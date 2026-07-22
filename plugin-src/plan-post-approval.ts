@@ -130,7 +130,7 @@ function buildApprovedPlanHandoffText(input: {
   const { compactionNote, planPath, answersJson, handoffAgent } = input;
   const step3 =
     handoffAgent === "orchestrator"
-      ? "3. **Do not** change application code yourself. After TODOs exist, delegate each implementation slice via **Task** → `code-executor` (narrow prompts per slice). When the cumulative change set is stable, delegate **Task** → `code-reviewer` then `docs-reviewer`; use `test-verifier` and `security-reviewer` when appropriate."
+      ? "3. **Do not** change application code yourself. After TODOs exist, delegate each implementation slice via **Task** → `builder` (narrow prompts per slice). When the cumulative change set is stable, delegate **Task** → `reviewer`."
       : "3. **Do not** change application code until TODOs exist; then mark the first item in progress and implement.";
 
   return `## Approved plan (automated handoff)
