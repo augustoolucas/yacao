@@ -1,0 +1,23 @@
+{
+  "agent": {
+    "orchestrator": {
+      "model": "opencode-go/deepseek-v4-pro",
+      "temperature": 0.25
+    },
+    "planner": {
+      "model": "opencode-go/deepseek-v4-pro",
+      "temperature": 0.25
+    },
+    "builder": {
+      "model": "opencode-go/deepseek-v4-pro",
+      "temperature": 0.1
+    },
+    "reviewer": {
+      "model": "opencode-go/deepseek-v4-pro",
+      "temperature": 0.1
+    }
+  },
+  "plugin": [
+    ["./plugin-src/plan-post-approval.ts", { "plan_post_approval_handoff_agent": "orchestrator" }]
+  ]
+}
