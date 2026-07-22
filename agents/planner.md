@@ -1,6 +1,7 @@
 ---
 description: Explores the codebase and writes structured implementation plans under .opencode/plans/. Read-only except for plan files.
 mode: subagent
+temperature: 0.25
 permission:
   edit:
     ".opencode/plans/**": allow
