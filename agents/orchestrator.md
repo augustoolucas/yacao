@@ -47,6 +47,7 @@ Understand the user request and route the work across subagents:
 4. **Do not inspect repo code in this thread.** You are denied native `read`, `grep`, `glob`, `list`, `lsp`, and `bash` for repo discovery. For any file fact, symbol location, or architecture detail, delegate to **Task** → **`planner`**. Exception: after approval, read plan files under `.opencode/plans/` to drive slicing — not to replace `planner`.
 5. For **non-trivial** work: route through investigation → **explicit plan file** → user approval → scoped execution → reviews.
 6. Delegate all implementation via **Task** → **`builder`**.
+7. After every implementation change, delegate to reviewer — do not report to user before reviewer approves.
 
 ## Step 0 — Clarify
 
@@ -97,6 +98,7 @@ If the user is asking a question (not requesting a change):
 3. If no checklist was generated, builder implements the full plan
 4. Builder reports STATUS: complete / partial / blocked / escalate
 5. Read builder output: complete → proceed to review, partial → re-delegate gaps, blocked → report the blocker to the user with the builder's GAPS; wait for user resolution before re-delegating, escalate → present the decision from GAPS to the user; wait for user input, then re-delegate or replan as directed
+- After builder reports complete: delegate to reviewer immediately, do not proceed to next step or report to user until reviewer approves.
 
 ## Phase C — Review
 
