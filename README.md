@@ -5,19 +5,19 @@ A (really) straight forward agent orchestrator workflow for [opencode](https://g
 ## Architecture
 
 ```
-┌──────────────────────────────────────────┐
-│           orchestrator (primary)          │
-│  Coordinates, approves plans, delegates   │
-│  Does NOT read/write repo code directly   │
-└──────────┬───────────┬───────────────────┘
-           │           │
-     Task  │     Task  │  Task
-           ▼           ▼                    ▼
-   ┌──────────┐ ┌──────────┐      ┌──────────────┐
-   │ planner  │ │ builder  │      │  reviewer     │
-   │ Explore  │ │ Implem.  │      │  Validate     │
-   │ + plan   │ │ + verify │      │  diff vs plan │
-   └──────────┘ └──────────┘      └──────────────┘
+┌──────────────────────────────────────────────────┐
+│              orchestrator (primary)                │
+│    Coordinates, approves plans, delegates          │
+│    Does NOT read/write repo code directly          │
+└──────┬────────────┬────────────┬──────────────────┘
+       │            │            │
+  Task │       Task │       Task │  Task
+       ▼            ▼            ▼                ▼
+┌──────────┐ ┌──────────┐ ┌──────────┐    ┌──────────────┐
+│  planner │ │ question │ │  builder │    │   reviewer    │
+│  Explore │ │  Q&A     │ │  Implem. │    │   Validate    │
+│  + plan  │ │  Answer  │ │  + verify│    │   diff vs plan│
+└──────────┘ └──────────┘ └──────────┘    └──────────────┘
 ```
 
 ### Step 0 — Clarify
@@ -30,10 +30,13 @@ After clarification, the orchestrator categorizes the task:
 
 | Level | Criteria | Flow |
 |---|---|---|
+| **Question** | User is asking about the codebase, not requesting a change | Orchestrator → question agent |
 | **Trivial** | Self-contained, no dependencies, no risk | Orchestrator → Builder → Reviewer |
 | **Needs planning** | Everything else | Orchestrator → Planner → Approval → Builder → Reviewer |
 
 ### Phase A — Planning
+
+**Questions** — skip Phase A and Phase B. Go straight to the question agent (see Phase Q).
 
 **Trivial tasks** — skip Phase A. Go straight to Builder.
 
@@ -42,6 +45,10 @@ After clarification, the orchestrator categorizes the task:
 2. If the task is complex enough to warrant a checklist, planner also writes `.opencode/plans/checklist-<slug>.md`
 3. Orchestrator presents the plan (or checklist, if generated) for user approval (`Approve` / `Revise`)
 4. On Revise: re-delegate to planner with feedback
+
+### Phase Q — Question
+
+When the user is asking about the codebase (not requesting a change), the orchestrator routes directly to the **question** agent. The question agent explores code, searches patterns, reads files, and uses web search to answer. No plan, no implementation, no review — just an answer.
 
 ### Phase B — Implementation
 
@@ -114,7 +121,7 @@ Your `~/.config/opencode/opencode.jsonc` needs these blocks added (not replaced)
 
 ## Model requirements
 
-All four agents use **`opencode-go/deepseek-v4-pro`**. This is the only model tested. Using other models may work but YACAO's prompts and temperature settings are tuned for this provider.
+All five agents use **`opencode-go/deepseek-v4-pro`**. This is the only model tested. Using other models may work but YACAO's prompts and temperature settings are tuned for this provider.
 
 > **Note:** Subagents inherit the model from the primary agent — no `"agent"` block is needed in `opencode.jsonc`. Temperature is defined in each agent's `.md` frontmatter.
 
@@ -122,6 +129,7 @@ All four agents use **`opencode-go/deepseek-v4-pro`**. This is the only model te
 |---------------|--------------------------------|-------------|----------|
 | orchestrator  | opencode-go/deepseek-v4-pro   | 0.25        | Primary  |
 | planner       | opencode-go/deepseek-v4-pro   | 0.25        | Subagent |
+| question      | opencode-go/deepseek-v4-pro   | 0.25        | Subagent |
 | builder       | opencode-go/deepseek-v4-pro   | 0.10        | Subagent |
 | reviewer      | opencode-go/deepseek-v4-pro   | 0.10        | Subagent |
 
@@ -131,6 +139,7 @@ All four agents use **`opencode-go/deepseek-v4-pro`**. This is the only model te
 |---------------|------|------------|-------------|-------------------|
 | **orchestrator** | Coordinates phased work. Approves plans, slices implementation, delegates everything. | No | No | Yes — planner, builder, reviewer via Task |
 | **planner** | Explores codebase, reads files, searches for patterns, writes structured plans to `.opencode/plans/`. | Yes | Only `.opencode/plans/` | No |
+| **question** | Answers user questions about the codebase by exploring code, searching patterns, reading files, and web search. | Yes | No | No |
 | **builder** | Implements scoped coding tasks from precise specs. Edits files, runs verification, reports results. Never redesigns. | Yes | Yes (full) | No |
 | **reviewer** | Validates implementation diff against plan. Checks bugs, regressions, plan adherence, patterns, and simplicity. Read-only. | Yes | No | No |
 

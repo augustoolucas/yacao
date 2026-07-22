@@ -8,12 +8,12 @@ permission:
   grep: allow
   glob: allow
   list: allow
+  todowrite: allow
   bash:
     "*": allow
     "git add*": allow
     "git * commit*": deny
     "git * push*": deny
-    "git commit*": ask
     "git push*": ask
     "command git*": deny
     "env git*": deny

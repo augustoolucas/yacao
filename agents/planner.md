@@ -4,11 +4,8 @@ mode: subagent
 temperature: 0.25
 permission:
   edit:
-    ".opencode/plans/**": allow
     "*": deny
-  write:
     ".opencode/plans/**": allow
-    "*": deny
   read: allow
   grep: allow
   glob: allow

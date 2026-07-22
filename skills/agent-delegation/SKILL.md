@@ -5,19 +5,21 @@ description: "Use when the primary agent must decide whether to delegate via the
 
 # Subagent delegation (OpenCode)
 
-Must respect `permission.task` in the active primary agent's frontmatter (`agents/<id>.md` — `build` vs `plan` vs `orchestrator` have different allowlists). The **`orchestrator`** agent coordinates all subagents via Task; it does not inspect or edit repo files directly.
+Must respect `permission.task` in the active primary agent's frontmatter (`agents/<id>.md` — `build` vs `plan` vs `orchestrator` have different allowlists). (These are opencode's built-in primary agent modes, separate from the custom agents in this repo.) The **`orchestrator`** agent coordinates all subagents via Task; it does not inspect or edit repo files directly.
 
 ## Available agents
 
 | Agent | Role | Access |
 |-------|------|--------|
 | `planner` | Explore codebase + write implementation plans under `.opencode/plans/` | Read-only except `.opencode/plans/` |
+| `question` | Answers codebase questions by exploring code and searching the web. Read-only. | Read-only, web search allowed |
 | `builder` | Implement code according to specifications | Full edit access |
 | `reviewer` | Validate diffs against plans; check for bugs, regressions, and security issues | Read-only |
 
 - Use `planner` when the task needs codebase discovery, architecture mapping, symbol location, or a written plan before implementation.
+- Use `question` when the user is asking about the codebase (not requesting a change). No plan, no implementation needed.
 - Use `builder` for implementing scoped coding tasks. Let it call `planner` internally when it needs exploration.
-- Use `reviewer` to validate any meaningful diff before finalizing. This agent reviews only — it does not write or explore.
+- Use `reviewer` to validate **every** diff before finalizing — never skip, regardless of task complexity. This agent reviews only — it does not write or explore.
 - Security review is handled by the `reviewer` agent — no separate security agent is needed.
 
 ## Gold rule: minimal child prompt

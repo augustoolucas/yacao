@@ -32,14 +32,14 @@ permission:
 ```
 
 - `mode: primary` for the orchestrator (the main agent users invoke)
-- `mode: subagent` for planner, builder, reviewer (invoked via Task from the orchestrator)
+- `mode: subagent` for planner, question, builder, reviewer (invoked via Task from the orchestrator)
 - Permission rules follow opencode's glob-based permission model
 - Every agent defines its own tool access — the orchestrator has **no** direct repo read/write/bash
 
 ### Model config
 
-All four agents use `opencode-go/deepseek-v4-pro` as defined in `opencode.jsonc.partial`. Temperature:
-- orchestrator & planner: 0.25
+All five agents use `opencode-go/deepseek-v4-pro` as defined in `opencode.jsonc.partial`. Temperature:
+- orchestrator & planner & question: 0.25
 - builder & reviewer: 0.1
 
 ### Skills
@@ -60,7 +60,9 @@ After making changes, the only reliable way to verify:
 2. Merge any config changes from `opencode.jsonc.partial` into `~/.config/opencode/opencode.jsonc`
 3. Restart opencode (totally — close the session/process, start fresh)
 4. Run a simple task through the orchestrator (e.g. "write a hello world function")
-5. Verify: orchestrator delegates to planner, plan appears under `.opencode/plans/`, approval flow works, builder implements, reviewer validates
+5. Verify: orchestrator delegates to planner (complex tasks), plan appears under `.opencode/plans/`, approval flow works, builder implements, reviewer validates
+6. Verify trivial-task path: orchestrator delegates directly to builder with a spec, builder implements, reviewer validates (no plan file)
+7. Verify question path: orchestrator delegates to question agent for codebase questions, returns answer directly (no plan, no review)
 
 ### What can't be tested
 
