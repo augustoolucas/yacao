@@ -20,17 +20,42 @@ A (really) straight forward agent orchestrator workflow for [opencode](https://g
    └──────────┘ └──────────┘      └──────────────┘
 ```
 
+### Step 0 — Clarify
+
+Before any planning or implementation, the orchestrator clarifies the user's request through one or more rounds of questions. Only once the request is fully understood does the orchestrator proceed to complexity routing and delegation.
+
+### Complexity routing
+
+After clarification, the orchestrator categorizes the task:
+
+| Level | Criteria | Flow |
+|---|---|---|
+| **Trivial** | Self-contained, no dependencies, no risk | Orchestrator → Builder → Reviewer |
+| **Needs planning** | Everything else | Orchestrator → Planner → Approval → Builder → Reviewer |
+
 ### Phase A — Planning
-1. **planner** explores the codebase and writes a plan file to `.opencode/plans/<slug>.md`
-2. Orchestrator presents the plan for user approval (`Approve` / `Revise`)
-3. On Revise: re-delegate to planner with feedback
+
+**Trivial tasks** — skip Phase A. Go straight to Builder.
+
+**Needs planning:**
+1. **planner** explores the codebase and writes a plan to `.opencode/plans/plan-<slug>.md`
+2. If the task is complex enough to warrant a checklist, planner also writes `.opencode/plans/checklist-<slug>.md`
+3. Orchestrator presents the plan (or checklist, if generated) for user approval (`Approve` / `Revise`)
+4. On Revise: re-delegate to planner with feedback
 
 ### Phase B — Implementation
-1. Orchestrator reads the approved plan, slices it into TODOs
-2. **builder** implements each slice (one Task call per slice), runs verification, reports status
-3. Builder output format: `STATUS` (complete/partial/blocked/escalate) + `CHANGES` + `VERIFIED` + `GAPS`
+
+**Trivial tasks:**
+1. **builder** implements directly from the orchestrator's spec
+
+**Needs planning:**
+1. **builder** receives the full checklist (if generated) and follows it autonomously, consulting `.opencode/plans/plan-<slug>.md` for details
+2. Builder output format: `STATUS` (complete/partial/blocked/escalate) + `CHANGES` + `VERIFIED` + `GAPS`
 
 ### Phase C — Review
+
+Reviewer **always** runs — never skip.
+
 1. **reviewer** validates the full implementation diff against the plan
 2. Returns a structured verdict: `Approved` / `Adjustments needed` / `Rejected`
 3. Orchestrator acts on the verdict (re-delegate fixes, replan, or report completion)
@@ -62,7 +87,7 @@ cp /tmp/yacao/plugin-src/*.ts ~/.config/opencode/plugin-src/
 
 # 5. Merge config
 # Open ~/.config/opencode/opencode.jsonc and merge in the contents of
-# /tmp/yacao/opencode.jsonc.partial — add the "agent" and "plugin" blocks
+# /tmp/yacao/opencode.jsonc.partial — add the "plugin" block
 # alongside your existing config.
 
 # 6. Clean up
@@ -79,24 +104,19 @@ Your `~/.config/opencode/opencode.jsonc` needs these blocks added (not replaced)
 {
   // ... your existing config ...
 
-  "agent": {
-    "orchestrator": { "model": "opencode-go/deepseek-v4-pro", "temperature": 0.25 },
-    "planner":      { "model": "opencode-go/deepseek-v4-pro", "temperature": 0.25 },
-    "builder":      { "model": "opencode-go/deepseek-v4-pro", "temperature": 0.1  },
-    "reviewer":     { "model": "opencode-go/deepseek-v4-pro", "temperature": 0.1  }
-  },
-
   "plugin": [
     ["./plugin-src/plan-post-approval.ts", { "plan_post_approval_handoff_agent": "orchestrator" }]
   ]
 }
 ```
 
-**Important:** Do NOT replace your entire config file. Merge these blocks alongside your existing settings. If you already have an `"agent"` block, merge the four agent objects into it. If you already have a `"plugin"` array, append the plan-post-approval entry to it.
+**Important:** Do NOT replace your entire config file. Merge this alongside your existing settings. If you already have a `"plugin"` array, append the plan-post-approval entry to it. No `"agent"` block is needed — temperature is defined in each agent's `.md` frontmatter, and subagents inherit the model from the primary agent.
 
 ## Model requirements
 
 All four agents use **`opencode-go/deepseek-v4-pro`**. This is the only model tested. Using other models may work but YACAO's prompts and temperature settings are tuned for this provider.
+
+> **Note:** Subagents inherit the model from the primary agent — no `"agent"` block is needed in `opencode.jsonc`. Temperature is defined in each agent's `.md` frontmatter.
 
 | Agent         | Model                          | Temperature | Mode     |
 |---------------|--------------------------------|-------------|----------|
