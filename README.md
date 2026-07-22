@@ -89,35 +89,11 @@ cp /tmp/yacao/agents/*.md ~/.config/opencode/agents/
 # 3. Copy skills
 cp -r /tmp/yacao/skills/* ~/.config/opencode/skills/
 
-# 4. Copy plugin
-cp /tmp/yacao/plugin-src/*.ts ~/.config/opencode/plugin-src/
-
-# 5. Merge config
-# Open ~/.config/opencode/opencode.jsonc and merge in the contents of
-# /tmp/yacao/opencode.jsonc.partial — add the "plugin" block
-# alongside your existing config.
-
-# 6. Clean up
+# 4. Clean up
 rm -rf /tmp/yacao
 
-# 7. Restart opencode
+# 5. Restart opencode
 ```
-
-### Config merge detail
-
-Your `~/.config/opencode/opencode.jsonc` needs these blocks added (not replaced):
-
-```jsonc
-{
-  // ... your existing config ...
-
-  "plugin": [
-    ["./plugin-src/plan-post-approval.ts", { "plan_post_approval_handoff_agent": "orchestrator" }]
-  ]
-}
-```
-
-**Important:** Do NOT replace your entire config file. Merge this alongside your existing settings. If you already have a `"plugin"` array, append the plan-post-approval entry to it. No `"agent"` block is needed — temperature is defined in each agent's `.md` frontmatter, and subagents inherit the model from the primary agent.
 
 ## Model requirements
 
@@ -143,22 +119,11 @@ All five agents use **`opencode-go/deepseek-v4-pro`**. This is the only model te
 | **builder** | Implements scoped coding tasks from precise specs. Edits files, runs verification, reports results. Never redesigns. | Yes | Yes (full) | No |
 | **reviewer** | Validates implementation diff against plan. Checks bugs, regressions, plan adherence, patterns, and simplicity. Read-only. | Yes | No | No |
 
-## Bundled skills
+## Advanced (optional)
 
 | Skill | Purpose |
 |-------|---------|
-| `agent-delegation` | Decision table for routing work to subagents and keeping child prompts minimal |
 | `worktrees` | Git worktree lanes for isolated parallel work on complex or risky tasks |
-| `reflect` | Session archaeology — find repeated workflow patterns and suggest reusable assets |
-
-## What the plugin does
-
-The bundled `plan-post-approval.ts` plugin automates the handoff after plan approval:
-
-- When the `orchestrator` asks `PlanApprove` and the user chooses `Approve`, the plugin waits for session idle
-- It compacts the conversation context (summarized by the same model) and injects a handoff prompt with the approved plan path
-- If the handoff target is also `orchestrator`, it skips the automated prompt (the orchestrator continues Phase B in-session)
-- If running in `plan` mode, it hands off to `build` automatically
 
 ## License
 
