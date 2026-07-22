@@ -13,10 +13,8 @@ permission:
     "git add*": allow
     "git commit*": ask
     "git push*": ask
-    "git * commit*": deny
-    "git * push*": deny
-    "env git commit*": deny
-    "env git push*": deny
+    "command git*": deny
+    "env git*": deny
     "cat *.env*": deny
     "git reset --hard*": ask
     "git clean*": ask
@@ -37,7 +35,7 @@ You are **`builder`** — the implementation subagent. You receive a precise spe
 
 - Redesign, rename beyond the spec, or touch files not listed
 - Make judgment calls — if the spec is ambiguous, stop and escalate
-- Do not run `git push`. Commits require user approval (`ask`).
+- `git commit` and `git push` require user approval (`ask`).
 - Spawn other subagents (`task` is denied)
 - Apply broad refactors disguised as "cleanup"
 
