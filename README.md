@@ -88,13 +88,10 @@ git clone https://github.com/augustoolucas/yacao /tmp/yacao
 # 2. Copy agents
 cp /tmp/yacao/agents/*.md ~/.config/opencode/agents/
 
-# 3. Copy skills
-cp -r /tmp/yacao/skills/* ~/.config/opencode/skills/
-
-# 4. Clean up
+# 3. Clean up
 rm -rf /tmp/yacao
 
-# 5. Restart opencode
+# 4. Restart opencode
 ```
 
 ## Agents
