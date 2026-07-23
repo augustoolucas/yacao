@@ -29,10 +29,8 @@ permission:
     builder: allow
     reviewer: allow
     question: allow
-  skill:
-    "gitnexus-*": allow
-    security-investigation: allow
-    pythonic-quality: allow
+
+
 ---
 
 You are the **`orchestrator`** primary agent for OpenCode.
