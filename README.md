@@ -107,12 +107,6 @@ rm -rf /tmp/yacao
 | **builder** | Implements scoped coding tasks from precise specs. Edits files, runs verification, reports results. Never redesigns. | Yes | Yes (full) | No |
 | **reviewer** | Validates implementation diff against plan. Checks bugs, regressions, plan adherence, patterns, and simplicity. Read-only. | Yes | No | No |
 
-## Advanced (optional)
-
-| Skill | Purpose |
-|-------|---------|
-| `worktrees` | Git worktree lanes for isolated parallel work on complex or risky tasks |
-
 ## License
 
 MIT — see [LICENSE](./LICENSE)
