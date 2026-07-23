@@ -5,7 +5,6 @@
 This is an **opencode agent configuration repository**. It contains:
 
 - **Agents** (`agents/*.md`): YAML frontmatter with mode/permission declarations + markdown body with system prompts
-- **Skills** (`skills/<name>/SKILL.md`): Reusable workflow guidance, loaded on-demand via the skill tool
 
 There is no build step, no npm, no CLI — opencode consumes the raw files directly after installation.
 
@@ -24,7 +23,11 @@ permission:
   edit: allow|deny|<pattern>
   read: allow|deny|<pattern>
   bash: allow|deny|<pattern>
-  task: allow|deny|<agent-list>
+  task:
+    planner: allow
+    builder: allow
+    reviewer: allow
+    question: allow
   # ... other permissions
 ---
 ```
@@ -36,13 +39,7 @@ permission:
 
 ### Model config
 
-All five agents use `opencode-go/deepseek-v4-pro`. Model is inherited from the primary agent — no `agent` block needed in `opencode.jsonc`. Temperature is defined in each agent's `.md` frontmatter:
-- orchestrator & planner & question: 0.25
-- builder & reviewer: 0.1
-
-### Skills
-
-Each skill lives in its own directory: `skills/<name>/SKILL.md`. Skills use their own YAML frontmatter with `name` and `description`. The skill body is markdown — no executable code.
+All five agents inherit the model from the primary agent — no `model` key or `agent` block is needed in `opencode.jsonc`. Temperature is defined in each agent's `.md` frontmatter (orchestrator/planner/question: 0.25, builder/reviewer: 0.1).
 
 ## Testing
 
@@ -50,7 +47,7 @@ Each skill lives in its own directory: `skills/<name>/SKILL.md`. Skills use thei
 
 After making changes, the only reliable way to verify:
 
-1. Copy the changed agent/skill files to `~/.config/opencode/agents/`, `~/.config/opencode/skills/`
+1. Copy the changed agent files to `~/.config/opencode/agents/`
 2. Restart opencode (totally — close the session/process, start fresh)
 3. Run a simple task through the orchestrator (e.g. "write a hello world function")
 4. Verify: orchestrator delegates to planner (complex tasks), plan appears under `.opencode/plans/`, approval flow works, builder implements, reviewer validates
@@ -67,14 +64,12 @@ This repo's README describes the full install for end users. In short:
 
 1. Clone the repo
 2. Copy agents/ to `~/.config/opencode/agents/`
-3. Copy skills/ to `~/.config/opencode/skills/`
-4. Restart opencode
+3. Restart opencode
 
 ## Contribution rules
 
-- **Follow existing patterns.** Every agent has the same structure (YAML frontmatter + role description + workflow + rules). Keep it.
-- **Keep agent prompts narrow and specific.** The orchestrator prompt is already ~100 lines — don't bloat it.
-- **Permission changes are high-risk.** The orchestrator's `deny` on `read`/`bash`/`edit` is deliberate and prevents it from inspecting or modifying repo code directly. Do not relax this without a strong reason.
+- **Follow existing patterns.** Agents share a common structure: YAML frontmatter, role description, and workflow instructions. Most also include an explicit Rules section. Keep this structure.
+- **Keep agent prompts narrow and specific.** The orchestrator prompt is already ~125 lines — don't bloat it.
+- **Permission changes are high-risk.** The orchestrator's deny on read, grep, glob, list, bash, edit, lsp, webfetch, and websearch is deliberate — it cannot inspect or modify repo code directly. Do not relax this without a strong reason.
 - **Test after changes.** At minimum, run the manual restart test described above. If you changed permissions, verify both the allowed and denied paths.
-- **Skill frontmatter matters.** The `name` in a skill's YAML must match the directory name. The `description` is what opencode shows to the model when deciding whether to load the skill.
 
