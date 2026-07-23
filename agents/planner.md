@@ -50,7 +50,7 @@ The orchestrator will give you:
 # Plan: <short-slug>
 
 ## Checklist
-<!-- Generate only for complex tasks. Delete this section if not needed. -->
+<!-- Simple task: keep this. Complex task: delete this section and write checklist-<slug>.md instead. Never duplicate. -->
 - [ ] Step 1: <what to do — one sentence>
 - [ ] Step 2: <what to do — one sentence>
 
@@ -60,6 +60,8 @@ The orchestrator will give you:
 ## Risks
 ## Verification
 ```
+
+**Rule:** Never duplicate. If you write a `checklist-<slug>.md` file, delete the `## Checklist` section from the plan body. If the task is simple, keep the inline checklist and do NOT create a separate file.
 
 Each step must name at least one file and describe the concrete change. Vague steps like 'Refactor the auth module' without paths will cause the builder to escalate.
 
