@@ -95,25 +95,11 @@ rm -rf /tmp/yacao
 # 5. Restart opencode
 ```
 
-## Model requirements
-
-All five agents use **`opencode-go/deepseek-v4-pro`**. This is the only model tested. Using other models may work but YACAO's prompts and temperature settings are tuned for this provider.
-
-> **Note:** Subagents inherit the model from the primary agent — no `"agent"` block is needed in `opencode.jsonc`. Temperature is defined in each agent's `.md` frontmatter.
-
-| Agent         | Model                          | Temperature | Mode     |
-|---------------|--------------------------------|-------------|----------|
-| orchestrator  | opencode-go/deepseek-v4-pro   | 0.25        | Primary  |
-| planner       | opencode-go/deepseek-v4-pro   | 0.25        | Subagent |
-| question      | opencode-go/deepseek-v4-pro   | 0.25        | Subagent |
-| builder       | opencode-go/deepseek-v4-pro   | 0.10        | Subagent |
-| reviewer      | opencode-go/deepseek-v4-pro   | 0.10        | Subagent |
-
 ## Agents
 
 | Agent         | Role | Read repo? | Write repo? | Spawns subagents? |
 |---------------|------|------------|-------------|-------------------|
-| **orchestrator** | Coordinates phased work. Approves plans, slices implementation, delegates everything. | No | No | Yes — planner, builder, reviewer via Task |
+| **orchestrator** | Coordinates phased work. Clarifies requirements, routes to subagents, approves plans. Does not read/write repo code directly. | No | No | Yes — planner, builder, reviewer via Task |
 | **planner** | Explores codebase, reads files, searches for patterns, writes structured plans to `.opencode/plans/`. | Yes | Only `.opencode/plans/` | No |
 | **question** | Answers user questions about the codebase by exploring code, searching patterns, reading files, and web search. | Yes | No | No |
 | **builder** | Implements scoped coding tasks from precise specs. Edits files, runs verification, reports results. Never redesigns. | Yes | Yes (full) | No |
