@@ -1,6 +1,8 @@
 # YACAO — Yet Another Coding Agent Orchestrator
 
-A (really) straight forward agent orchestrator workflow for [opencode](https://github.com/opencode-ai/opencode). Automatically switches between planning and building agents, and also reviews the implementation at the end.
+You already use plan and build. You probably review your changes too. YACAO just connects the dots — so you don't have to.
+
+Built for [opencode](https://github.com/opencode-ai/opencode).
 
 ## Architecture
 
