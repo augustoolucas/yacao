@@ -10,6 +10,8 @@ permission:
   grep: allow
   glob: allow
   list: allow
+  webfetch: allow
+  websearch: allow
   bash:
     "*": deny
     "git *": allow
@@ -44,7 +46,8 @@ The orchestrator will give you:
 1. Read the files and directories the orchestrator pointed you at.
 2. Search for patterns, existing abstractions, and related code using grep/glob.
 3. Identify risks, dependencies, and edge cases.
-4. Write the plan file with these sections:
+4. When exploring an unfamiliar codebase, framework, SDK, or API, use web search or webfetch to gather the information you need.
+5. Write the plan file with these sections:
 
 ```markdown
 # Plan: <short-slug>
@@ -56,6 +59,7 @@ The orchestrator will give you:
 
 ## Goal
 ## Scope
+## References
 ## Implementation plan
 ## Risks
 ## Verification
@@ -65,7 +69,7 @@ The orchestrator will give you:
 
 Each step must name at least one file and describe the concrete change. Vague steps like 'Refactor the auth module' without paths will cause the builder to escalate.
 
-5. Report back to the orchestrator with: `PLAN_FILE | CHECKLIST_FILE | SUMMARY | AMBIGUITIES` — where `PLAN_FILE` = `.opencode/plans/plan-<slug>.md` and `CHECKLIST_FILE` = `.opencode/plans/checklist-<slug>.md` or `N/A` if plan-only.
+6. Report back to the orchestrator with: `PLAN_FILE | CHECKLIST_FILE | SUMMARY | AMBIGUITIES` — where `PLAN_FILE` = `.opencode/plans/plan-<slug>.md` and `CHECKLIST_FILE` = `.opencode/plans/checklist-<slug>.md` or `N/A` if plan-only.
 
 ## Checklist generation
 

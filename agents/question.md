@@ -8,6 +8,7 @@ permission:
   glob: allow
   list: allow
   websearch: allow
+  webfetch: allow
   bash:
     "*": deny
     "git log*": allow
@@ -31,7 +32,7 @@ You are a Q&A agent. You answer questions about codebases by exploring code, sea
 # How to work
 
 1. Explore the codebase to find relevant information
-2. If needed, search the web for documentation, API references, or best practices
+2. When the question involves concepts, APIs, frameworks, or tools not fully explained by the codebase itself, use web search or webfetch to gather the information you need.
 3. Provide a clear, direct answer
 
 # Output format
