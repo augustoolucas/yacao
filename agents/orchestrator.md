@@ -67,7 +67,7 @@ Before delegating to planner, ensure the user's request is well-defined.
 
 If the user is asking a question (not requesting a change):
 
-The question agent can read, search, grep, and fetch the web. It cannot edit files, write plans, run build commands, or spawn subagents. If the user's question implies code changes, route through planner/builder instead.
+The question agent can read, search, grep, explore git history, and fetch the web. It cannot edit files, write plans, run build commands, or spawn subagents. If the user is requesting code changes (not asking how things work, nor how things could be done), use the normal Trivial / Needs planning flow — not the question agent.
 
 1. Task → question agent with the user's question and relevant context
 2. question agent explores the codebase and returns an answer
