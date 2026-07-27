@@ -98,7 +98,7 @@ rm -rf /tmp/yacao
 
 | Agent         | Role | Read repo? | Write repo? | Spawns subagents? |
 |---------------|------|------------|-------------|-------------------|
-| **orchestrator** | Coordinates phased work. Clarifies requirements, routes to subagents, approves plans. Does not read/write repo code directly. | No | No | Yes — planner, builder, reviewer via Task |
+| **orchestrator** | Coordinates phased work. Clarifies requirements, routes to subagents, approves plans. Does not read/write repo code directly. | No | No | Yes — planner, builder, reviewer, question via Task |
 | **planner** | Explores codebase, reads files, searches for patterns, writes structured plans to `.opencode/plans/`. | Yes | Only `.opencode/plans/` | No |
 | **question** | Answers user questions about the codebase by exploring code, searching patterns, reading files, and web search. | Yes | No | No |
 | **builder** | Implements scoped coding tasks from precise specs. Edits files, runs verification, reports results. Never redesigns. | Yes | Yes (full) | No |

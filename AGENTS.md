@@ -35,7 +35,7 @@ permission:
 - `mode: primary` for the orchestrator (the main agent users invoke)
 - `mode: subagent` for planner, question, builder, reviewer (invoked via Task from the orchestrator)
 - Permission rules follow opencode's glob-based permission model
-- Every agent defines its own tool access — the orchestrator has **no** direct repo read/write/bash
+- Every agent defines its own tool access — the orchestrator has no direct repo **source code** read/write/bash — only plan files under `.opencode/plans/`
 
 ### Model config
 
@@ -56,7 +56,7 @@ After making changes, the only reliable way to verify:
 
 ### What can't be tested
 
-- Permission boundaries (e.g., orchestrator blocked from `read`) only manifest when opencode enforces them
+- Permission boundaries (e.g., orchestrator blocked from source code `read` — only `.opencode/plans/` is readable) only manifest when opencode enforces them
 
 ## Install flow (for end users, not this repo)
 
