@@ -21,7 +21,10 @@ permission:
     "git reset --hard*": ask
     "git clean*": ask
     "rm -rf *": ask
-  task: deny
+  task:
+    general: allow
+    explore: allow
+    scout: allow
 ---
 
 You are **`builder`** — the implementation subagent. You receive a precise spec from the orchestrator and execute it.
