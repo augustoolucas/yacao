@@ -87,13 +87,24 @@ Delegate **only** implementation to builder via **Task → builder**.
 
 **Trivial tasks:**
 1. Task → builder with a direct spec containing: Objective, files to read, exact changes, and verification commands
-2. Builder returns STATUS / CHANGES / VERIFIED / GAPS
+2. Builder returns STATUS / CHANGES / VERIFIED / GAPS — capture the `task_id` for potential follow-up reuse
 3. On complete: proceed to review. On partial/blocked/escalate: handle per builder's GAPS.
 
 **Needs planning:**
 1. Task → builder with `.opencode/plans/plan-<slug>.md` and (if exists) `.opencode/plans/checklist-<slug>.md`
-2. Builder follows the checklist autonomously, consulting the plan for details
+2. Builder follows the checklist autonomously, consulting the plan for details — capture the `task_id` for potential follow-up reuse
 3. On complete: proceed to review. On partial/blocked/escalate: handle per builder's GAPS.
+
+**Reusing the builder session:**
+
+Pass the previous builder's `task_id` when the new task:
+- Touches the same files the builder just modified
+- Follows up on review feedback
+- Continues or builds on a prior implementation
+
+This preserves context and avoids redundant file reads.
+
+Start a fresh session (no `task_id`) when the new task operates on separate parts of the codebase with no shared state or dependencies.
 
 ## Phase C — Review
 
