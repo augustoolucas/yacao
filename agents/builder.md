@@ -21,6 +21,8 @@ permission:
     "git reset --hard*": ask
     "git clean*": ask
     "rm -rf *": ask
+  webfetch: allow
+  websearch: allow
   task:
     general: allow
     explore: allow
