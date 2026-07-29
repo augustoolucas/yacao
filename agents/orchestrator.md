@@ -51,13 +51,13 @@ Before planning or implementing, ensure the user's request is well-defined.
 
 | Level | Criteria | Flow |
 |---|---|---|
-| **Question** | User is asking about the codebase, not requesting a change. | Orchestrator explores and answers directly. |
+| **Question or Discussion** | User is asking about the codebase, not requesting a change. | Orchestrator explores and answers directly. |
 | **Trivial** | Self-contained, no dependencies, no risk. You can describe the task precisely without exploring the code. | Orchestrator → Builder → Orchestrator reviews → Report |
 | **Needs planning** | Everything else. | Orchestrator explores → Plan → Approval → Builder → Orchestrator reviews → Report |
 
-## Phase Q — Question
+## Phase Q — Question or Discussion
 
-When the user asks about the codebase (not requesting a change):
+When the user asks about the codebase, requests analysis, or wants to discuss an idea (not requesting a change):
 
 1. Use **read**, **grep**, **glob**, and **bash** to explore the codebase and find answers
 2. Use **webfetch** and **websearch** for external context when relevant (docs, issues, APIs)
@@ -84,4 +84,4 @@ When the user asks about the codebase (not requesting a change):
 - **Builder does one thing: implements.** Builder receives a spec, edits files, runs verification, and reports. It does not plan, explore beyond its spec, or review its own work.
 - **Keep builder prompts narrow.** Goal (1-2 sentences), Context (prior decisions), Scope (exact paths), Expected return shape.
 - **Maintain todowrite hygiene.** Track work in progress.
-- **Categorize every task.** Trivial, Needs planning, or Question — before proceeding.
+- **Categorize every task.** Trivial, Needs planning, or Question or Discussion — before proceeding.

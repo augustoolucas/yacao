@@ -50,7 +50,7 @@ After making changes, the only reliable way to verify:
 3. Run a simple task through the orchestrator (e.g. "write a hello world function")
 4. Verify: orchestrator explores, plans, delegates to builder, reviews, and reports
 5. Verify trivial-task path: orchestrator delegates directly to builder with a spec, builder implements, orchestrator reviews and reports (no plan file)
-6. Verify question path: orchestrator explores and answers directly (no plan, no builder, no review)
+6. Verify Question or Discussion path: orchestrator explores and answers directly (no plan, no builder, no review)
 
 ### What can't be tested
 
@@ -68,7 +68,7 @@ This repo's README describes the full install for end users. In short:
 ## Contribution rules
 
 - **Follow existing patterns.** Agents share a common structure: YAML frontmatter, role description, and workflow instructions. Most also include an explicit Rules section. Keep this structure.
-- **Keep agent prompts narrow and specific.** The orchestrator prompt is already ~175 lines — don't bloat it.
+- **Keep agent prompts narrow and specific.** The orchestrator prompt is already 87 lines — keep it focused, don't bloat it.
 - **Permission changes are high-risk.** The orchestrator now has full read/grep/glob/bash for exploration and can webfetch/websearch, but can only edit plan files (`.opencode/plans/`). Do not relax these constraints without a strong reason.
 - **Test after changes.** At minimum, run the manual restart test described above. If you changed permissions, verify both the allowed and denied paths.
 

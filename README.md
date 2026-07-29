@@ -41,13 +41,13 @@ After clarification, the orchestrator categorizes the task:
 
 | Level | Criteria | Flow |
 |---|---|---|
-| **Question** | User is asking about the codebase, not requesting a change | Orchestrator explores and answers directly |
+| **Question or Discussion** | User is asking about the codebase, not requesting a change | Orchestrator explores and answers directly |
 | **Trivial** | Self-contained, no dependencies, no risk | Orchestrator → Builder → Orchestrator reviews → Report |
 | **Needs planning** | Everything else | Orchestrator explores → Plan → Approval → Builder → Orchestrator reviews → Report |
 
-### Phase Q — Question
+### Phase Q — Question or Discussion
 
-When the user is asking about the codebase (not requesting a change), the orchestrator uses **read**, **grep**, **glob**, **bash**, and optionally **webfetch**/**websearch** to explore and answer directly. No plan, no builder, no review — just an answer.
+When the user is asking about the codebase, requesting analysis, or wants to discuss an idea (not requesting a change), the orchestrator uses **read**, **grep**, **glob**, **bash**, and optionally **webfetch**/**websearch** to explore and answer directly. No plan, no builder, no review — just an answer.
 
 ### Phase A — Planning
 
@@ -104,7 +104,7 @@ Skills are reusable, on-demand workflow guides loaded by the orchestrator at eac
 | **`implementation`** | Phase B — before delegating to builder | Construct the spec, capture the `task_id`, and handle the builder's response. |
 | **`review`** | Phase C — after every implementation | Validate the diff against the plan or spec across 6 dimensions and return a verdict. |
 
-Trivial and Question tasks don't enter Phase A (planning skill is never invoked). Review skill runs on every implementation, including trivial tasks.
+Trivial and Question or Discussion tasks don't enter Phase A (planning skill is never invoked). Review skill runs on every implementation, including trivial tasks.
 
 ## License
 
