@@ -66,63 +66,15 @@ When the user asks about the codebase (not requesting a change):
 
 ## Phase A — Planning
 
-**Trivial tasks** — skip Phase A. Go straight to Phase B with a direct spec.
-
-**Needs planning:**
-
-1. **Explore** — use read, grep, glob, and bash to understand the relevant code, identify affected files, and surface risks. You have full read access to the repo.
-2. **Write plan** — create `.opencode/plans/plan-<slug>.md` with these sections:
-   - **Goal** — what the change accomplishes
-   - **Scope** — files touched, boundaries
-   - **References** — table of relevant files and their roles
-   - **Implementation plan** — numbered steps, each actionable
-   - **Risks** — things that could go wrong, regressions to watch for
-3. **Checklist** (optional) — if the task is complex, also write `.opencode/plans/checklist-<slug>.md` as a high-level TODO list
-4. **Present for approval** — show the plan (or checklist) to the user. Wait for `Approve` or `Revise`.
-5. On **Revise**: update the plan and re-present
+**Invoke the `planning` skill** when the task is "Needs planning". Trivial tasks skip this phase.
 
 ## Phase B — Implementation
 
-Delegate **only** implementation to builder via **Task → builder**.
-
-**Trivial tasks:**
-1. Task → builder with a direct spec containing: Objective, files to read, exact changes, and verification commands
-2. Builder returns STATUS / CHANGES / VERIFIED / GAPS — capture the `task_id` for potential follow-up reuse
-3. On complete: proceed to review. On partial/blocked/escalate: handle per builder's GAPS.
-
-**Needs planning:**
-1. Task → builder with `.opencode/plans/plan-<slug>.md` and (if exists) `.opencode/plans/checklist-<slug>.md`
-2. Builder follows the checklist autonomously, consulting the plan for details — capture the `task_id` for potential follow-up reuse
-3. On complete: proceed to review. On partial/blocked/escalate: handle per builder's GAPS.
-
-**Reusing the builder session:**
-
-Pass the previous builder's `task_id` when the new task:
-- Touches the same files the builder just modified
-- Follows up on review feedback
-- Continues or builds on a prior implementation
-
-This preserves context and avoids redundant file reads.
-
-Start a fresh session (no `task_id`) when the new task operates on separate parts of the codebase with no shared state or dependencies.
+**Invoke the `implementation` skill** when delegating code changes to the builder.
 
 ## Phase C — Review
 
-Always review after implementation — never skip.
-
-1. Run `git diff` to see all changes
-2. Read modified files — verify against the plan (or spec for trivial tasks)
-3. Validate these dimensions:
-   - **Plan adherence** — does the diff match the plan/spec? Nothing extra, nothing missing?
-   - **Bugs / regressions** — any obvious logic errors, broken paths, or things that used to work and now won't?
-   - **Structure / patterns** — does the code follow existing repo patterns? No unnecessary new abstractions?
-   - **Compatibility** — do changed interfaces still work with callers?
-   - **Tests / verification** — did the builder run verification? Did it actually pass?
-   - **Simplicity** — is the change minimal? No unrelated refactors or cleanup disguised as the task?
-4. **Verdict:**
-   - **Approved** → report completion to user
-   - **Adjustments needed** → delegate each issue to builder via Task, re-review after fixes
-   - **Rejected** (plan not implemented, design flaw, scope creep, 3+ critical bugs) → replan or refocus builder, then re-review
+**Invoke the `review` skill** after every implementation. Never skip review.
 
 ## Rules
 

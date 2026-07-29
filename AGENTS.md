@@ -5,6 +5,7 @@
 This is an **opencode agent configuration repository**. It contains:
 
 - **Agents** (`agents/*.md`): YAML frontmatter with mode/permission declarations + markdown body with system prompts
+- **Skills** (`skills/<name>/SKILL.md`): Reusable workflow guidance, loaded on-demand via the skill tool. The orchestrator invokes phase-specific skills (planning, implementation, review) when entering each phase.
 
 There is no build step, no npm, no CLI — opencode consumes the raw files directly after installation.
 
@@ -60,8 +61,9 @@ After making changes, the only reliable way to verify:
 This repo's README describes the full install for end users. In short:
 
 1. Clone the repo
-2. Copy agents/ to `~/.config/opencode/agents/`
-3. Restart opencode
+2. Copy `agents/*.md` to `~/.config/opencode/agents/`
+3. Copy `skills/<name>/SKILL.md` to `~/.config/opencode/skills/<name>/SKILL.md` (one folder per skill)
+4. Restart opencode
 
 ## Contribution rules
 

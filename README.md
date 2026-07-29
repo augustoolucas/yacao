@@ -12,6 +12,13 @@ Built for [opencode](https://github.com/opencode-ai/opencode).
 │   Explores code, writes plans, reviews diffs, reports     │
 │   Reads everything, edits only plans (.opencode/plans/)   │
 └──────────────────────┬────────────────────────────────────┘
+                       │ invokes (skill tool)
+                       ▼
+┌───────────────────────────────────────────────────────────┐
+│                skills/<name>/SKILL.md                     │
+│   planning · implementation · review                     │
+│   Phase-specific workflow guidance, loaded on-demand      │
+└──────────────────────┬────────────────────────────────────┘
                        │
                   Task │  (builder)
                        ▼
@@ -22,7 +29,7 @@ Built for [opencode](https://github.com/opencode-ai/opencode).
 └───────────────────────────────────────────────────────────┘
 ```
 
-The orchestrator handles exploration, planning, and review directly. Only the implementation step is delegated to builder.
+The orchestrator handles exploration, planning, and review directly. Phase-specific workflow guidance is loaded on-demand from `skills/` via the skill tool. Only the implementation step is delegated to builder.
 
 ### Step 0 — Clarify
 
@@ -44,32 +51,15 @@ When the user is asking about the codebase (not requesting a change), the orches
 
 ### Phase A — Planning
 
-**Trivial tasks** — skip Phase A. Go straight to Phase B with a direct spec.
-
-**Needs planning:**
-
-1. **Orchestrator** explores the codebase directly (read, grep, glob, bash) and writes a plan to `.opencode/plans/plan-<slug>.md`
-2. If the task is complex enough, also writes `.opencode/plans/checklist-<slug>.md`
-3. Orchestrator presents the plan (or checklist) for user approval (`Approve` / `Revise`)
-4. On Revise: orchestrator updates the plan and re-presents
+The orchestrator invokes the `planning` skill. See `skills/planning/SKILL.md`.
 
 ### Phase B — Implementation
 
-**Trivial tasks:**
-1. **builder** implements directly from the orchestrator's spec
-
-**Needs planning:**
-1. **builder** receives the plan file (and checklist, if generated) and implements autonomously
-2. Builder output format: `STATUS` (complete/partial/blocked/escalate) + `CHANGES` + `VERIFIED` + `GAPS`
+The orchestrator invokes the `implementation` skill. See `skills/implementation/SKILL.md`.
 
 ### Phase C — Review
 
-The orchestrator reviews every builder output directly — never skip.
-
-1. Runs `git diff` to see all changes
-2. Reads modified files and validates against the plan (or spec for trivial tasks)
-3. Checks: plan adherence, bugs/regressions, structure/patterns, compatibility, verification, simplicity
-4. If issues found: delegates fixes to builder and re-reviews. If clean: reports completion to user.
+The orchestrator invokes the `review` skill. See `skills/review/SKILL.md`.
 
 ## Install
 
@@ -87,8 +77,9 @@ Your opencode agent will follow the manual steps below.
 # 1. Clone
 git clone https://github.com/augustoolucas/yacao /tmp/yacao
 
-# 2. Copy agents
+# 2. Copy agents and skills
 cp /tmp/yacao/agents/*.md ~/.config/opencode/agents/
+cp -r /tmp/yacao/skills/. ~/.config/opencode/skills/
 
 # 3. Clean up
 rm -rf /tmp/yacao
@@ -102,6 +93,18 @@ rm -rf /tmp/yacao
 |---|---|---|---|---|
 | **orchestrator** | Explores code, writes plans, delegates to builder, reviews diffs, and reports. All-in-one primary agent. | Yes | No (only `.opencode/plans/`) | Yes — builder via Task |
 | **builder** | Implements scoped coding tasks from precise specs. Edits files, runs verification, reports results. Never redesigns. | Yes | Yes (full) | Yes — native opencode subagents (general, explore, scout) |
+
+## Skills
+
+Skills are reusable, on-demand workflow guides loaded by the orchestrator at each phase. The orchestrator invokes a phase-specific skill (via the skill tool) when it enters that phase — its body is not in the system prompt, only the description is.
+
+| Skill | When invoked | Purpose |
+|---|---|---|
+| **`planning`** | Phase A — for "Needs planning" tasks | Explore the codebase and produce a structured plan for approval. |
+| **`implementation`** | Phase B — before delegating to builder | Construct the spec, capture the `task_id`, and handle the builder's response. |
+| **`review`** | Phase C — after every implementation | Validate the diff against the plan or spec across 6 dimensions and return a verdict. |
+
+Trivial and Question tasks don't enter Phase A (planning skill is never invoked). Review skill runs on every implementation, including trivial tasks.
 
 ## License
 
