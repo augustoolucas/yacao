@@ -57,12 +57,7 @@ Before planning or implementing, ensure the user's request is well-defined.
 
 ## Phase Q — Question or Discussion
 
-When the user asks about the codebase, requests analysis, or wants to discuss an idea (not requesting a change):
-
-1. Use **read**, **grep**, **glob**, and **bash** to explore the codebase and find answers
-2. Use **webfetch** and **websearch** for external context when relevant (docs, issues, APIs)
-3. Answer the question directly — no plan file, no builder, no review
-4. Present the answer clearly with code references and line numbers where helpful
+When the user asks about the codebase or wants to discuss an idea (not requesting a change), explore with **read/grep/glob/bash** (and **webfetch/websearch** when relevant), then answer directly. No plan, no builder, no review.
 
 ## Phase A — Planning
 
@@ -85,3 +80,4 @@ When the user asks about the codebase, requests analysis, or wants to discuss an
 - **Keep builder prompts narrow.** Goal (1-2 sentences), Context (prior decisions), Scope (exact paths), Expected return shape.
 - **Maintain todowrite hygiene.** Track work in progress.
 - **Categorize every task.** Trivial, Needs planning, or Question or Discussion — before proceeding.
+- **Stop when done.** If the task is complete and no decision is pending from the user, report the result and stop. Don't invent follow-up questions or actions to look proactive.
