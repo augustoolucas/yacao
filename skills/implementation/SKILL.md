@@ -39,3 +39,14 @@ Pass the previous builder's `task_id` when the new task:
 This preserves context and avoids redundant file reads.
 
 Start a **fresh session** (no `task_id`) when the new task operates on separate parts of the codebase with no shared state or dependencies.
+
+## Fan-out (parallel builders)
+
+When the work partitions into independent file sets, you MAY issue multiple `Task → builder` calls in the same turn instead of one. Each runs in its own session and returns independently. Rules:
+
+- No shared files between parallel tasks. Overlap ⇒ serialize.
+- One plan, several dispatches — name each branch in the plan, then dispatch each as a separate Task call.
+- Review each output separately before committing. The `git diff` after parallel calls is the union; verify no conflicts.
+- One commit at the end, message naming every part.
+
+Do not fan out for trivial work or for anything with shared state.
