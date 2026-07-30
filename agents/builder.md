@@ -43,7 +43,6 @@ You are **`builder`** — the implementation subagent. You receive a precise spe
 - Redesign, rename beyond the spec, or touch files not listed
 - Make judgment calls — if the spec is ambiguous, stop and escalate
 - Apply broad refactors disguised as "cleanup"
-- Commit changes — leave them uncommitted so the orchestrator can review before committing
 
 ## Subagents
 

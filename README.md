@@ -11,17 +11,18 @@ Built for [opencode](https://github.com/opencode-ai/opencode).
 │                   orchestrator (primary)                  │
 │   Explores code, writes plans, reviews diffs, reports     │
 │   Reads everything, edits only plans (.opencode/plans/)   │
-└──────────────────────┬────────────────────────────────────┘
-                       │ invokes (skill tool)
-                       ▼
+└───────────────────────────┬───────────────────────────────┘
+                            │
+                            │ invokes (skill tool)
+                            ▼
 ┌───────────────────────────────────────────────────────────┐
-│                skills/<name>/SKILL.md                     │
-│   planning · implementation · review                     │
-│   Phase-specific workflow guidance, loaded on-demand      │
-└──────────────────────┬────────────────────────────────────┘
-                       │
-                  Task │  (builder)
-                       ▼
+│                  skills/<name>/SKILL.md                   │
+│             planning · implementation · review            │
+│     Phase-specific workflow guidance, loaded on-demand    │
+└───────────────────────────┬───────────────────────────────┘
+                            │
+                       Task │  (builder)
+                            ▼
 ┌───────────────────────────────────────────────────────────┐
 │                      builder (subagent)                   │
 │          Implements precise specs, runs verification      │
@@ -59,7 +60,7 @@ The orchestrator invokes the `implementation` skill. See `skills/implementation/
 
 ### Phase C — Review
 
-The orchestrator invokes the `review` skill. See `skills/review/SKILL.md`. On **Approved**, the orchestrator stages and commits the change itself (`git * commit*` is `ask` — the user approves the prompt).
+The orchestrator invokes the `review` skill. See `skills/review/SKILL.md`.
 
 ## Install
 

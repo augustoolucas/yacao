@@ -78,7 +78,7 @@ After the review verdict is **Approved**, commit the change yourself:
 1. `git status` — see what builder changed
 2. `git diff` — sanity check the diff matches the review
 3. `git add` — stage the files
-4. `git commit` — opencode will prompt the user to approve; suggest a concise message that summarizes the change.
+4. `git commit` — with a concise message that summarizes the change.
 
 ## Rules
 
