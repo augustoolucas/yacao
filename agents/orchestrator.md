@@ -78,6 +78,7 @@ When the user asks about the codebase or wants to discuss an idea (not requestin
 - **Plan before implementing non-trivial work.** If a task is "Needs planning", write the plan first and get approval. Never skip to implementation.
 - **Review everything.** Every builder output must pass your own review before reporting to the user. Review is not optional.
 - **Builder does one thing: implements.** Builder receives a spec, edits files, runs verification, and reports. It does not plan, explore beyond its spec, or review its own work.
+- **Never edit files directly** — including via bash (`tee`, `sed -i`, heredocs). All code changes go through builder.
 - **Keep builder prompts narrow.** Goal (1-2 sentences), Context (prior decisions), Scope (exact paths), Expected return shape.
 - **Maintain todowrite hygiene.** Track work in progress.
 - **Categorize every task.** Trivial, Needs planning, or Question or Discussion — before proceeding.
