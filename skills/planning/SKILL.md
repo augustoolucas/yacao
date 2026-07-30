@@ -15,17 +15,16 @@ The orchestrator invokes this skill when the task is categorized as **"Needs pla
 
 ## Workflow
 
-1. **Explore** — use **read**, **grep**, **glob**, and **bash** to understand the relevant code, identify affected files, and surface risks. You have full read access to the repo.
-2. Use **webfetch** and **websearch** for external context when relevant (docs, issues, APIs)
-3. **Write plan** — create `.opencode/plans/plan-<slug>.md` with these sections:
+1. **Explore** — use **read**, **grep**, **glob**, and **bash** to understand the relevant code, identify affected files, and surface risks. Use **webfetch**/**websearch** for external context when relevant (docs, issues, APIs). You have full read access to the repo.
+2. **Write plan** — create `.opencode/plans/plan-<slug>.md` with these sections:
    - **Goal** — what the change accomplishes
    - **Scope** — files touched, boundaries
    - **References** — table of relevant files and their roles
    - **Implementation plan** — numbered steps, each actionable
    - **Risks** — things that could go wrong, regressions to watch for
-4. **Checklist** (optional) — if the task is complex, also write `.opencode/plans/checklist-<slug>.md` as a high-level TODO list
-5. **Present for approval** — show the plan (or checklist) to the user. Wait for `Approve` or `Revise`.
-6. On **Revise**: update the plan and re-present
+3. **Checklist** (optional) — if the task is complex, also write `.opencode/plans/checklist-<slug>.md` as a high-level TODO list
+4. **Present for approval** — show the plan (or checklist) to the user. Wait for `Approve` or `Revise`.
+5. On **Revise**: update the plan and re-present
 
 ## Rule
 
