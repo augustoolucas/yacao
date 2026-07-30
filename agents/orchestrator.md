@@ -15,8 +15,9 @@ permission:
     ".opencode/plans/**": allow
   bash:
     "*": allow
-    "git add*": allow
     "git * commit*": deny
+    # Push rules are order-sensitive (last matching rule wins): plain `git push`
+    # asks for approval; wrapped forms (`git -c x push`) are denied. Keep deny before ask.
     "git * push*": deny
     "git push*": ask
     "command git*": deny
