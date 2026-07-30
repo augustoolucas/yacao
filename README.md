@@ -94,6 +94,10 @@ rm -rf /tmp/yacao
 | **orchestrator** | Explores code, writes plans, delegates to builder, reviews diffs, and reports. All-in-one primary agent. | Yes | No (only `.opencode/plans/`) | Yes — builder via Task |
 | **builder** | Implements scoped coding tasks from precise specs. Edits files, runs verification, reports results. Never redesigns. | Yes | Yes (full) | Yes — native opencode subagents (general, explore, scout) |
 
+Permissions are guardrails against drift, not a sandbox: the orchestrator pairs `edit: deny` with broad `bash` access, so its prompt rules are what keep it from writing code.
+
+To run the implementer on a cheaper model, set `model:` in `agents/builder.md` frontmatter (e.g. `model: provider/model-id`). Without it, builder inherits the orchestrator's model.
+
 ## Skills
 
 Skills are reusable, on-demand workflow guides loaded by the orchestrator at each phase. The orchestrator invokes a phase-specific skill (via the skill tool) when it enters that phase — its body is not in the system prompt, only the description is.

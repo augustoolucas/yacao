@@ -68,7 +68,7 @@ This repo's README describes the full install for end users. In short:
 ## Contribution rules
 
 - **Follow existing patterns.** Agents share a common structure: YAML frontmatter, role description, and workflow instructions. Most also include an explicit Rules section. Keep this structure.
-- **Keep agent prompts narrow and specific.** The orchestrator prompt is already 87 lines — keep it focused, don't bloat it.
+- **Keep agent prompts narrow and specific.** Keep prompts focused — don't bloat them.
 - **Permission changes are high-risk.** The orchestrator now has full read/grep/glob/bash for exploration and can webfetch/websearch, but can only edit plan files (`.opencode/plans/`). Do not relax these constraints without a strong reason.
 - **Test after changes.** At minimum, run the manual restart test described above. If you changed permissions, verify both the allowed and denied paths.
 
