@@ -11,7 +11,7 @@ permission:
   todowrite: allow
   bash:
     "*": allow
-    "git * commit*": allow
+    "git * commit*": deny
     "git * push*": deny
     "git push*": ask
     "command git*": deny

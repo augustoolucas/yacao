@@ -15,7 +15,7 @@ permission:
     ".opencode/plans/**": allow
   bash:
     "*": allow
-    "git * commit*": deny
+    "git * commit*": ask
     # Push rules are order-sensitive (last matching rule wins): plain `git push`
     # asks for approval; wrapped forms (`git -c x push`) are denied. Keep deny before ask.
     "git * push*": deny
@@ -71,6 +71,13 @@ When the user asks about the codebase or wants to discuss an idea (not requestin
 ## Phase C — Review
 
 **Invoke the `review` skill** after every implementation. Never skip review.
+
+After the review verdict is **Approved**, commit the change yourself:
+
+1. `git status` — see what builder changed
+2. `git diff` — sanity check the diff matches the review
+3. `git add` — stage the files
+4. `git commit` — you'll be asked to confirm the commit message; provide a concise message and approve
 
 ## Rules
 
