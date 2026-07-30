@@ -59,7 +59,7 @@ The orchestrator invokes the `implementation` skill. See `skills/implementation/
 
 ### Phase C — Review
 
-The orchestrator invokes the `review` skill. See `skills/review/SKILL.md`.
+The orchestrator invokes the `review` skill. See `skills/review/SKILL.md`. On **Approved**, the orchestrator stages and commits the change itself (`git * commit*` is `ask` — the user approves the prompt).
 
 ## Install
 
@@ -86,6 +86,10 @@ rm -rf /tmp/yacao
 
 # 4. Restart opencode
 ```
+
+### Make YACAO the default agent
+
+Add `"default_agent": "orchestrator"` to `~/.config/opencode/opencode.jsonc`. Without it, opencode starts on `build`; the orchestrator is reachable via Tab.
 
 ## Agents
 

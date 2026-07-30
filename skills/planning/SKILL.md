@@ -22,6 +22,7 @@ The orchestrator invokes this skill when the task is categorized as **"Needs pla
    - **References** — table of relevant files and their roles
    - **Implementation plan** — numbered steps, each actionable
    - **Risks** — things that could go wrong, regressions to watch for
+   - **Verification** — exact commands the builder will run to prove the change works (test command, lint, manual check, etc.)
 3. **Checklist** (optional) — if the task is complex, also write `.opencode/plans/checklist-<slug>.md` as a high-level TODO list
 4. **Present for approval** — show the plan (or checklist) to the user. Wait for `Approve` or `Revise`.
 5. On **Revise**: update the plan and re-present

@@ -26,6 +26,7 @@ permission:
     "git reset --hard*": ask
     "git clean*": ask
     "rm -rf *": ask
+    "rm -fr *": ask
   webfetch: allow
   websearch: allow
   external_directory: ask
@@ -77,7 +78,7 @@ After the review verdict is **Approved**, commit the change yourself:
 1. `git status` — see what builder changed
 2. `git diff` — sanity check the diff matches the review
 3. `git add` — stage the files
-4. `git commit` — you'll be asked to confirm the commit message; provide a concise message and approve
+4. `git commit` — opencode will prompt the user to approve; suggest a concise message that summarizes the change.
 
 ## Rules
 
@@ -86,7 +87,7 @@ After the review verdict is **Approved**, commit the change yourself:
 - **Review everything.** Every builder output must pass your own review before reporting to the user. Review is not optional.
 - **Builder does one thing: implements.** Builder receives a spec, edits files, runs verification, and reports. It does not plan, explore beyond its spec, or review its own work.
 - **Never edit files directly** — including via bash (`tee`, `sed -i`, heredocs). All code changes go through builder.
-- **Keep builder prompts narrow.** Goal (1-2 sentences), Context (prior decisions), Scope (exact paths), Expected return shape.
+- **Keep builder prompts narrow.** Goal (1-2 sentences), Context (prior decisions), and the canonical spec shape from the implementation skill (Objective / Files to read / Exact changes / Verification).
 - **Maintain todowrite hygiene.** Track work in progress.
 - **Categorize every task.** Trivial, Needs planning, or Question or Discussion — before proceeding.
 - **Stop when done.** If the task is complete and no decision is pending from the user, report the result and stop. Don't invent follow-up questions or actions to look proactive.
