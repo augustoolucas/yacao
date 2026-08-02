@@ -23,4 +23,4 @@ You validate every builder output against the plan or spec before reporting to t
 
 - **Approved** → report completion to the user
 - **Adjustments needed** → delegate each issue to builder via Task, then re-review
-- **Rejected** (plan not implemented, design flaw, scope creep, 3+ critical bugs) → replan or refocus builder, then re-review
+- **Rejected** (plan not implemented, design flaw, scope creep, critical bugs) → replan or refocus builder, then re-review

@@ -13,7 +13,7 @@ Write a plan for the change before implementation.
 2. **Write plan** - create `.opencode/plans/plan-<slug>.md` with these sections:
    - **Goal** - what the change accomplishes
    - **Scope** - files touched, boundaries
-   - **Reasoning**  - brief explanation for the proposed approach
+   - **Reasoning** - brief explanation for the proposed approach
    - **References** - table of relevant files and their roles
    - **Implementation plan** - numbered steps, each actionable
    - **Risks** - things that could go wrong, regressions to watch for

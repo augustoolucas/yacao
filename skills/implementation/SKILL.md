@@ -22,7 +22,7 @@ You delegate code changes to **builder** via the **Task** tool - you construct t
 2. Builder follows the plan - capture the `task_id` for potential follow-up reuse
 3. On `complete`: proceed to review. On `partial` / `blocked` / `escalate`: handle per builder's `GAPS`
 
-## Reusing the builder session
+## Reusing the builder session (both paths)
 
 Pass the previous builder's `task_id` when the new task:
 
