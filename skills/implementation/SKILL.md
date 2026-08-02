@@ -5,12 +5,7 @@ description: Use when delegating code changes to the builder agent. Covers how t
 
 # Implementation
 
-The orchestrator invokes this skill to delegate code changes to **builder** via the **Task** tool. The orchestrator does not implement code itself - it constructs the spec, hands it off, and handles the response.
-
-## When to invoke
-
-- Any task that needs code changes (trivial or needs-planning)
-- Always after the spec is ready - never with a vague ask
+You delegate code changes to **builder** via the **Task** tool - you construct the spec, hand it off, and handle the response.
 
 ## Trivial tasks
 

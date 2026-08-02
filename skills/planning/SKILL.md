@@ -5,12 +5,7 @@ description: Use when the user's request requires a plan before implementation. 
 
 # Planning
 
-The orchestrator invokes this skill when the task is categorized as **"Needs planning"** - i.e., non-trivial work that needs a written plan before implementation. Trivial tasks skip this phase.
-
-## When to invoke
-
-- The task changes multiple files, has dependencies, or carries risk
-- You need user approval before writing code
+Write a plan for the change before implementation.
 
 ## Workflow
 
@@ -23,5 +18,5 @@ The orchestrator invokes this skill when the task is categorized as **"Needs pla
    - **Implementation plan** - numbered steps, each actionable
    - **Risks** - things that could go wrong, regressions to watch for
    - **Verification** - exact commands to prove the change works (test command, lint, manual check, etc.)
-3. **Present for approval** - show the plan to the user. Wait for `Approve` or `Revise`.
+3. **Present for approval** - show the plan to the user. You need user approval before writing code. Wait for `Approve` or `Revise`.
 4. On **Revise**: update the plan and re-present

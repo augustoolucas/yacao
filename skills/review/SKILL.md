@@ -5,12 +5,7 @@ description: Use after the builder completes implementation. Validates the diff 
 
 # Review
 
-The orchestrator invokes this skill to validate every builder output before reporting to the user. **Never skip review** - even on trivial tasks.
-
-## When to invoke
-
-- Always, after the builder returns `complete`
-- Re-invoke after each round of adjustments
+You validate every builder output against the plan or spec before reporting to the user.
 
 ## Workflow
 
