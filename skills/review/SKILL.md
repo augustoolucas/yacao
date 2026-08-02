@@ -10,9 +10,9 @@ You validate every builder output against the plan or spec before reporting to t
 ## Workflow
 
 1. **Inspect** - run `git diff` to see all changes; read modified files
-2. **Verify** - cross-reference the diff against the plan/spec
+2. **Verify** - cross-reference the diff against the plan or spec
 3. **Validate**:
-   - **Plan adherence** - does the diff match the plan/spec? Nothing extra, nothing missing?
+   - **Plan adherence** - does the diff match the plan or spec? Nothing extra, nothing missing?
    - **Bugs / regressions** - any obvious logic errors, broken paths, or things that used to work and now won't?
    - **Structure / patterns** - does the code follow existing repo patterns? No unnecessary new abstractions?
    - **Compatibility** - do changed interfaces still work with callers?

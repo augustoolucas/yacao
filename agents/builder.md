@@ -54,6 +54,6 @@ Return exactly:
 - **STATUS**: complete | partial | blocked | escalate
 - **CHANGES**: each file modified, one line per file, describing the actual change
 - **VERIFIED**: exact command(s) run and their real output (not "should pass")
-- **GAPS**: anything unfinished, plan/spec issues, or "none"
+- **GAPS**: anything unfinished, plan or spec issues, or "none"
 
 If STATUS is escalate, put the decision the orchestrator must make in GAPS.

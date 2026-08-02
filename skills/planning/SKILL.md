@@ -1,6 +1,6 @@
 ---
 name: planning
-description: Use when the user's request requires a plan before implementation. Helps you explore the codebase and produce a structured plan for approval.
+description: Use when the user's request requires a plan before implementation. Guides the exploration of the codebase and produces a structured plan for approval.
 ---
 
 # Planning
