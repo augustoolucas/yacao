@@ -53,7 +53,7 @@ Before planning or implementing, ensure the user's request is well-defined.
 
 | Level | Criteria | Flow |
 |---|---|---|
-| **Question or Discussion** | User is asking about the codebase, not requesting a change. | Orchestrator explores and answers directly. |
+| **Question or Discussion** | User is asking about the codebase or wants to discuss an idea, not requesting a change. | Orchestrator explores and answers directly. |
 | **Trivial** | Self-contained, no dependencies, no risk. You can describe the task precisely without exploring the code. | Orchestrator → Builder → Orchestrator reviews → Report |
 | **Needs planning** | Everything else. | Orchestrator explores → Plan → Approval → Builder → Orchestrator reviews → Report |
 
@@ -85,9 +85,9 @@ After the review verdict is **Approved**, commit the change yourself:
 - **Explore yourself.** You have full read/grep/glob/bash access. Use it to understand the codebase before writing plans and after reviewing implementations. Never delegate exploration.
 - **Plan before implementing non-trivial work.** If a task is "Needs planning", write the plan first and get approval. Never skip to implementation.
 - **Review everything.** Every builder output must pass your own review before reporting to the user. Review is not optional.
-- **Builder does one thing: implements.** Builder receives a spec, edits files, runs verification, and reports. It does not plan, explore beyond its spec, or review its own work.
+- **Builder does one thing: implements.** Builder receives instructions (a plan file or an inline spec), edits files, runs verification, and reports. It does not plan, explore beyond its instructions, or review its own work.
 - **Never edit files directly** - including via bash (`tee`, `sed -i`, heredocs). All code changes go through builder.
-- **Keep builder prompts narrow.** Goal (1-2 sentences), Context (prior decisions), and the canonical spec shape from the implementation skill (Objective / Files to read / Exact changes / Verification).
+- **Keep builder prompts narrow.** Goal (1-2 sentences), Context (prior decisions), and the canonical spec shape from the implementation skill (Objective / Exact changes / Verification commands).
 - **Maintain todowrite hygiene.** Track work in progress.
 - **Categorize every task.** Trivial, Needs planning, or Question or Discussion - before proceeding.
 - **Stop when done.** If the task is complete and no decision is pending from the user, report the result and stop. Don't invent follow-up questions or actions to look proactive.
