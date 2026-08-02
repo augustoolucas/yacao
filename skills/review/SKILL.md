@@ -17,7 +17,7 @@ You validate every builder output against the plan or spec before reporting to t
    - **Structure / patterns** - does the code follow existing repo patterns? No unnecessary new abstractions?
    - **Compatibility** - do changed interfaces still work with callers?
    - **Tests / verification** - did the builder run verification? Did it actually pass?
-   - **Simplicity** - is the change minimal? Does it reuse existing things instead of recreating them? No unrelated refactors or cleanup disguised as the task?
+   - **Simplicity** - is the change minimal? Does it build on existing project code instead of duplicating it? No unrelated refactors or cleanup disguised as the task?
 
 ## Verdict
 
