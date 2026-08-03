@@ -15,8 +15,8 @@ Write a plan for the change before implementation.
    - **Scope** - files touched, boundaries
    - **Reasoning** - brief explanation for the proposed approach
    - **References** - table of relevant files and their roles
-   - **Implementation plan** - numbered steps, each actionable
+   - **Changes** - numbered steps, each actionable
    - **Risks** - things that could go wrong, regressions to watch for
-   - **Verification** - exact commands to prove the change works (test command, lint, manual check, etc.)
+   - **Verification commands** - exact commands to prove the change works (test command, lint, manual check, etc.)
 3. **Present for approval** - show the plan to the user. You need user approval before writing code. Wait for `Approve` or `Revise`.
 4. On **Revise**: update the plan and re-present

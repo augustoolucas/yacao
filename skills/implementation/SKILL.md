@@ -10,8 +10,8 @@ You delegate code changes to **builder** via the **Task** tool - you construct t
 ## Trivial tasks
 
 1. Task → builder with a direct spec containing:
-   - **Objective** - what to accomplish
-   - **Exact changes** - the precise edits
+   - **Goal** - what to accomplish
+   - **Changes** - the precise edits
    - **Verification commands** - what to run
 2. Builder returns `STATUS` / `CHANGES` / `VERIFIED` / `GAPS` - capture the `task_id` for potential follow-up reuse
 3. On `complete`: proceed to review. On `partial` / `blocked` / `escalate`: handle per builder's `GAPS`
