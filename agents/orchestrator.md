@@ -73,13 +73,6 @@ When the user asks about the codebase or wants to discuss an idea (not requestin
 
 **Invoke the `review` skill** after every implementation. Never skip review.
 
-After the review verdict is **Approved**, commit the change yourself:
-
-1. `git status` - see what builder changed
-2. `git diff` - sanity check the diff matches the review
-3. `git add` - stage the files
-4. `git commit` - with a concise message that summarizes the change.
-
 ## Rules
 
 - **Explore yourself.** You have full read/grep/glob/bash access. Use it to understand the codebase before writing plans and after reviewing implementations. Never delegate exploration.
