@@ -1,36 +1,18 @@
 # YACAO - Yet Another Coding Agent Orchestrator
 
-You already use plan and build. You probably review your changes too. YACAO just connects the dots - so you don't have to.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Built for [opencode](https://github.com/opencode-ai/opencode).
+You already use Plan and Build. You probably review your changes too. YACAO just connects the dots - so you don't have to.
 
-## Architecture
+### What's YACAO
 
-```
-┌───────────────────────────────────────────────────────────┐
-│                   orchestrator (primary)                  │
-│   Explores code, writes plans, reviews diffs, reports     │
-│   Reads everything, edits only plans (.opencode/plans/)   │
-└───────────────────────────┬───────────────────────────────┘
-                            │
-                            │ invokes (skill tool)
-                            ▼
-┌───────────────────────────────────────────────────────────┐
-│                  skills/<name>/SKILL.md                   │
-│             planning · implementation · review            │
-│     Phase-specific workflow guidance, loaded on-demand    │
-└───────────────────────────┬───────────────────────────────┘
-                            │
-                       Task │  (builder)
-                            ▼
-┌───────────────────────────────────────────────────────────┐
-│                      builder (subagent)                   │
-│          Implements precise specs, runs verification      │
-│                Reads + writes repo code freely            │
-└───────────────────────────────────────────────────────────┘
-```
+YACAO is an actually minimal agent workflow for OpenCode. Only 2 agents and 3 skills to handle all Planning, Building and Reviewing.
 
-The orchestrator handles exploration, planning, and review directly. Phase-specific workflow guidance is loaded on-demand from `skills/` via the skill tool. Only the implementation step is delegated to builder.
+The main orchestrator agent handles code exploration, implementation planning, and review directly. Each workflow phase has specific guidance detailed as skills, loaded on-demand. Implementation is delegated to builder. 
+
+### Why YACAO
+
+Most "slim" or "minimal" multi agent framework for OpenCode still feel too bloated FOR ME, with +4 agents. So I decided to build my own version, it's been working fine for my usage so far.
 
 ### Step 0 - Clarify
 
@@ -42,9 +24,9 @@ After clarification, the orchestrator categorizes the task:
 
 | Level | Criteria | Flow |
 |---|---|---|
-| **Question or Discussion** | User is asking about the codebase, not requesting a change | Orchestrator explores and answers directly |
+| **Question or Discussion** | User is asking about the codebase or discussing ideas, not requesting a change | Orchestrator explores and answers directly |
 | **Trivial** | Self-contained, no dependencies, no risk | Orchestrator → Builder → Orchestrator reviews → Report |
-| **Needs planning** | Everything else | Orchestrator explores → Plan → Approval → Builder → Orchestrator reviews → Report |
+| **Needs planning** | Everything else | Orchestrator explores → Plan → User Approval → Builder → Orchestrator reviews → Report |
 
 ### Phase Q - Question or Discussion
 
@@ -90,7 +72,7 @@ rm -rf /tmp/yacao
 
 ### Make YACAO the default agent
 
-Add `"default_agent": "orchestrator"` to `~/.config/opencode/opencode.jsonc`. Without it, opencode starts on `build`; the orchestrator is reachable via Tab.
+Add `"default_agent": "orchestrator"` to `~/.config/opencode/opencode.jsonc`. Without it, opencode starts on `build`; the Orchestrator is reachable via Tab.
 
 ## Agents
 
@@ -105,7 +87,7 @@ To run the implementer on a cheaper model, set `model:` in `agents/builder.md` f
 
 ## Skills
 
-Skills are reusable, on-demand workflow guides loaded by the orchestrator at each phase. The orchestrator invokes a phase-specific skill (via the skill tool) when it enters that phase - its body is not in the system prompt, only the description is.
+Skills are reusable, on-demand workflow guides loaded by the orchestrator at each phase. The orchestrator invokes a phase-specific skill when it enters that phase - its body is not in the system prompt, only the description is.
 
 | Skill | When invoked | Purpose |
 |---|---|---|
@@ -113,7 +95,7 @@ Skills are reusable, on-demand workflow guides loaded by the orchestrator at eac
 | **`implementation`** | Phase B - before delegating to builder | Construct the spec, capture the `task_id`, and handle the builder's response. |
 | **`review`** | Phase C - after every implementation | Validate the diff against the plan or spec and return a verdict. |
 
-Trivial and Question or Discussion tasks don't enter Phase A (planning skill is never invoked). Review skill runs on every implementation, including trivial tasks.
+Trivial and Question or Discussion tasks don't enter Phase A (planning skill is never invoked). Review runs on every implementation, including trivial tasks.
 
 ## License
 
