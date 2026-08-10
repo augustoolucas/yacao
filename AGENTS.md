@@ -45,10 +45,10 @@ Both agents inherit the model from the primary agent - no `model` key or `agent`
 
 After making changes, the only reliable way to verify:
 
-1. Copy the changed agent files to `~/.config/opencode/agents/`
+1. Copy the changed agent files to `~/.config/opencode/agents/` and changed skill files to `~/.config/opencode/skills/`
 2. Restart opencode (totally - close the session/process, start fresh)
-3. Run a simple task through the orchestrator (e.g. "write a hello world function")
-4. Verify: orchestrator explores, plans, delegates to builder, reviews, and reports
+3. Run a plan such as "implement CSV export and JSON export as two independent tasks, then add a dependent integration command that combines both."
+4. Verify: one user approval is followed by parallel builders for the independent CSV and JSON tasks, review of every branch, the integration task only in the next wave after all current reviews pass, and a final full-plan review
 5. Verify trivial-task path: orchestrator delegates directly to builder with a spec, builder implements, orchestrator reviews and reports (no plan file)
 6. Verify Question or Discussion path: orchestrator explores and answers directly (no plan, no builder, no review)
 
@@ -71,4 +71,3 @@ This repo's README describes the full install for end users. In short:
 - **Keep agent prompts narrow and specific.** Keep prompts focused - don't bloat them.
 - **Permission changes are high-risk.** The orchestrator now has full read/grep/glob/bash for exploration and can webfetch/websearch, but can only edit plan files (`.opencode/plans/`). Do not relax these constraints without a strong reason.
 - **Test after changes.** At minimum, run the manual restart test described above. If you changed permissions, verify both the allowed and denied paths.
-

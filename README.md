@@ -8,7 +8,7 @@ You already use Plan and Build. You probably review your changes too. YACAO just
 
 YACAO is an actually minimal agent workflow for OpenCode. Only 2 agents and 3 skills to handle all Planning, Building and Reviewing.
 
-The main orchestrator agent handles code exploration, implementation planning, and review directly. Each workflow phase has specific guidance detailed as skills, loaded on-demand. Implementation is delegated to builder. 
+The main orchestrator agent handles code exploration, implementation planning, and review directly. Each workflow phase has specific guidance detailed as skills, loaded on-demand. Implementation is delegated to builder through self-contained task contracts and reviewed task waves.
 
 ### Why YACAO
 
@@ -26,7 +26,7 @@ After clarification, the orchestrator categorizes the task:
 |---|---|---|
 | **Question or Discussion** | User is asking about the codebase or discussing ideas, not requesting a change | Orchestrator explores and answers directly |
 | **Trivial** | Self-contained, no dependencies, no risk | Orchestrator → Builder → Orchestrator reviews → Report |
-| **Needs planning** | Everything else | Orchestrator explores → Plan → User Approval → Builder → Orchestrator reviews → Report |
+| **Needs planning** | Everything else | Orchestrator explores → Plan overview and task contracts → One user approval → sequential or controlled parallel builder task waves → per-task reviews → final full-plan review → Report |
 
 ### Phase Q - Question or Discussion
 
@@ -38,11 +38,11 @@ The orchestrator invokes the `planning` skill. See `skills/planning/SKILL.md`.
 
 ### Phase B - Implementation
 
-The orchestrator invokes the `implementation` skill. See `skills/implementation/SKILL.md`.
+The orchestrator invokes the `implementation` skill. See `skills/implementation/SKILL.md`. For **Needs planning**, the plan is an overview at `.opencode/plans/plan-<slug>/plan.md` with self-contained task contracts under `tasks/task-XX-<name>.md`. The builder receives only the current task contract's `Goal`, `Changes`, `File scope`, `Dependencies`, and `Verification commands`; future task contracts and the complete plan remain with the orchestrator. Sequential tasks use one builder at a time. Parallel builders are allowed only for tasks explicitly marked independent with no shared files, state, or dependencies. Each branch has its own `task_id`, reused for related tasks and adjustments.
 
 ### Phase C - Review
 
-The orchestrator invokes the `review` skill. See `skills/review/SKILL.md`.
+The orchestrator invokes the `review` skill. See `skills/review/SKILL.md`. Every task and parallel branch is reviewed against its current contract before the next task or wave starts; all reviews in a wave must be approved first. After all tasks and waves pass, the orchestrator performs a final full-plan review and runs the overview's final verification commands before reporting.
 
 ## Install
 
@@ -57,17 +57,23 @@ Your opencode agent will follow the manual steps below.
 ### Manual
 
 ```bash
-# 1. Clone
-git clone https://github.com/augustoolucas/yacao /tmp/yacao
+# 1. Create a temporary installation directory
+tmp_dir="$(mktemp -d)"
 
-# 2. Copy agents and skills
-cp /tmp/yacao/agents/*.md ~/.config/opencode/agents/
-cp -r /tmp/yacao/skills/. ~/.config/opencode/skills/
+# 2. Clone
+git clone https://github.com/augustoolucas/yacao "$tmp_dir/yacao"
 
-# 3. Clean up
-rm -rf /tmp/yacao
+# 3. Create config directories without removing existing agents or skills
+mkdir -p "$HOME/.config/opencode/agents" "$HOME/.config/opencode/skills"
 
-# 4. Restart opencode
+# 4. Copy agents and skills
+cp "$tmp_dir/yacao"/agents/*.md "$HOME/.config/opencode/agents/"
+cp -r "$tmp_dir/yacao"/skills/. "$HOME/.config/opencode/skills/"
+
+# 5. Clean up
+rm -rf "$tmp_dir"
+
+# 6. Restart opencode
 ```
 
 ### Make YACAO the default agent
@@ -78,8 +84,8 @@ Add `"default_agent": "orchestrator"` to `~/.config/opencode/opencode.jsonc`. Wi
 
 | Agent | Role | Read repo? | Write repo? | Spawns subagents? |
 |---|---|---|---|---|
-| **orchestrator** | Explores code, writes plans, delegates to builder, reviews diffs, and reports. All-in-one primary agent. | Yes | No (only `.opencode/plans/`) | Yes - builder via Task |
-| **builder** | Implements scoped coding tasks from precise specs. Edits files, runs verification, reports results. Never redesigns. | Yes | Yes (full) | Yes - native opencode subagents (general, explore, scout) |
+| **orchestrator** | Explores code, writes plan overviews and task contracts, delegates to builder, reviews diffs, and reports. All-in-one primary agent. | Yes | No (only `.opencode/plans/`) | Yes - builder via Task |
+| **builder** | Implements scoped coding tasks from self-contained task contracts or inline specs. Edits files, runs verification, reports results. Never redesigns. | Yes | Yes (full) | Yes - native opencode subagents (general, explore, scout) |
 
 Permissions are guardrails against drift, not a sandbox: the orchestrator pairs `edit: deny` with broad `bash` access, so its prompt rules are what keep it from writing code.
 
@@ -91,11 +97,11 @@ Skills are reusable, on-demand workflow guides loaded by the orchestrator at eac
 
 | Skill | When invoked | Purpose |
 |---|---|---|
-| **`planning`** | Phase A - for "Needs planning" tasks | Explore the codebase and produce a structured plan for approval. |
-| **`implementation`** | Phase B - before delegating to builder | Construct the spec, capture the `task_id`, and handle the builder's response. |
-| **`review`** | Phase C - after every implementation | Validate the diff against the plan or spec and return a verdict. |
+| **`planning`** | Phase A - for "Needs planning" tasks | Explore the codebase and produce a plan overview plus self-contained task contracts for approval. |
+| **`implementation`** | Phase B - before delegating to builder | Dispatch only the current task contract, control independent fan-out, reuse branch `task_id` values, and handle each builder response. |
+| **`review`** | Phase C - after every implementation | Validate each current task or branch and perform the final full-plan review before reporting. |
 
-Trivial and Question or Discussion tasks don't enter Phase A (planning skill is never invoked). Review runs on every implementation, including trivial tasks.
+Trivial and Question or Discussion tasks keep their existing paths: trivial tasks use one builder call followed by review, while Question or Discussion tasks are answered directly with no plan, builder, or review. Needs planning tasks receive one approval for the complete plan, then proceed through reviewed task waves and a final full-plan review.
 
 ## License
 
