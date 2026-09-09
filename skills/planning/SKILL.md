@@ -5,7 +5,7 @@ description: Use when the user's request requires a plan before implementation. 
 
 # Planning
 
-Write a plan for the change before implementation.
+Write a plan for the change before implementation. Make sure your plan follows the KISS, DRY and YAGNI principles.
 
 ## Workflow
 
