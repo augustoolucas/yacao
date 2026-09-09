@@ -22,7 +22,7 @@ With YACAO, the workflow is fundamentally the same but feels much more natural: 
 
 ## How it works
 
-TL;DR: the orchestrator receives your prompt and routes it. Questions and discussions are answered directly, after exploring the codebase if needed. Change requests are clarified until well defined, then:
+TL;DR: the orchestrator receives your prompt and routes it. Questions and discussions are answered directly after exploring the codebase if needed. Change requests are clarified until well defined, then:
 
 - trivial changes go straight to the builder and back for review;
 - larger changes get a written plan you approve first, then the builder implements it, with review and fixes until it's right.
