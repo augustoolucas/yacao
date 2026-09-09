@@ -20,15 +20,6 @@ I used to discuss ideas with the built-in Plan Agent, plan solutions, then manua
 
 With YACAO, the workflow is fundamentally the same but feels much more natural: the Orchestrator kicks off implementation once the idea is solid, reviews the result upon completion, and automatically instructs the builder to fix issues if needed.
 
-## YACAO is under active development
-
-I personally use YACAO daily at work, so I am constantly fine tuning and adjusting the agents and skills. Contributions are very welcome.
-
-## TODO
-
-- Orchestrator still asks for approval for every plan before handing it to builder. I still need to figure out how to make it more proactive without risking unwanted changes.
-- Builder currently receives and implements the entire plan at once. Splitting plans into small, individually reviewable steps is under development.
-
 ## Install
 
 ```bash
@@ -48,7 +39,7 @@ rm -rf /tmp/yacao
 # 5. Restart opencode
 ```
 
-## Optional
+## Configuration
 
 ### Make YACAO the default agent
 
@@ -57,6 +48,15 @@ Add `"default_agent": "orchestrator"` to `opencode.jsonc`. Without it, opencode 
 ### Setup builder model
 
 Builder inherits the model set for Orchestrator. You need to edit `agents/builder.md` to set a different model.
+
+## Development
+
+I personally use YACAO daily at work, so I am constantly fine tuning and adjusting the agents and skills. Contributions are very welcome.
+
+### Roadmap
+
+- Orchestrator still asks for approval for every plan before handing it to builder. I still need to figure out how to make it more proactive without risking unwanted changes.
+- Builder currently receives and implements the entire plan at once. Splitting plans into small, individually reviewable steps is under development.
 
 ## License
 
