@@ -6,19 +6,28 @@ You already use Plan and Build. You probably review your changes too. YACAO just
 
 YACAO is a truly minimal agent workflow for OpenCode: just 2 agents and 3 skills to handle all planning, building, and reviewing.
 
-The main orchestrator agent directly handles code exploration, implementation planning, and reviews. Each workflow phase has specific guidance defined as skills, loaded on demand. Implementation is delegated to the builder agent.
+The main orchestrator agent directly handles code exploration, implementation planning and review. Each workflow phase has specific guidance defined as skills, loaded on demand. Implementation is delegated to the builder agent.
 
-**Minimal learning curve:** The goal is to streamline the natural workflow of vanilla OpenCode. There is no need to learn and memorize a bunch of commands, agents, and skills. Work the same way you already do, just without tabbing.
+The goal is to streamline the natural workflow of vanilla OpenCode, with minimal to none learning curve. There is no need to learn and memorize a bunch of commands, fancily named agents and skills. Work the same way you already do, just without tabbing.
+
+YACAO is intended for small, incremental tasks built through iterative processes, rather than single-shot entire solutions. It is not intended to be necessarily better, cheaper or more effective than vanilla OpenCode, it's just more practical. 
 
 ## Why YACAO?
 
 Most "slim" or "minimal" multi-agent frameworks for OpenCode still feel too bloated for my taste, packed with too many agents and commands and skills and whatever. So I decided to build my own version, and it has been working well for my use case so far.
 
-YACAO is intended for small, incremental tasks through an iterative process, rather than single-shot entire solutions.
+I used to discuss ideas with the built-in Plan Agent, plan solutions, then manually switching to the Build Agent to implement it, and then asking the Plan Agent to review the output, which often led to further adjustments. 
 
-I used to discuss ideas with the built-in Plan Agent, plan solutions, then manually switching to the Build Agent to implement them, and then asking the Plan Agent to review the output, which often led to further adjustments. 
+With YACAO, the workflow is fundamentally the same but feels much more natural: the Orchestrator kicks off implementation once the idea is solid, reviews the result upon completion, and automatically instructs the builder to fix issues if needed.
 
-With YACAO, the workflow is fundamentally the same but feels much more natural: the Orchestrator kicks off implementation on its own once the idea is solid, reviews the result upon completion, and automatically instructs the builder to fix issues if needed.
+## YACAO is under active development
+
+I personally use YACAO daily at work, so I am constantly fine tuning and adjusting the agents and skills. Contributions are very welcome.
+
+## TODO
+
+- Orchestrator still asks for approval for every plan before handling it to builder. I still need to figure out how to make it more proactive without risking unwanted changes.
+- Builder currently receives and implements the entire plan at once. Splitting plans into small and individually reviewable steps is under development.
 
 ## Install
 
@@ -36,9 +45,15 @@ rm -rf /tmp/yacao
 # 4. Restart opencode
 ```
 
+## Optional
+
 ### Make YACAO the default agent
 
-Add `"default_agent": "orchestrator"` to `~/.config/opencode/opencode.jsonc`. Without it, opencode starts on `build` and you'll have to select Orchestrator via Tab key.
+Add `"default_agent": "orchestrator"` to `opencode.jsonc`. Without it, opencode starts on `Build` and you need to select Orchestrator via Tab key.
+
+### Setup builder model
+
+Builder inherits the model set for Orchestrator, you need to edit `agents/builder.md` to set a different model.
 
 ## License
 
