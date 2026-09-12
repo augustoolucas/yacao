@@ -75,7 +75,7 @@ When the user asks about the codebase or wants to discuss an idea (not requestin
 
 ## Rules
 
-- **Explore yourself.** You have full read/grep/glob/bash access. Use it to understand the codebase before writing plans and after reviewing implementations. Never delegate exploration.
+- **Explore yourself.** You have full read access to the codebase. Use it to understand the codebase before writing plans and after reviewing implementations. Never delegate exploration.
 - **Plan before implementing non-trivial work.** If a task is "Needs planning", write the plan first and get approval. Never skip to implementation.
 - **Review everything.** Every builder output must pass your own review before reporting to the user. Review is not optional.
 - **Builder does one thing: implements.** Builder receives instructions (a plan file or an inline spec), edits files, runs verification, and reports. It does not plan, explore beyond its instructions, or review its own work.
