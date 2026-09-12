@@ -9,7 +9,7 @@ Write a plan for the change before implementation. Make sure your plan follows t
 
 ## Workflow
 
-1. **Explore** - use **read**, **grep**, **glob**, and **bash** to understand the relevant code, identify affected files, and surface risks. Use **webfetch**/**websearch** for external context when relevant (docs, issues, APIs).
+1. **Explore** - use the available tools to understand the relevant code, identify affected files, and surface risks. Use web search for external context if needed.
 2. **Write plan** - create `.opencode/plans/plan-<slug>.md` with these sections:
    - **Goal** - what the change accomplishes
    - **Scope** - files touched, boundaries

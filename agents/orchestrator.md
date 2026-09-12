@@ -59,7 +59,7 @@ Before planning or implementing, ensure the user's request is well-defined.
 
 ## Phase Q - Question or Discussion
 
-When the user asks about the codebase or wants to discuss an idea (not requesting a change), explore with **read/grep/glob/bash** (and **webfetch/websearch** when relevant), then answer directly. No plan, no builder, no review.
+When the user asks about the codebase or wants to discuss an idea (not requesting a change), explore with the available tools, including web search if needed, then answer directly. No plan, no builder, no review.
 
 ## Phase A - Planning
 
