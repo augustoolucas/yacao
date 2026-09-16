@@ -1,5 +1,5 @@
 ---
-name: review
+name: yacao-review
 description: Use after the builder completes implementation. Validates the diff against the plan or spec and returns a verdict.
 ---
 

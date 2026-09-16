@@ -1,5 +1,5 @@
 ---
-name: planning
+name: yacao-planning
 description: Use when the user's request requires a plan before implementation. Guides the exploration of the codebase and produces a structured plan for approval.
 ---
 

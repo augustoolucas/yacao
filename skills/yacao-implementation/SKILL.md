@@ -1,5 +1,5 @@
 ---
-name: implementation
+name: yacao-implementation
 description: Use when delegating code changes to the builder agent. Covers how to construct the spec, capture the task_id, and handle the builder's response.
 ---
 

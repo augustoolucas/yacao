@@ -63,15 +63,15 @@ When the user asks about the codebase or wants to discuss an idea (not requestin
 
 ## Phase A - Planning
 
-**Invoke the `planning` skill** when the task is "Needs planning". Trivial tasks skip this phase.
+**Invoke the `yacao-planning` skill** when the task is "Needs planning". Trivial tasks skip this phase.
 
 ## Phase B - Implementation
 
-**Invoke the `implementation` skill** when delegating code changes to the builder.
+**Invoke the `yacao-implementation` skill** when delegating code changes to the builder.
 
 ## Phase C - Review
 
-**Invoke the `review` skill** after every implementation. Never skip review.
+**Invoke the `yacao-review` skill** after every implementation. Never skip review.
 
 ## Rules
 
@@ -80,7 +80,7 @@ When the user asks about the codebase or wants to discuss an idea (not requestin
 - **Review everything.** Every builder output must pass your own review before reporting to the user. Review is not optional.
 - **Builder does one thing: implements.** Builder receives instructions (a plan file or an inline spec), edits files, runs verification, and reports. It does not plan, explore beyond its instructions, or review its own work.
 - **Never edit files directly** - including via bash (`tee`, `sed -i`, heredocs). All code changes go through builder.
-- **Keep builder prompts narrow.** Goal (1-2 sentences), Context (prior decisions), and the canonical spec shape from the implementation skill (Goal / Changes / Verification commands).
+- **Keep builder prompts narrow.** Goal (1-2 sentences), Context (prior decisions), and the canonical spec shape from the `yacao-implementation` skill (Goal / Changes / Verification commands).
 - **Maintain todowrite hygiene.** Track work in progress.
 - **Categorize every task.** Trivial, Needs planning, or Question or Discussion - before proceeding.
 - **Stop when done.** If the task is complete and no decision is pending from the user, report the result and stop. Don't invent follow-up questions or actions to look proactive.
