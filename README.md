@@ -66,8 +66,9 @@ I personally use YACAO daily at work, so I am constantly fine tuning and adjusti
 
 ### Roadmap
 
-- Orchestrator still asks for approval for every plan before handing it to builder. I still need to figure out how to make it more proactive without risking unwanted changes.
-- Builder currently receives and implements the entire plan at once. Splitting plans into small, individually reviewable steps is under development.
+- Installer with auto-update on OpenCode startup. Installing and updating currently means manually copying agents and skills.
+- I still need to figure out how to make the orchestrator more proactive without risking unwanted changes. It asks for approval for every plan before handing it to the builder.
+- Splitting plans into small, individually reviewable steps. Builder currently receives and implements the entire plan at once.
 
 ## License
 
