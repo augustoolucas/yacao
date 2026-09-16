@@ -18,7 +18,7 @@ Most "slim" or "minimal" multi-agent frameworks for OpenCode still feel too bloa
 
 I used to discuss ideas with the built-in Plan Agent, plan solutions, then manually switch to the Build Agent to implement it, and then ask the Plan Agent to review the output, which often led to further adjustments.
 
-With YACAO, the workflow is fundamentally the same but feels much more natural: the Orchestrator kicks off implementation once the idea is solid, reviews the result upon completion, and automatically instructs the builder to fix issues if needed.
+With YACAO, the workflow is fundamentally the same but feels much more natural: the orchestrator kicks off implementation once the idea is solid, reviews the result upon completion, and automatically instructs the builder to fix issues if needed.
 
 ## How it works
 
@@ -47,18 +47,18 @@ cp -r /tmp/yacao/skills/. "$HOME/.config/opencode/skills/"
 # 4. Clean up
 rm -rf /tmp/yacao
 
-# 5. Restart opencode
+# 5. Restart OpenCode
 ```
 
 ## Configuration
 
 ### Make YACAO the default agent
 
-Add `"default_agent": "orchestrator"` to `opencode.jsonc`. Without it, opencode starts on `Build` and you need to select Orchestrator via Tab key.
+Add `"default_agent": "orchestrator"` to `opencode.jsonc`. Without it, OpenCode starts on `Build` and you need to select Orchestrator via Tab key.
 
 ### Setup builder model
 
-Builder inherits the model set for Orchestrator. You need to edit `agents/builder.md` to set a different model.
+Builder inherits the model set for the orchestrator. You need to edit `agents/builder.md` to set a different model.
 
 ## Development
 
