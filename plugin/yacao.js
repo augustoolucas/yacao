@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 
 const AGENT_FILES = ["orchestrator.json", "builder.json"];
 const FILE_REF = /^\{file:(.+)\}$/;
+const ROOT = path.dirname(path.dirname(fs.realpathSync(fileURLToPath(import.meta.url))));
+
+let notified = false; // once per process
 
 const resolveFileRefs = (value, baseDir) => {
   if (typeof value === "string") {
@@ -17,6 +20,15 @@ const resolveFileRefs = (value, baseDir) => {
     }
   }
   return value;
+};
+
+const notificationMessage = () => {
+  try {
+    const { version } = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
+    return version ? `v${version} loaded` : "plugin loaded";
+  } catch {
+    return "plugin loaded";
+  }
 };
 
 export const YacaoPlugin = async ({ client } = {}) => {
@@ -33,12 +45,34 @@ export const YacaoPlugin = async ({ client } = {}) => {
     console.error(message);
   };
 
+  const notify = async () => {
+    if (notified) return;
+    notified = true;
+    const message = notificationMessage();
+    try {
+      await client?.tui?.showToast({
+        body: { title: "YACAO", message, variant: "info", duration: 4000 },
+      });
+    } catch {
+      // never throw during startup
+    }
+    try {
+      await client?.app?.log({ body: { service: "yacao", level: "info", message } });
+    } catch {
+      // never throw during startup
+    }
+  };
+
+  // Covers the TUI-resume case (no session.created fires). The toast is lost if
+  // published before the TUI subscribes, and there is no delivery confirmation,
+  // so wait for the UI to come up.
+  const fallbackTimer = setTimeout(() => notify(), 5000);
+  fallbackTimer.unref?.();
+
   return {
     config: async (config) => {
       try {
-        const pluginFile = fs.realpathSync(fileURLToPath(import.meta.url));
-        const root = path.dirname(path.dirname(pluginFile));
-        const agentsDir = path.join(root, "agents");
+        const agentsDir = path.join(ROOT, "agents");
 
         config.agent ??= {};
         for (const file of AGENT_FILES) {
@@ -51,7 +85,7 @@ export const YacaoPlugin = async ({ client } = {}) => {
           config.agent[name] = { ...definition, ...(config.agent[name] ?? {}) };
         }
 
-        const skillsDir = path.join(root, "skills");
+        const skillsDir = path.join(ROOT, "skills");
         config.skills ??= {};
         config.skills.paths ??= [];
         if (!config.skills.paths.includes(skillsDir)) {
@@ -62,6 +96,11 @@ export const YacaoPlugin = async ({ client } = {}) => {
       } catch (error) {
         await logError(error);
       }
+    },
+    event: async ({ event } = {}) => {
+      if (event?.type !== "session.created") return;
+      clearTimeout(fallbackTimer);
+      await notify();
     },
   };
 };
