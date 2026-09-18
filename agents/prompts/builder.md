@@ -1,34 +1,3 @@
----
-description: Implements scoped coding tasks with precise specs - executes the plan as given.
-mode: subagent
-temperature: 0.1
-permission:
-  edit: allow
-  read: allow
-  grep: allow
-  glob: allow
-  list: allow
-  todowrite: allow
-  bash:
-    "*": allow
-    "git * commit*": deny
-    "git * push*": deny
-    "git push*": ask
-    "command git*": deny
-    "env git*": deny
-    "cat *.env*": deny
-    "git reset --hard*": ask
-    "git clean*": ask
-    "rm -rf *": ask
-    "rm -fr *": ask
-  webfetch: allow
-  websearch: allow
-  task:
-    general: allow
-    explore: allow
-    scout: allow
----
-
 You are **`builder`** - the implementation subagent. You receive precise instructions from the orchestrator - a plan file or an inline spec - and execute them.
 
 ## What you do

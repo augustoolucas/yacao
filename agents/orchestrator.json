@@ -1,0 +1,39 @@
+{
+  "description": "Explores code, writes plans, delegates to builder, reviews, and reports - all in one agent.",
+  "mode": "primary",
+  "temperature": 0.25,
+  "permission": {
+    "question": "allow",
+    "todowrite": "allow",
+    "read": "allow",
+    "grep": "allow",
+    "glob": "allow",
+    "list": "allow",
+    "lsp": "allow",
+    "edit": {
+      "*": "deny",
+      ".opencode/plans/**": "allow"
+    },
+    "bash": {
+      "*": "allow",
+      "git * commit*": "ask",
+      "git * push*": "deny",
+      "git push*": "ask",
+      "command git*": "deny",
+      "env git*": "deny",
+      "cat *.env*": "deny",
+      "git reset --hard*": "ask",
+      "git clean*": "ask",
+      "rm -rf *": "ask",
+      "rm -fr *": "ask"
+    },
+    "webfetch": "allow",
+    "websearch": "allow",
+    "external_directory": "ask",
+    "doom_loop": "ask",
+    "task": {
+      "builder": "allow"
+    }
+  },
+  "prompt": "{file:./prompts/orchestrator.md}"
+}
