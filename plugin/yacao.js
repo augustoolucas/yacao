@@ -156,7 +156,7 @@ const pinConfigs = (tag, directory, includeProject) => {
   return updated > 0;
 };
 
-export const YacaoPlugin = async ({ client, directory, options: inputOptions } = {}, pluginOptions) => {
+export const YacaoPlugin = async ({ client, directory, worktree, options: inputOptions } = {}, pluginOptions) => {
   const options = inputOptions ?? pluginOptions ?? {};
 
   const logError = async (error) => {
@@ -196,7 +196,7 @@ export const YacaoPlugin = async ({ client, directory, options: inputOptions } =
       if (!claimUpdateCheck()) return;
       const tag = await fetchLatestTag();
       if (!tag || !isNewer(tag, runningVersion())) return;
-      if (!pinConfigs(tag, directory, options.updateScope === "all")) return;
+      if (!pinConfigs(tag, worktree ?? directory, options.updateScope === "all")) return;
       const message = `updated to ${normalizeTag(tag)} - restart to apply`;
       try {
         await client?.tui?.showToast({
