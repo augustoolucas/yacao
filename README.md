@@ -31,42 +31,52 @@ More detailed description of YACAO in the future.
 
 ## Install
 
-Tested only on the OpenCode CLI so far.
+Add the plugin to your `opencode.jsonc`:
 
-```bash
-# 1. Clone
-git clone https://github.com/augustoolucas/yacao /tmp/yacao
+```jsonc
+{
+  "plugin": ["yacao@git+https://github.com/augustoolucas/yacao.git"]
+}
+```
 
-# 2. Create config directories
-mkdir -p "$HOME/.config/opencode/agents" "$HOME/.config/opencode/skills"
+Then restart OpenCode. The plugin injects the agents and registers the skills at every startup, so nothing is copied into `~/.config/opencode` and there is nothing to edit locally - updates apply whenever you restart.
 
-# 3. Copy agents and skills
-cp /tmp/yacao/agents/*.md "$HOME/.config/opencode/agents/"
-cp -r /tmp/yacao/skills/. "$HOME/.config/opencode/skills/"
+OpenCode reinstalls the plugin from git on every launch. To pin a specific version instead, append a tag to the spec:
 
-# 4. Clean up
-rm -rf /tmp/yacao
-
-# 5. Restart OpenCode
+```jsonc
+{
+  "plugin": ["yacao@git+https://github.com/augustoolucas/yacao.git#v0.2.0"]
+}
 ```
 
 ## Configuration
 
 ### Make YACAO the default agent
 
-Add `"default_agent": "orchestrator"` to `opencode.jsonc`. Without it, OpenCode starts on `Build` and you need to select Orchestrator via Tab key.
+The plugin sets `orchestrator` as the default agent automatically. To start on something else, set `"default_agent"` in `opencode.jsonc` - your value wins.
 
 ### Setup builder model
 
-Builder inherits the model set for the orchestrator. You need to edit `agents/builder.md` to set a different model.
+To set the builder's model, or override any other agent option, add it to `opencode.jsonc`:
+
+```jsonc
+{
+  "agent": {
+    "builder": {
+      "model": "your-provider/your-model"
+    }
+  }
+}
+```
+
+Plugin defaults are merged under your config, so anything you set here takes precedence.
 
 ## Development
 
-I personally use YACAO daily at work, so I am constantly fine tuning and adjusting the agents and skills. Contributions are very welcome.
+I personally use YACAO daily at work, so I am constantly fine tuning and adjusting it. Contributions are very welcome.
 
 ### Roadmap
 
-- Installer with auto-update on OpenCode startup. Installing and updating currently means manually copying agents and skills.
 - I still need to figure out how to make the orchestrator more proactive without risking unwanted changes. It asks for approval for every plan before handing it to the builder.
 - Splitting plans into small, individually reviewable steps. Builder currently receives and implements the entire plan at once.
 
