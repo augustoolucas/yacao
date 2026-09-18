@@ -53,10 +53,10 @@ To auto-update YACAO, enable the `autoUpdate` option:
 {
   "plugin": [
     [
-        "yacao@git+https://github.com/augustoolucas/yacao.git",
-        {
-            "autoUpdate": true
-        }
+      "yacao@git+https://github.com/augustoolucas/yacao.git",
+      {
+        "autoUpdate": true
+      }
     ]
   ]
 }
@@ -93,11 +93,11 @@ Both options are opt-in - `autoUpdate` is off by default, and `updateScope` defa
 {
   "plugin": [
     [
-        "yacao@git+https://github.com/augustoolucas/yacao.git",
-        {
-            "autoUpdate": true,
-            "updateScope": "all"
-        }
+      "yacao@git+https://github.com/augustoolucas/yacao.git",
+      {
+        "autoUpdate": true,
+        "updateScope": "all"
+      }
     ]
   ]
 }
