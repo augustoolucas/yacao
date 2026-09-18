@@ -31,6 +31,17 @@ const notificationMessage = () => {
   }
 };
 
+const isPlainObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+
+const mergeDefinition = (base, override) => {
+  if (!isPlainObject(base) || !isPlainObject(override)) return override;
+  const result = { ...base };
+  for (const [key, value] of Object.entries(override)) {
+    result[key] = mergeDefinition(base[key], value);
+  }
+  return result;
+};
+
 export const YacaoPlugin = async ({ client } = {}) => {
   const logError = async (error) => {
     const message = `YACAO plugin failed: ${error?.stack ?? error}`;
@@ -82,7 +93,7 @@ export const YacaoPlugin = async ({ client } = {}) => {
             JSON.parse(fs.readFileSync(agentPath, "utf8")),
             path.dirname(agentPath)
           );
-          config.agent[name] = { ...definition, ...(config.agent[name] ?? {}) };
+          config.agent[name] = mergeDefinition(definition, config.agent[name] ?? {});
         }
 
         const skillsDir = path.join(ROOT, "skills");
