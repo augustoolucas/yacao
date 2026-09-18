@@ -39,9 +39,7 @@ Add the plugin to your `opencode.jsonc`:
 }
 ```
 
-Then restart OpenCode. The plugin injects the agents and registers the skills at every startup, so nothing is copied into `~/.config/opencode` and there is nothing to edit locally - updates apply whenever you restart.
-
-OpenCode reinstalls the plugin from git on every launch. To pin a specific version instead, append a tag to the spec:
+To pin a specific version, append a tag to the spec:
 
 ```jsonc
 {
@@ -49,15 +47,30 @@ OpenCode reinstalls the plugin from git on every launch. To pin a specific versi
 }
 ```
 
+To auto-update YACAO, enable the `autoUpdate` option:
+
+```jsonc
+{
+  "plugin": [
+    [
+        "yacao@git+https://github.com/augustoolucas/yacao.git",
+        {
+            "autoUpdate": true
+        }
+    ]
+  ]
+}
+```
+
+Then restart OpenCode.
+
 ## Configuration
 
-### Make YACAO the default agent
-
-The plugin sets `orchestrator` as the default agent automatically. To start on something else, set `"default_agent"` in `opencode.jsonc` - your value wins.
+The plugin sets `orchestrator` as the default agent automatically. To start on something else, set `"default_agent"` in `opencode.jsonc`.
 
 ### Setup builder model
 
-To set the builder's model, or override any other agent option, add it to `opencode.jsonc`:
+Builder inherits the model set for the orchestrator. To set a different model, or override any other agent option, add it to `opencode.jsonc`:
 
 ```jsonc
 {
@@ -69,7 +82,26 @@ To set the builder's model, or override any other agent option, add it to `openc
 }
 ```
 
-Plugin defaults are merged under your config, so anything you set here takes precedence.
+### Auto-update options
+
+Both options are opt-in - `autoUpdate` is off by default, and `updateScope` defaults to `globalOnly`:
+
+- `autoUpdate`: on startup, checks the latest release and pins the plugin spec forward (`#vX.Y.Z`) when a newer version exists, so the next restart installs it.
+- `updateScope`: which configs may be updated - `"globalOnly"` (default) updates only the global config, `"all"` also updates the project's `.opencode/opencode.jsonc` or `opencode.json`.
+
+```jsonc
+{
+  "plugin": [
+    [
+        "yacao@git+https://github.com/augustoolucas/yacao.git",
+        {
+            "autoUpdate": true,
+            "updateScope": "all"
+        }
+    ]
+  ]
+}
+```
 
 ## Development
 
@@ -77,7 +109,6 @@ I personally use YACAO daily at work, so I am constantly fine tuning and adjusti
 
 ### Roadmap
 
-- I still need to figure out how to make the orchestrator more proactive without risking unwanted changes. It asks for approval for every plan before handing it to the builder.
 - Splitting plans into small, individually reviewable steps. Builder currently receives and implements the entire plan at once.
 
 ## License
