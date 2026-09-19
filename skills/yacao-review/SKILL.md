@@ -33,5 +33,5 @@ After every task is approved:
 ## Verdict
 
 - **Approved** -> mark the current task approved; the orchestrator may dispatch the next task only after this review is approved. After all tasks pass, perform the final full-plan review.
-- **Adjustments needed** for the current task -> delegate each issue to the builder via Task, reusing its `task_id`; no new user approval is needed, then re-review the current task.
+- **Adjustments needed** for the current task -> delegate each issue to the builder via Task, reusing its `task_id`; then re-review the current task. No new user approval is needed: only scope, approach, or plan changes and genuine blockers go back to the user.
 - **Rejected** (plan not implemented, design flaw, scope creep, critical bugs) -> stop, revise the plan overview and task contracts through planning, present the revised plan, obtain user approval, and only then resume implementation.
