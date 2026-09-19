@@ -29,5 +29,5 @@ Write a plan overview and self-contained task contracts before implementation. M
    - **Verification commands** - exact commands that prove the task works
 
    Keep tasks meaningful and independently testable. A plan may consist of a single task when the work does not split into verifiable increments. Order the tasks so each one can be implemented and verified before the next; per-task verification is required even when the overview also has final verification commands. Keep the complete plan in the overview, never in a task contract.
-3. **Present for approval** - show a show summary to the user. One approval covers the complete plan before writing code; do not ask for approval between tasks. Wait for `Approve` or `Revise`.
+3. **Present for approval** - show a summary to the user. One approval covers the complete plan before writing code; do not ask for approval between tasks. Wait for `Approve` or `Revise`.
 4. On **Revise**: update the overview and task contracts, then re-present.
