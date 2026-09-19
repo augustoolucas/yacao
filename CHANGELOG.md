@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.0-rc (2026-09-19)
+
+- Split approved plans into tasks: the builder receives one task at a
+  time, each result is reviewed before the next task starts, and a final
+  review runs before reporting.
+- Remove policy statements duplicated between agents and skills.
+
 ## v0.2.0 (2026-09-18)
 
 - YACAO as an OpenCode plugin: one `plugin` entry in
