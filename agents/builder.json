@@ -1,5 +1,5 @@
 {
-  "description": "Implements scoped coding tasks with precise specs - executes the plan as given.",
+  "description": "Implements scoped coding tasks from self-contained instructions.",
   "mode": "subagent",
   "temperature": 0.1,
   "permission": {

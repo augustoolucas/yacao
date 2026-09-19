@@ -111,7 +111,6 @@ I personally use YACAO daily at work, so I am constantly fine tuning and adjusti
 
 ### Roadmap
 
-- Splitting plans into small, individually reviewable steps. Builder currently receives and implements the entire plan at once.
 - OpenCode V2 support. YACAO currently targets the V1 plugin API; V2 changed the plugin API, so a port is required.
 
 ## License

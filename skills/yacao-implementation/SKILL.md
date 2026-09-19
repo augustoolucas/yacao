@@ -1,46 +1,42 @@
 ---
 name: yacao-implementation
-description: Use when delegating code changes to the builder agent. Covers how to construct the spec, capture the task_id, and handle the builder's response.
+description: Guides ordered task dispatch, task_id reuse, and builder response handling.
 ---
 
 # Implementation
 
-You delegate code changes to **builder** via the **Task** tool - you construct the spec, hand it off, and handle the response.
+You delegate code changes to **builder** via the **Task** tool - you construct the task, hand it off, and handle the response. Before every dispatch, note the worktree/diff state, and capture the returned `task_id` for potential follow-up reuse.
 
 ## Trivial tasks
 
-1. Task → builder with a direct spec containing:
-   - **Goal** - what to accomplish
-   - **Changes** - the precise edits. Make sure to follow KISS, DRY and YAGNI principles.
-   - **Verification commands** - what to run (omit only when nothing needs to be verified)
-2. Builder returns `STATUS` / `CHANGES` / `VERIFIED` / `GAPS` - capture the `task_id` for potential follow-up reuse
-3. On `complete`: proceed to review. On `partial` / `blocked` / `escalate`: handle per builder's `GAPS`
+Send the builder a direct spec containing:
+
+- **Goal** - what to accomplish
+- **Context** - useful prior decisions and relevant history
+- **Changes** - the precise edits. Make sure to follow KISS, DRY and YAGNI principles.
+- **Verification commands** - what to run (omit only when nothing needs to be verified)
 
 ## Needs planning
 
-1. Task → builder with `.opencode/plans/plan-<slug>.md`
-2. Builder follows the plan - capture the `task_id` for potential follow-up reuse
-3. On `complete`: proceed to review. On `partial` / `blocked` / `escalate`: handle per builder's `GAPS`
+Follow the approved plan overview's ordered task list, one builder at a time:
 
-## Reusing the builder session (both paths)
+1. Read the current task contract at `.opencode/plans/plan-<slug>/tasks/task-XX-<name>.md`.
+2. Send the builder the task's `Goal`, `Changes`, `File scope`, `Dependencies`, and `Verification commands`, plus any useful context from prior decisions - nothing else. Never send the full plan overview or future task contracts.
+3. Start the next task only after the current task's review is approved. After the last task, run the final full-plan review (see the `yacao-review` skill).
 
-Pass the previous builder's `task_id` when the new task:
+## Builder status routing
 
-- Touches the same files the builder just modified
-- Follows up on review feedback
-- Continues or builds on a prior implementation
+For a builder response:
 
-This preserves context and avoids redundant file reads.
+- `complete` -> invoke the `yacao-review` flow for the current task.
+- `partial` -> hold the current task, reuse the same `task_id` to complete it, and do not advance to another task.
+- `blocked` -> stop, surface the blocker, and do not advance.
+- `escalate` -> read `GAPS`; resolve it from the plan overview or codebase when you can, otherwise surface it to the user; do not advance.
 
-Start a **fresh session** (no `task_id`) when the new task operates on separate parts of the codebase with no shared state or dependencies.
+A blocked or escalated task may resume without a new plan approval only if the approved task and approach remain unchanged; a material plan, approach, or scope change goes back to planning for a revised, approved plan. On the trivial path, where no overview exists, a material change is categorized as **Needs planning** and enters the planning flow first.
 
-## Fan-out (parallel builders)
+## Reusing the builder session
 
-When the work partitions into independent file sets, you MAY issue multiple parallel `Task → builder` calls in the same turn instead of one. Each runs in its own session and returns independently. Rules:
-
-- No shared files between parallel tasks. Overlap ⇒ serialize.
-- One plan, several dispatches - name each branch in the plan, then dispatch each as a separate Task call.
-- Review each output separately before committing. The `git diff` after parallel calls is the union; verify no conflicts.
-- One commit at the end, message naming every part.
-
-Do not fan out for trivial work or for anything with shared state.
+- Always reuse the `task_id` for corrections to the same task.
+- Reuse it for related or dependent tasks when the previous context helps.
+- Start a fresh session for unrelated tasks.
