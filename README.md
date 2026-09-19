@@ -1,107 +1,118 @@
 # YACAO - Yet Another Coding Agent Orchestrator
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+You already use Plan and Build. You probably review your changes too. YACAO just connects the dots, so you don't have to.
 
-You already use Plan and Build. You probably review your changes too. YACAO just connects the dots - so you don't have to.
+## What is YACAO?
 
-### What's YACAO
+YACAO is a truly minimal agent workflow for OpenCode: just 2 agents and 3 skills to handle all planning, building, and reviewing.
 
-YACAO is an actually minimal agent workflow for OpenCode. Only 2 agents and 3 skills to handle all Planning, Building and Reviewing.
+The main orchestrator agent directly handles code exploration, implementation planning, and review. Each workflow phase has specific guidance defined as skills, loaded on demand. Implementation is delegated to the builder agent.
 
-The main orchestrator agent handles code exploration, implementation planning, and review directly. Each workflow phase has specific guidance detailed as skills, loaded on-demand. Implementation is delegated to builder through self-contained task contracts and reviewed task waves.
+The goal is to streamline the natural workflow of vanilla OpenCode, with minimal to none learning curve. There is no need to learn and memorize a bunch of commands, fancily named agents and skills. Work the same way you already do, just without tabbing.
 
-### Why YACAO
+YACAO is intended for small, incremental tasks built through iterative processes, rather than single-shot entire solutions. It is not necessarily better, cheaper, or more effective than vanilla OpenCode, it's just more practical.
 
-Most "slim" or "minimal" multi agent framework for OpenCode still feel too bloated FOR ME, with +4 agents. So I decided to build my own version, it's been working fine for my usage so far.
+## Why YACAO?
 
-### Step 0 - Clarify
+Most "slim" or "minimal" multi-agent frameworks for OpenCode still feel too bloated for my taste, packed with too many agents and commands and skills and whatever. So I decided to build my own version, and it has been working well for my use case so far.
 
-Before any planning or implementation, the orchestrator clarifies the user's request through one or more rounds of questions. Only once the request is fully understood does the orchestrator proceed to complexity routing.
+I used to discuss ideas with the built-in Plan Agent, plan solutions, then manually switch to the Build Agent to implement it, and then ask the Plan Agent to review the output, which often led to further adjustments.
 
-### Complexity routing
+With YACAO, the workflow is fundamentally the same but feels much more natural: the orchestrator kicks off implementation once the idea is solid, reviews the result upon completion, and automatically instructs the builder to fix issues if needed.
 
-After clarification, the orchestrator categorizes the task:
+## How it works
 
-| Level | Criteria | Flow |
-|---|---|---|
-| **Question or Discussion** | User is asking about the codebase or discussing ideas, not requesting a change | Orchestrator explores and answers directly |
-| **Trivial** | Self-contained, no dependencies, no risk | Orchestrator → Builder → Orchestrator reviews → Report |
-| **Needs planning** | Everything else | Orchestrator explores → Plan overview and task contracts → One user approval → sequential or controlled parallel builder task waves → per-task reviews → final full-plan review → Report |
+TL;DR: the orchestrator receives your prompt and routes it. Questions and discussions are answered directly after exploring the codebase if needed. Change requests are clarified until well defined, then:
 
-### Phase Q - Question or Discussion
+- trivial changes go straight to the builder and back for review;
+- larger changes get a written plan you approve first, then the builder implements it, with review and fixes until it's right.
 
-When the user is asking about the codebase, requesting analysis, or wants to discuss an idea (not requesting a change), the orchestrator uses **read**, **grep**, **glob**, **bash**, and optionally **webfetch**/**websearch** to explore and answer directly. No plan, no builder, no review - just an answer.
-
-### Phase A - Planning
-
-The orchestrator invokes the `planning` skill. See `skills/planning/SKILL.md`.
-
-### Phase B - Implementation
-
-The orchestrator invokes the `implementation` skill. See `skills/implementation/SKILL.md`. For **Needs planning**, the plan is an overview at `.opencode/plans/plan-<slug>/plan.md` with self-contained task contracts under `tasks/task-XX-<name>.md`. The builder receives only the current task contract's `Goal`, `Changes`, `File scope`, `Dependencies`, and `Verification commands`; future task contracts and the complete plan remain with the orchestrator. Sequential tasks use one builder at a time. Parallel builders are allowed only for tasks explicitly marked independent with no shared files, state, or dependencies. Each branch has its own `task_id`, reused for related tasks and adjustments.
-
-### Phase C - Review
-
-The orchestrator invokes the `review` skill. See `skills/review/SKILL.md`. Every task and parallel branch is reviewed against its current contract before the next task or wave starts; all reviews in a wave must be approved first. After all tasks and waves pass, the orchestrator performs a final full-plan review and runs the overview's final verification commands before reporting.
+More detailed description of YACAO in the future.
 
 ## Install
 
-### Preferred: give the repo URL to your AI agent
+YACAO requires OpenCode V1; V2 support is on the roadmap.
 
-```
-Install YACAO from https://github.com/augustoolucas/yacao
-```
+Add the plugin to your `opencode.jsonc`:
 
-Your opencode agent will follow the manual steps below.
-
-### Manual
-
-```bash
-# 1. Create a temporary installation directory
-tmp_dir="$(mktemp -d)"
-
-# 2. Clone
-git clone https://github.com/augustoolucas/yacao "$tmp_dir/yacao"
-
-# 3. Create config directories without removing existing agents or skills
-mkdir -p "$HOME/.config/opencode/agents" "$HOME/.config/opencode/skills"
-
-# 4. Copy agents and skills
-cp "$tmp_dir/yacao"/agents/*.md "$HOME/.config/opencode/agents/"
-cp -r "$tmp_dir/yacao"/skills/. "$HOME/.config/opencode/skills/"
-
-# 5. Clean up
-rm -rf "$tmp_dir"
-
-# 6. Restart opencode
+```jsonc
+{
+  "plugin": ["yacao@git+https://github.com/augustoolucas/yacao.git"]
+}
 ```
 
-### Make YACAO the default agent
+To pin a specific version, append a tag to the spec:
 
-Add `"default_agent": "orchestrator"` to `~/.config/opencode/opencode.jsonc`. Without it, opencode starts on `build`; the Orchestrator is reachable via Tab.
+```jsonc
+{
+  "plugin": ["yacao@git+https://github.com/augustoolucas/yacao.git#v0.2.0"]
+}
+```
 
-## Agents
+To auto-update YACAO, enable the `autoUpdate` option:
 
-| Agent | Role | Read repo? | Write repo? | Spawns subagents? |
-|---|---|---|---|---|
-| **orchestrator** | Explores code, writes plan overviews and task contracts, delegates to builder, reviews diffs, and reports. All-in-one primary agent. | Yes | No (only `.opencode/plans/`) | Yes - builder via Task |
-| **builder** | Implements scoped coding tasks from self-contained task contracts or inline specs. Edits files, runs verification, reports results. Never redesigns. | Yes | Yes (full) | Yes - native opencode subagents (general, explore, scout) |
+```jsonc
+{
+  "plugin": [
+    [
+      "yacao@git+https://github.com/augustoolucas/yacao.git",
+      {
+        "autoUpdate": true
+      }
+    ]
+  ]
+}
+```
 
-Permissions are guardrails against drift, not a sandbox: the orchestrator pairs `edit: deny` with broad `bash` access, so its prompt rules are what keep it from writing code.
+Then restart OpenCode.
 
-To run the implementer on a cheaper model, set `model:` in `agents/builder.md` frontmatter (e.g. `model: provider/model-id`). Without it, builder inherits the orchestrator's model.
+## Configuration
 
-## Skills
+The plugin sets `orchestrator` as the default agent automatically. To start on something else, set `"default_agent"` in `opencode.jsonc`.
 
-Skills are reusable, on-demand workflow guides loaded by the orchestrator at each phase. The orchestrator invokes a phase-specific skill when it enters that phase - its body is not in the system prompt, only the description is.
+### Setup builder model
 
-| Skill | When invoked | Purpose |
-|---|---|---|
-| **`planning`** | Phase A - for "Needs planning" tasks | Explore the codebase and produce a plan overview plus self-contained task contracts for approval. |
-| **`implementation`** | Phase B - before delegating to builder | Dispatch only the current task contract, control independent fan-out, reuse branch `task_id` values, and handle each builder response. |
-| **`review`** | Phase C - after every implementation | Validate each current task or branch and perform the final full-plan review before reporting. |
+Builder inherits the model set for the orchestrator. To set a different model, or override any other agent option, add it to `opencode.jsonc`:
 
-Trivial and Question or Discussion tasks keep their existing paths: trivial tasks use one builder call followed by review, while Question or Discussion tasks are answered directly with no plan, builder, or review. Needs planning tasks receive one approval for the complete plan, then proceed through reviewed task waves and a final full-plan review.
+```jsonc
+{
+  "agent": {
+    "builder": {
+      "model": "your-provider/your-model"
+    }
+  }
+}
+```
+
+### Auto-update options
+
+Both options are opt-in - `autoUpdate` is off by default, and `updateScope` defaults to `globalOnly`:
+
+- `autoUpdate`: on startup, checks the latest release and pins the plugin spec forward (`#vX.Y.Z`) when a newer version exists, so the next restart installs it.
+- `updateScope`: which configs may be updated - `"globalOnly"` (default) updates only the global config, `"all"` also updates the project's `.opencode/opencode.jsonc` or `opencode.json`.
+
+```jsonc
+{
+  "plugin": [
+    [
+      "yacao@git+https://github.com/augustoolucas/yacao.git",
+      {
+        "autoUpdate": true,
+        "updateScope": "all"
+      }
+    ]
+  ]
+}
+```
+
+## Development
+
+I personally use YACAO daily at work, so I am constantly fine tuning and adjusting it. Contributions are very welcome.
+
+### Roadmap
+
+- Splitting plans into small, individually reviewable steps. Builder currently receives and implements the entire plan at once.
+- OpenCode V2 support. YACAO currently targets the V1 plugin API; V2 changed the plugin API, so a port is required.
 
 ## License
 
