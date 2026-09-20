@@ -7,6 +7,7 @@
     "read": "allow",
     "grep": "allow",
     "glob": "allow",
+    "skill": "allow",
     "list": "allow",
     "todowrite": "allow",
     "bash": {
@@ -27,8 +28,7 @@
     "websearch": "allow",
     "task": {
       "general": "allow",
-      "explore": "allow",
-      "scout": "allow"
+      "explore": "allow"
     }
   },
   "prompt": "{file:./prompts/builder.md}"
