@@ -156,7 +156,139 @@ const pinConfigs = (tag, directory, includeProject) => {
   return updated > 0;
 };
 
-export const YacaoPlugin = async ({ client, directory, worktree, options: inputOptions } = {}, pluginOptions) => {
+const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n?/;
+
+const parseSkill = (raw) => {
+  const match = FRONTMATTER.exec(raw);
+  if (!match) return null;
+  const fields = {};
+  for (const line of match[1].split(/\r?\n/)) {
+    const separator = line.indexOf(":");
+    if (separator < 1) continue;
+    fields[line.slice(0, separator).trim()] = line.slice(separator + 1).trim();
+  }
+  return { fields, body: raw.slice(match[0].length) };
+};
+
+// Reads the skill files up front so the V2 transform callback stays synchronous
+// and side-effect free; V2 may replay it.
+const discoverSkills = () => {
+  const skills = [];
+  const skillsDir = path.join(ROOT, "skills");
+  let entries;
+  try {
+    entries = fs.readdirSync(skillsDir);
+  } catch {
+    return skills;
+  }
+  for (const id of entries.sort()) {
+    if (!id.startsWith("yacao-")) continue;
+    const location = path.join(skillsDir, id, "SKILL.md");
+    let raw;
+    try {
+      raw = fs.readFileSync(location, "utf8");
+    } catch {
+      continue;
+    }
+    const parsed = parseSkill(raw);
+    if (!parsed?.fields.name || !parsed?.fields.description) continue;
+    skills.push({
+      id,
+      name: parsed.fields.name,
+      description: parsed.fields.description,
+      path: location,
+      content: parsed.body,
+    });
+  }
+  return skills;
+};
+
+const AGENT_ACTION_MAP = { bash: "shell", task: "subagent" };
+
+// V2 permission rules: broad rules first, exceptions after; the last match wins.
+const agentPermissionRules = (permission) => {
+  const rules = [];
+  for (const [action, value] of Object.entries(permission ?? {})) {
+    const mapped = AGENT_ACTION_MAP[action] ?? action;
+    if (isPlainObject(value)) {
+      for (const [resource, effect] of Object.entries(value)) {
+        rules.push({ action: mapped, resource, effect });
+      }
+    } else {
+      rules.push({ action: mapped, resource: "*", effect: value });
+    }
+  }
+  return rules;
+};
+
+// Registers the agents in memory through the V2 agent transform. Per-agent
+// temperature is not part of Agent.Info, so it stays V1-only.
+const applyAgentDefinitions = (editor, definitions) => {
+  for (const { name, definition } of definitions) {
+    const rules = agentPermissionRules(definition.permission);
+    const existing = editor.get(name);
+    if (!existing) {
+      editor.update(name, (agent) => {
+        agent.name = name;
+        agent.description = definition.description;
+        agent.system = definition.prompt;
+        agent.mode = definition.mode;
+        agent.permissions = rules;
+      });
+      continue;
+    }
+    // A user-defined agent wins: fill only missing fields and prepend our rules
+    // so the user's rules stay last and keep winning.
+    existing.name ??= name;
+    existing.description ??= definition.description;
+    existing.system ??= definition.prompt;
+    existing.permissions.unshift(...rules);
+  }
+};
+
+export default {
+  id: "yacao",
+
+  // V2 setup: skills and agents are registered here.
+  async setup(ctx) {
+    if (ctx?.skill?.transform) {
+      try {
+        const skills = discoverSkills();
+        if (skills.length > 0) {
+          await ctx.skill.transform((editor) => {
+            for (const skill of skills) editor.add(skill);
+          });
+        }
+      } catch (error) {
+        console.error(`YACAO plugin failed: ${error?.stack ?? error}`);
+      }
+    }
+
+    // Older hosts call setup() without the V2 agent API and provide the agents
+    // through the config hook instead, so skip the registration silently.
+    if (ctx?.agent?.transform) {
+      try {
+        const agentsDir = path.join(ROOT, "agents");
+        const definitions = AGENT_FILES.map((file) => {
+          const agentPath = path.join(agentsDir, file);
+          return {
+            name: path.basename(file, ".json"),
+            definition: resolveFileRefs(
+              JSON.parse(fs.readFileSync(agentPath, "utf8")),
+              path.dirname(agentPath)
+            ),
+          };
+        });
+        await ctx.agent.transform((editor) => {
+          applyAgentDefinitions(editor, definitions);
+        });
+      } catch (error) {
+        console.error(`YACAO plugin failed: ${error?.stack ?? error}`);
+      }
+    }
+  },
+
+  async server({ client, directory, worktree, options: inputOptions } = {}, pluginOptions) {
   const options = inputOptions ?? pluginOptions ?? {};
 
   const logError = async (error) => {
@@ -259,4 +391,5 @@ export const YacaoPlugin = async ({ client, directory, worktree, options: inputO
       await notify();
     },
   };
+  },
 };
