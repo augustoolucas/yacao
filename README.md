@@ -28,9 +28,9 @@ YACAO is a truly minimal agent workflow for OpenCode: just 2 agents and 3 skills
 
 The main orchestrator agent directly handles code exploration, implementation planning, and review. Each workflow phase has specific guidance defined as skills, loaded on demand. Implementation is delegated to the builder agent.
 
-The goal is to streamline the natural workflow of vanilla OpenCode, with minimal to none learning curve. There is no need to learn and memorize a bunch of commands, fancily named agents and skills. Work the same way you already do, just without tabbing.
+The goal is to streamline the natural workflow of vanilla OpenCode, with little to no learning curve. There is no need to learn and memorize a bunch of commands, fancily named agents and skills. Work the same way you already do, just without tabbing.
 
-YACAO is intended for small, incremental tasks built through iterative processes, rather than single-shot entire solutions. It is not necessarily better, cheaper, or more effective than vanilla OpenCode, it's just more practical.
+YACAO is intended for small, incremental tasks built through iterative processes rather than single-shot solutions, although it can handle those too. It is not necessarily better, cheaper, or more effective than vanilla OpenCode; it is simply more practical.
 
 ## Why YACAO?
 
@@ -47,8 +47,6 @@ TL;DR: the orchestrator receives your prompt and routes it. Questions and discus
 - trivial changes go straight to the builder and back for review;
 - larger changes get a written plan you approve first, then the builder implements it, with review and fixes until it's right.
 
-More detailed description of YACAO in the future.
-
 ## Install
 
 YACAO works on OpenCode V1 and V2.
@@ -56,6 +54,7 @@ YACAO works on OpenCode V1 and V2.
 ### OpenCode V1
 
 Requires OpenCode 1.18.29 or newer.
+
 Add the plugin to your `opencode.jsonc`:
 
 ```jsonc
@@ -114,6 +113,7 @@ Then restart OpenCode.
 ## Configuration
 
 On V1 YACAO sets `orchestrator` as the default agent automatically **if no `default_agent` is already set**.
+
 On V2 you need to set `"default_agent": "orchestrator"`.
 
 ### Setup builder model
@@ -147,6 +147,7 @@ On V2, use the `agents` key:
 ### Setup builder subagents
 
 The builder can spawn OpenCode's `general` and `explore` subagents to parallelize work inside a task.
+
 OpenCode limits subagent nesting to one level by default, so raise it:
 
 On V1, add to `opencode.jsonc`:
@@ -191,6 +192,7 @@ Without this, the builder's spawn attempts fail with a subagent depth limit erro
 ## Development
 
 I personally use YACAO daily at work, so I am constantly fine tuning and adjusting it.
+
 Contributions are very welcome.
 
 ## License
