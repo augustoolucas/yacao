@@ -3,6 +3,15 @@
   "version": "0.3.0",
   "type": "module",
   "main": "plugin/yacao.js",
+  "exports": {
+    ".": "./plugin/yacao.js",
+    "./tui": "./plugin/yacao-tui.jsx"
+  },
+  "peerDependencies": {
+    "@opentui/core": ">=0.5.8",
+    "@opentui/solid": ">=0.5.8",
+    "solid-js": ">=1.9.0"
+  },
   "license": "MIT",
   "description": "Yet Another Coding Agent Orchestrator - a minimal 2-agent, 3-skill workflow plugin for OpenCode."
 }
