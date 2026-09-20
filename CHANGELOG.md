@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.4.0 (2026-09-20)
+
+- Add OpenCode V2 support: the plugin exposes a dual entrypoint, registering
+  agents and skills through the V2 plugin API while keeping the V1 path intact.
+- Add a V2 CLI plugin that shows the YACAO version in the home footer and the
+  sidebar content.
+- Restrict orchestrator edits to plan markdown files.
+
 ## v0.3.0 (2026-09-20)
 
 - Split approved plans into tasks: the builder receives one task at a
