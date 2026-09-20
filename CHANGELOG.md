@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.4.1 (2026-09-20)
+
+- Fix V2 skill loading so YACAO agents no longer request permission for
+  their own skills.
+- Remove the obsolete `scout` subagent permission from the builder.
+- Clarify V1 and V2 installation and builder configuration.
+
 ## v0.4.0 (2026-09-20)
 
 - Add OpenCode V2 support: the plugin exposes a dual entrypoint, registering
