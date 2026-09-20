@@ -31,9 +31,11 @@ More detailed description of YACAO in the future.
 
 ## Install
 
-YACAO requires OpenCode V1; V2 support is on the roadmap.
+YACAO works on OpenCode V1 and V2.
 
-Add the plugin to your `opencode.jsonc`:
+### OpenCode V1
+
+Requires OpenCode 1.18.29 or newer. Add the plugin to your `opencode.jsonc`:
 
 ```jsonc
 {
@@ -66,13 +68,46 @@ To auto-update YACAO, enable the `autoUpdate` option:
 
 Then restart OpenCode.
 
+### OpenCode V2
+
+V2 uses the `plugins` key. Add the plugin (replace `vX.Y.Z` with a release tag):
+
+```jsonc
+{
+  "plugins": ["yacao@git+https://github.com/augustoolucas/yacao.git#vX.Y.Z"],
+  "default_agent": "orchestrator"
+}
+```
+
+On V2, `default_agent` is a plain config field you set yourself; the plugin only sets it automatically on V1.
+
+To pass plugin options, use the object form:
+
+```jsonc
+{
+  "plugins": [
+    {
+      "package": "yacao@git+https://github.com/augustoolucas/yacao.git",
+      "options": {}
+    }
+  ],
+  "default_agent": "orchestrator"
+}
+```
+
+On V2 the plugin registers the three skills and both agents in memory through the plugin API at startup; no files are written to your config directory. A user-defined agent with the same name wins - YACAO only fills in the fields you left unset.
+
+`autoUpdate` and `updateScope` are V1-only options; V2 relies on OpenCode's own plugin update checks.
+
+Then restart OpenCode.
+
 ## Configuration
 
-The plugin sets `orchestrator` as the default agent automatically. To start on something else, set `"default_agent"` in `opencode.jsonc`.
+On V1 the plugin sets `orchestrator` as the default agent automatically; on V2 set `"default_agent": "orchestrator"` yourself (see Install). To start on something else, set `"default_agent"` to another agent.
 
 ### Setup builder model
 
-Builder inherits the model set for the orchestrator. To set a different model, or override any other agent option, add it to `opencode.jsonc`:
+On V1, builder inherits the model set for the orchestrator. To set a different model, or override any other agent option, add it to `opencode.jsonc`:
 
 ```jsonc
 {
@@ -84,9 +119,21 @@ Builder inherits the model set for the orchestrator. To set a different model, o
 }
 ```
 
+On V2, use the `agents` key:
+
+```jsonc
+{
+  "agents": {
+    "builder": {
+      "model": "your-provider/your-model"
+    }
+  }
+}
+```
+
 ### Auto-update options
 
-Both options are opt-in - `autoUpdate` is off by default, and `updateScope` defaults to `globalOnly`:
+Both options are V1-only and opt-in - `autoUpdate` is off by default, and `updateScope` defaults to `globalOnly`:
 
 - `autoUpdate`: on startup, checks the latest release and pins the plugin spec forward (`#vX.Y.Z`) when a newer version exists, so the next restart installs it.
 - `updateScope`: which configs may be updated - `"globalOnly"` (default) updates only the global config, `"all"` also updates the project's `.opencode/opencode.jsonc` or `opencode.json`.
@@ -108,10 +155,6 @@ Both options are opt-in - `autoUpdate` is off by default, and `updateScope` defa
 ## Development
 
 I personally use YACAO daily at work, so I am constantly fine tuning and adjusting it. Contributions are very welcome.
-
-### Roadmap
-
-- OpenCode V2 support. YACAO currently targets the V1 plugin API; V2 changed the plugin API, so a port is required.
 
 ## License
 
