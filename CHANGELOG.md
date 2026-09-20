@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.3.0-rc (2026-09-19)
+## v0.3.0 (2026-09-20)
 
 - Split approved plans into tasks: the builder receives one task at a
   time, each result is reviewed before the next task starts, and a final
