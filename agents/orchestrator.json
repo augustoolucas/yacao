@@ -12,7 +12,7 @@
     "lsp": "allow",
     "edit": {
       "*": "deny",
-      ".opencode/plans/**": "allow"
+      ".opencode/plans/*.md": "allow"
     },
     "bash": {
       "*": "allow",
