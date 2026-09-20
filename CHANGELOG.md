@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.4.2-rc (2026-09-20)
+
+- Remove the V2 TUI plugin until OpenCode's npm/git plugin loader can load
+  external Solid plugins correctly. See [OpenCode issue #33884](https://github.com/anomalyco/opencode/issues/33884).
+
 ## v0.4.1 (2026-09-20)
 
 - Fix V2 skill loading so YACAO agents no longer request permission for
