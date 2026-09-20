@@ -1,6 +1,26 @@
-# YACAO - Yet Another Coding Agent Orchestrator
+<h1 align="center">YACAO - Yet Another Coding Agent Orchestrator</h1>
 
-You already use Plan and Build. You probably review your changes too. YACAO just connects the dots, so you don't have to.
+<p align="center">
+  <strong>You already use Plan and Build. You probably review your changes too.</strong><br>
+  YACAO just connects the dots, so you don't have to.
+</p>
+
+<p align="center">
+  <a href="https://opencode.ai/"><img src="https://img.shields.io/badge/OpenCode-V1%20%7C%20V2-6d5dfc?style=flat-square&amp;logo=opencode&amp;logoColor=white" alt="OpenCode V1 | V2"></a>
+  <a href="https://github.com/augustoolucas/yacao/releases/latest"><img src="https://img.shields.io/github/v/release/augustoolucas/yacao?style=flat-square&amp;label=YACAO" alt="YACAO version"></a>
+  <a href="https://github.com/augustoolucas/yacao/blob/main/LICENSE"><img src="https://img.shields.io/github/license/augustoolucas/yacao?style=flat-square" alt="MIT License"></a>
+  <a href="https://github.com/augustoolucas/yacao/stargazers"><img src="https://img.shields.io/github/stars/augustoolucas/yacao?style=flat-square" alt="GitHub stars"></a>
+</p>
+
+<p align="center">
+  <a href="#what-is-yacao">What is YACAO?</a> ·
+  <a href="#why-yacao">Why YACAO?</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#install">Install</a> ·
+  <a href="#configuration">Configuration</a> ·
+  <a href="#development">Development</a> ·
+  <a href="#license">License</a>
+</p>
 
 ## What is YACAO?
 
