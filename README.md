@@ -63,14 +63,6 @@ Add the plugin to your `opencode.jsonc`:
 }
 ```
 
-To pin a specific version, append a tag to the spec (replace vX.Y.Z with a release tag):
-
-```jsonc
-{
-  "plugin": ["yacao@git+https://github.com/augustoolucas/yacao.git#vX.Y.Z"]
-}
-```
-
 To auto-update YACAO, enable the `autoUpdate` option:
 
 ```jsonc
@@ -95,15 +87,6 @@ Add the plugin:
 ```jsonc
 {
   "plugins": ["yacao@git+https://github.com/augustoolucas/yacao.git"],
-  "default_agent": "orchestrator"
-}
-```
-
-To pin a specific version, append a tag to the spec (replace vX.Y.Z with a release tag):
-
-```jsonc
-{
-  "plugins": ["yacao@git+https://github.com/augustoolucas/yacao.git#vX.Y.Z"],
   "default_agent": "orchestrator"
 }
 ```
