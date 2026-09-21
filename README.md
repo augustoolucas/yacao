@@ -174,7 +174,7 @@ Without this, the builder's spawn attempts fail with a subagent depth limit erro
 
 ## Development
 
-I personally use YACAO daily at work, so I am constantly fine tuning and adjusting it.
+I personally use YACAO daily, so I am constantly fine tuning and adjusting it.
 
 Contributions are very welcome.
 
