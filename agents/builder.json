@@ -3,29 +3,29 @@
   "mode": "subagent",
   "temperature": 0.1,
   "permission": {
-    "edit": "allow",
-    "read": "allow",
-    "grep": "allow",
-    "glob": "allow",
-    "skill": "allow",
-    "list": "allow",
-    "todowrite": "allow",
+    "*": "allow",
+    "external_directory": "ask",
+    "question": "deny",
+    "read": {
+      "*": "allow",
+      "*.env": "ask",
+      "*.env.*": "ask",
+      "*.env.example": "allow"
+    },
     "bash": {
       "*": "allow",
-      "git * commit*": "deny",
-      "git commit*": "deny",
+      "git * commit*": "ask",
+      "git commit*": "ask",
       "git * push*": "deny",
       "git push*": "ask",
       "command git*": "deny",
       "env git*": "deny",
-      "cat *.env*": "deny",
+      "cat *.env*": "ask",
       "git reset --hard*": "ask",
       "git clean*": "ask",
       "rm -rf *": "ask",
       "rm -fr *": "ask"
     },
-    "webfetch": "allow",
-    "websearch": "allow",
     "task": {
       "general": "allow",
       "explore": "allow"

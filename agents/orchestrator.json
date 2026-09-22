@@ -3,14 +3,15 @@
   "mode": "primary",
   "temperature": 0.25,
   "permission": {
-    "question": "allow",
-    "todowrite": "allow",
-    "read": "allow",
-    "grep": "allow",
-    "glob": "allow",
-    "list": "allow",
-    "lsp": "allow",
-    "skill": "allow",
+    "*": "allow",
+    "external_directory": "ask",
+    "doom_loop": "ask",
+    "read": {
+      "*": "allow",
+      "*.env": "ask",
+      "*.env.*": "ask",
+      "*.env.example": "allow"
+    },
     "edit": {
       "*": "deny",
       ".opencode/plans/*.md": "allow"
@@ -23,16 +24,12 @@
       "git push*": "ask",
       "command git*": "deny",
       "env git*": "deny",
-      "cat *.env*": "deny",
+      "cat *.env*": "ask",
       "git reset --hard*": "ask",
       "git clean*": "ask",
       "rm -rf *": "ask",
       "rm -fr *": "ask"
     },
-    "webfetch": "allow",
-    "websearch": "allow",
-    "external_directory": "ask",
-    "doom_loop": "ask",
     "task": {
       "builder": "allow"
     }
