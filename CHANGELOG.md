@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4.3-rc (2026-09-22)
+## v0.4.3 (2026-09-22)
 
 - Rework agent permissions around the native rule idiom: the builder can now create
   commits with approval and reading `.env` files requires approval.
