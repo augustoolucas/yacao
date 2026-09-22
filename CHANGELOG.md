@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.3-rc (2026-09-22)
+
+- Rework agent permissions around the native rule idiom: the builder can now create
+  commits with approval and reading `.env` files requires approval.
+- Remove duplicated task-sequencing rule from the review skill.
+
 ## v0.4.2 (2026-09-20)
 
 - Remove YACAO version from the V2 TUI plugin until OpenCode's npm/git plugin loader can load
