@@ -221,8 +221,22 @@ const agentPermissionRules = (permission) => {
   return rules;
 };
 
-// Registers the agents in memory through the V2 agent transform. Per-agent
-// temperature is not part of Agent.Info, so it stays V1-only.
+// "provider/model#variant" -> Model.Ref ({ providerID, id, variant? }), the shape
+// Agent.Info.model expects on V2. Mirrors @opencode/schema Model.Ref.parse.
+const parseModelRef = (value) => {
+  if (typeof value !== "string") return null;
+  const providerEnd = value.indexOf("/");
+  if (providerEnd <= 0) return null;
+  const providerID = value.slice(0, providerEnd);
+  const variantStart = value.indexOf("#", providerEnd + 1);
+  const id = value.slice(providerEnd + 1, variantStart === -1 ? undefined : variantStart);
+  const variant = variantStart === -1 ? undefined : value.slice(variantStart + 1);
+  if (!id || providerID.includes("#") || (variant !== undefined && (!variant || variant.includes("#")))) return null;
+  return variant ? { providerID, id, variant } : { providerID, id };
+};
+
+// Registers the agents in memory through the V2 agent transform. Model is
+// propagated; per-agent temperature is not part of Agent.Info, so stays V1-only.
 const applyAgentDefinitions = (editor, definitions) => {
   for (const { name, definition } of definitions) {
     const rules = agentPermissionRules(definition.permission);
@@ -234,6 +248,8 @@ const applyAgentDefinitions = (editor, definitions) => {
         agent.system = definition.prompt;
         agent.mode = definition.mode;
         agent.permissions = rules;
+        const model = parseModelRef(definition.model);
+        if (model) agent.model = model;
       });
       continue;
     }
@@ -242,6 +258,8 @@ const applyAgentDefinitions = (editor, definitions) => {
     existing.name ??= name;
     existing.description ??= definition.description;
     existing.system ??= definition.prompt;
+    const model = parseModelRef(definition.model);
+    if (model) existing.model ??= model;
     existing.permissions.unshift(...rules);
   }
 };
