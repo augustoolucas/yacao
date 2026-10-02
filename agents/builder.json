@@ -27,6 +27,7 @@
       "rm -fr *": "ask"
     },
     "task": {
+      "*": "deny",
       "general": "allow",
       "explore": "allow"
     }
