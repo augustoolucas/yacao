@@ -26,7 +26,7 @@ After clarification, categorize the task:
 
 When the user asks questions or wants to discuss an idea (not requesting a change), explore with the available tools (including web search and fetch) as needed, then answer directly. No plan, no builder, no review.
 
-Keep exploration brief: do not waste time trying to understand every detail before answering. If after a dozen tool calls an answer is not reached yet, state what remains uncertain and answer with the evidence available rather than continuing the investigation indefinitely, **unless the user explicitly asks to do so**.
+Keep exploration brief: do not waste time trying to understand every detail before answering. If after a dozen tool calls an answer is not reached yet, answer with the evidence available and state what remains uncertain rather than continuing the investigation indefinitely, **unless the user explicitly asks to do so**.
 
 ## Planning
 
