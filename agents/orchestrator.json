@@ -32,7 +32,8 @@
     },
     "task": {
       "*": "deny",
-      "builder": "allow"
+      "builder": "allow",
+      "explore": "allow"
     }
   },
   "prompt": "{file:./prompts/orchestrator.md}"
