@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.4.4 (2026-10-13)
+
+- Keep the orchestrator focused on the question at hand: explore with the tools when that
+  matters, otherwise answer from what it knows, and lead with the answer.
+- A `model` declared in `agents/*.json` now reaches the agent on OpenCode V2 instead of
+  being silently ignored.
+- Subagent allowlists are exclusive: an agent can only dispatch the subagents it lists.
+- The orchestrator can dispatch `explore` subagents for broad or parallelizable searches.
+
 ## v0.4.3 (2026-09-22)
 
 - Rework agent permissions around the native rule idiom: the builder can now create
