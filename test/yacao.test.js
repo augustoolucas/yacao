@@ -274,6 +274,7 @@ describe("agent shell rule order", () => {
       'git commit -m "fix push"',
       'git commit -m "stash it"',
       'git -C . commit -m "fix push"',
+      'git commit -m "merge main"',
     ]) {
       assert.equal(decide(builder, command), "deny", command);
     }
@@ -282,7 +283,14 @@ describe("agent shell rule order", () => {
   test("builder asks for the gated git commands", () => {
     for (const command of [
       "git stash push -m x",
-      "git stash list",
+      "git merge main",
+      "git cherry-pick abc123",
+      "git revert HEAD",
+      "git am patch",
+      "git rebase main",
+      "git pull origin main",
+      "git reset --soft HEAD~1",
+      "git reset HEAD~1",
       "git checkout -b topic",
       "git restore .",
       "git switch -c topic",
@@ -311,5 +319,7 @@ describe("agent shell rule order", () => {
       assert.equal(decide(orchestrator, command), "ask", command);
     }
     assert.equal(decide(orchestrator, "git status --porcelain"), "allow");
+    assert.equal(decide(orchestrator, "git merge main"), "ask");
+    assert.equal(decide(orchestrator, "git rebase main"), "ask");
   });
 });
