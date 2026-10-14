@@ -180,6 +180,23 @@ describe("applyAgentDefinitions", () => {
     ]);
   });
 
+  test("replaces the host permission scaffold", () => {
+    const editor = createEditor({
+      builder: {
+        permissions: [
+          { action: "*", resource: "*", effect: "allow" },
+          { action: "webfetch", resource: "*", effect: "deny" },
+        ],
+      },
+    });
+    applyAgentDefinitions(editor, [{ name: "builder", definition: definitionFor() }]);
+    assert.deepEqual(editor.agents.builder.permissions, [
+      { action: "edit", resource: "*", effect: "allow" },
+      { action: "shell", resource: "git status", effect: "allow" },
+      { action: "shell", resource: "git push", effect: "deny" },
+    ]);
+  });
+
   test("keeps a user model and forces the definition mode", () => {
     const editor = createEditor({
       builder: { model: { providerID: "anthropic", id: "claude" }, mode: "primary" },
@@ -205,12 +222,15 @@ describe("applyAgentDefinitions", () => {
     assert.equal(editor.agents.builder.permissions.length, 3);
   });
 
-  test("does not duplicate rules when applied twice", () => {
+  test("replaces rules on every call (idempotent)", () => {
     const editor = createEditor();
     const definitions = [{ name: "builder", definition: definitionFor() }];
     applyAgentDefinitions(editor, definitions);
-    const first = [...editor.agents.builder.permissions];
     applyAgentDefinitions(editor, definitions);
-    assert.deepEqual(editor.agents.builder.permissions, first);
+    assert.deepEqual(editor.agents.builder.permissions, [
+      { action: "edit", resource: "*", effect: "allow" },
+      { action: "shell", resource: "git status", effect: "allow" },
+      { action: "shell", resource: "git push", effect: "deny" },
+    ]);
   });
 });

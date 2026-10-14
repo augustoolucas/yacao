@@ -195,21 +195,10 @@ const parseModelRef = (value) => {
   return variant ? { providerID, id, variant } : { providerID, id };
 };
 
-// Two rules are the same when their action, resource and effect match; object
-// references differ across calls, so compare properties instead of identity.
-const sameRule = (a, b) =>
-  a !== null &&
-  typeof a === "object" &&
-  a.action === b.action &&
-  a.resource === b.resource &&
-  a.effect === b.effect;
-
-const startsWithRules = (existing, rules) =>
-  existing.length >= rules.length && rules.every((rule, index) => sameRule(existing[index], rule));
-
-// Registers the agents in memory through the V2 agent transform. Every mutation
-// happens inside update(), the callback the host commits; model is propagated,
-// but per-agent temperature is not part of Agent.Info, so stays V1-only.
+// Registers the agents in memory through the V2 agent transform. Model is
+// propagated; mode is forced; permissions replace the host scaffold so YACAO's
+// role invariants cannot be overridden by global permission defaults.
+// Per-agent temperature is not part of Agent.Info, so it stays V1-only.
 const applyAgentDefinitions = (editor, definitions) => {
   for (const { name, definition } of definitions) {
     const rules = agentPermissionRules(definition.permission);
@@ -221,10 +210,9 @@ const applyAgentDefinitions = (editor, definitions) => {
       agent.mode = definition.mode;
       const model = parseModelRef(definition.model);
       if (model && !agent.model) agent.model = model;
-      // A user-defined agent wins: prepend our rules only once, so theirs stay
-      // last and keep winning, and a second call does not duplicate them.
-      const existing = Array.isArray(agent.permissions) ? agent.permissions : [];
-      if (!startsWithRules(existing, rules)) agent.permissions = [...rules, ...existing];
+      // Replace the host scaffold: last-match-wins evaluation means anything the
+      // host appends after our rules would otherwise override them.
+      agent.permissions = rules;
     });
   }
 };
