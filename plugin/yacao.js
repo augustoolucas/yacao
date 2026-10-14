@@ -11,8 +11,6 @@ const UPDATE_ENDPOINT = "https://api.github.com/repos/augustoolucas/yacao/releas
 const UPDATE_DELAY_MS = 5000;
 const UPDATE_TIMEOUT_MS = 8000;
 const UPDATE_TTL_MS = 60 * 60 * 1000;
-// Matches a quoted YACAO git plugin spec, pinned or not, whatever the quote style.
-const YACAO_SPEC = /(["'])yacao@git\+https:\/\/github\.com\/augustoolucas\/yacao\.git(?:#[^"']*)?\1/g;
 
 let notified = false; // once per process
 
@@ -59,8 +57,10 @@ const runningVersion = () => {
 };
 
 const parseSemver = (value) => {
-  const match = /^v?(\d+)\.(\d+)\.(\d+)$/.exec(value ?? "");
-  return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null;
+  const match = /^v?(\d+)\.(\d+)\.(\d+)(?:-(.+))?$/.exec(value ?? "");
+  return match
+    ? { numbers: [Number(match[1]), Number(match[2]), Number(match[3])], pre: match[4] ?? null }
+    : null;
 };
 
 const isNewer = (candidate, current) => {
@@ -68,8 +68,10 @@ const isNewer = (candidate, current) => {
   const own = parseSemver(current);
   if (!next || !own) return false;
   for (let i = 0; i < 3; i += 1) {
-    if (next[i] !== own[i]) return next[i] > own[i];
+    if (next.numbers[i] !== own.numbers[i]) return next.numbers[i] > own.numbers[i];
   }
+  if (next.pre === own.pre) return false;
+  if (next.pre === null) return true;
   return false;
 };
 
@@ -112,48 +114,6 @@ const fetchLatestTag = async () => {
   } finally {
     clearTimeout(timeout);
   }
-};
-
-const globalConfigDir = () =>
-  path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config"), "opencode");
-
-const configCandidates = (directory, includeProject) => {
-  const candidates = [
-    path.join(globalConfigDir(), "opencode.jsonc"),
-    path.join(globalConfigDir(), "opencode.json"),
-  ];
-  if (includeProject && directory) {
-    candidates.push(path.join(directory, ".opencode", "opencode.jsonc"));
-    candidates.push(path.join(directory, ".opencode", "opencode.json"));
-  }
-  return candidates;
-};
-
-// Rewrites raw text instead of parsing JSON so jsonc comments and formatting
-// survive; the quote style of the matched spec is preserved.
-const pinConfigs = (tag, directory, includeProject) => {
-  const spec = `yacao@git+https://github.com/augustoolucas/yacao.git#${normalizeTag(tag)}`;
-  let updated = 0;
-  for (const file of configCandidates(directory, includeProject)) {
-    let raw;
-    try {
-      raw = fs.readFileSync(file, "utf8");
-    } catch {
-      continue;
-    }
-    const rewritten = raw.replace(YACAO_SPEC, (_match, quote) => `${quote}${spec}${quote}`);
-    if (rewritten === raw) continue;
-    try {
-      const temporary = `${file}.tmp`;
-      fs.writeFileSync(temporary, rewritten);
-      fs.chmodSync(temporary, fs.statSync(file).mode & 0o7777);
-      fs.renameSync(temporary, file);
-      updated += 1;
-    } catch {
-      // unreadable or unwritable candidate: keep going
-    }
-  }
-  return updated > 0;
 };
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*\r?\n?/;
@@ -346,8 +306,7 @@ export default {
       if (!claimUpdateCheck()) return;
       const tag = await fetchLatestTag();
       if (!tag || !isNewer(tag, runningVersion())) return;
-      if (!pinConfigs(tag, worktree ?? directory, options.updateScope === "all")) return;
-      const message = `updated to ${normalizeTag(tag)} - restart to apply`;
+      const message = `update available: ${normalizeTag(tag)}`;
       try {
         await client?.tui?.showToast({
           body: { title: "YACAO", message, variant: "info", duration: 4000 },
