@@ -195,32 +195,37 @@ const parseModelRef = (value) => {
   return variant ? { providerID, id, variant } : { providerID, id };
 };
 
-// Registers the agents in memory through the V2 agent transform. Model is
-// propagated; per-agent temperature is not part of Agent.Info, so stays V1-only.
+// Two rules are the same when their action, resource and effect match; object
+// references differ across calls, so compare properties instead of identity.
+const sameRule = (a, b) =>
+  a !== null &&
+  typeof a === "object" &&
+  a.action === b.action &&
+  a.resource === b.resource &&
+  a.effect === b.effect;
+
+const startsWithRules = (existing, rules) =>
+  existing.length >= rules.length && rules.every((rule, index) => sameRule(existing[index], rule));
+
+// Registers the agents in memory through the V2 agent transform. Every mutation
+// happens inside update(), the callback the host commits; model is propagated,
+// but per-agent temperature is not part of Agent.Info, so stays V1-only.
 const applyAgentDefinitions = (editor, definitions) => {
   for (const { name, definition } of definitions) {
     const rules = agentPermissionRules(definition.permission);
-    const existing = editor.get(name);
-    if (!existing) {
-      editor.update(name, (agent) => {
-        agent.name = name;
-        agent.description = definition.description;
-        agent.system = definition.prompt;
-        agent.mode = definition.mode;
-        agent.permissions = rules;
-        const model = parseModelRef(definition.model);
-        if (model) agent.model = model;
-      });
-      continue;
-    }
-    // A user-defined agent wins: fill only missing fields and prepend our rules
-    // so the user's rules stay last and keep winning.
-    existing.name ??= name;
-    existing.description ??= definition.description;
-    existing.system ??= definition.prompt;
-    const model = parseModelRef(definition.model);
-    if (model) existing.model ??= model;
-    existing.permissions.unshift(...rules);
+    editor.update(name, (agent) => {
+      agent.name = name;
+      if (!agent.description) agent.description = definition.description;
+      if (!agent.system) agent.system = definition.prompt;
+      // Always overwrite the host default (primary); never leave a builder primary.
+      agent.mode = definition.mode;
+      const model = parseModelRef(definition.model);
+      if (model && !agent.model) agent.model = model;
+      // A user-defined agent wins: prepend our rules only once, so theirs stay
+      // last and keep winning, and a second call does not duplicate them.
+      const existing = Array.isArray(agent.permissions) ? agent.permissions : [];
+      if (!startsWithRules(existing, rules)) agent.permissions = [...rules, ...existing];
+    });
   }
 };
 
