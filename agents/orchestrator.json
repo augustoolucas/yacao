@@ -20,7 +20,7 @@
       "*": "allow",
       "git * commit*": "ask",
       "git commit*": "ask",
-      "git * push*": "deny",
+      "git * push*": "ask",
       "git push*": "ask",
       "command git*": "deny",
       "env git*": "deny",
@@ -28,7 +28,15 @@
       "git reset --hard*": "ask",
       "git clean*": "ask",
       "rm -rf *": "ask",
-      "rm -fr *": "ask"
+      "rm -fr *": "ask",
+      "git checkout*": "ask",
+      "git * checkout*": "ask",
+      "git restore*": "ask",
+      "git * restore*": "ask",
+      "git stash*": "ask",
+      "git * stash*": "ask",
+      "rm -r -f*": "ask",
+      "rm -f -r*": "ask"
     },
     "task": {
       "*": "deny",
