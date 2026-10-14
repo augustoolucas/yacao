@@ -127,7 +127,7 @@ On V2, use the `agents` key:
 
 ### Setup builder subagents
 
-The builder can spawn OpenCode's `general` and `explore` subagents to parallelize work inside a task.
+The builder can dispatch OpenCode's `explore` subagent to parallelize searches inside a task.
 
 OpenCode limits subagent nesting to one level by default, so raise it:
 
@@ -150,6 +150,10 @@ On V2, the key lives under `experimental`:
 ```
 
 Without this, the builder's spawn attempts fail with a subagent depth limit error.
+
+### Agent permissions
+
+Permissions are guardrails against honest mistakes, not a sandbox: shell access can bypass most of them by design.
 
 ### Auto-update options (OpenCode V1 Only)
 
