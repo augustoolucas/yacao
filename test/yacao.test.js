@@ -304,7 +304,7 @@ describe("agent shell rule order", () => {
   });
 
   test("builder allows routine commands", () => {
-    for (const command of ["git status --porcelain", "git diff HEAD", "ls -la", "npm test"]) {
+    for (const command of ["git status --porcelain", "git diff HEAD", "ls -la", "npm test", "git stash list", "git stash show -p"]) {
       assert.equal(decide(builder, command), "allow", command);
     }
   });
@@ -321,5 +321,6 @@ describe("agent shell rule order", () => {
     assert.equal(decide(orchestrator, "git status --porcelain"), "allow");
     assert.equal(decide(orchestrator, "git merge main"), "ask");
     assert.equal(decide(orchestrator, "git rebase main"), "ask");
+    assert.equal(decide(orchestrator, "git stash list"), "allow");
   });
 });

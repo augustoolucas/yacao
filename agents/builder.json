@@ -54,6 +54,8 @@
       "git rebase*": "ask",
       "git pull*": "ask",
       "git reset*": "ask",
+      "git stash list*": "allow",
+      "git stash show*": "allow",
       "git commit*": "deny"
     },
     "task": {

@@ -50,7 +50,9 @@
       "git stash*": "ask",
       "git * stash*": "ask",
       "rm -r -f*": "ask",
-      "rm -f -r*": "ask"
+      "rm -f -r*": "ask",
+      "git stash list*": "allow",
+      "git stash show*": "allow"
     },
     "task": {
       "*": "deny",
