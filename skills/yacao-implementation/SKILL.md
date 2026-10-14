@@ -5,7 +5,7 @@ description: Guides ordered task dispatch, task_id reuse, and builder response h
 
 # Implementation
 
-You delegate code changes to **builder** via the **Task** tool - you construct the task, hand it off, and handle the response. Before every dispatch, note the worktree/diff state, and capture the returned `task_id` for potential follow-up reuse.
+You delegate code changes to **builder** via the **Task** tool - you construct the task, hand it off, and handle the response. The review base is the last approved task commit (`HEAD`). Capture the returned `task_id` for potential follow-up reuse.
 
 ## Trivial tasks
 
@@ -21,8 +21,8 @@ Send the builder a direct spec containing:
 Follow the approved plan overview's ordered task list, one builder at a time:
 
 1. Read the current task contract at `.opencode/plans/plan-<slug>/tasks/task-XX-<name>.md`.
-2. Send the builder the task's `Goal`, `Changes`, `File scope`, `Dependencies`, and `Verification commands`, plus any useful context from prior decisions - nothing else. Never send the full plan overview or future task contracts.
-3. Start the next task only after the current task's review is approved. After the last task, run the final full-plan review (see the `yacao-review` skill).
+2. Send the builder the task's `Goal`, `Changes`, `File scope`, `Dependencies`, and `Verification commands`, plus the overview risks that this task could trigger and any useful context from prior decisions - nothing else. Never send the full plan overview or future task contracts.
+3. Before the first dispatch, record the current `HEAD` as `Base commit` in the plan overview (refresh it if history moved since planning). Start the next task only after the current task's review is approved and committed by you - in a new session or after compaction, reconstruct progress and the review base from the overview and `git log --oneline`, never from memory. After the last task, run the final full-plan review (see the `yacao-review` skill).
 
 ## Builder status routing
 

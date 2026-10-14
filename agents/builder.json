@@ -14,8 +14,8 @@
     },
     "bash": {
       "*": "allow",
-      "git * commit*": "ask",
-      "git commit*": "ask",
+      "git * commit*": "deny",
+      "git commit*": "deny",
       "git * push*": "deny",
       "git push*": "ask",
       "command git*": "deny",
