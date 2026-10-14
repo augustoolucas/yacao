@@ -61,7 +61,7 @@ Add the plugin to your `opencode.jsonc`:
 }
 ```
 
-To auto-update YACAO, enable the `autoUpdate` option:
+To be notified when a new release is available, enable the `autoUpdate` option:
 
 ```jsonc
 {
