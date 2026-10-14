@@ -40,6 +40,7 @@
       "git stash*": "ask",
       "git checkout*": "ask",
       "git restore*": "ask",
+      "git switch*": "ask",
       "git commit*": "deny"
     },
     "task": {

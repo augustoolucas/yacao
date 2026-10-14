@@ -1,5 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import {
   parseSemver,
@@ -232,5 +233,83 @@ describe("applyAgentDefinitions", () => {
       { action: "shell", resource: "git status", effect: "allow" },
       { action: "shell", resource: "git push", effect: "deny" },
     ]);
+  });
+});
+
+const readAgentPermissions = (name) =>
+  JSON.parse(readFileSync(new URL(`../agents/${name}.json`, import.meta.url), "utf8")).permission;
+
+const shellRules = (name) =>
+  agentPermissionRules(readAgentPermissions(name)).filter((rule) => rule.action === "shell");
+
+// Our reading of the documented wildcard semantics: anchored match, `*` spans
+// every character, the last matching rule wins. This pins the rule order in the
+// agent definitions, not the host implementation.
+const toRegExp = (pattern) =>
+  new RegExp(
+    "^" +
+      pattern
+        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        .replace(/\\\*/g, ".*")
+        .replace(/\\\?/g, ".") +
+      "$",
+  );
+
+const decide = (rules, command) => {
+  let effect = null;
+  for (const rule of rules) {
+    if (toRegExp(rule.resource).test(command)) effect = rule.effect;
+  }
+  return effect;
+};
+
+describe("agent shell rule order", () => {
+  const builder = shellRules("builder");
+  const orchestrator = shellRules("orchestrator");
+
+  test("builder denies every commit form", () => {
+    for (const command of [
+      "git commit",
+      'git commit -m "ordinary message"',
+      'git commit -m "fix push"',
+      'git commit -m "stash it"',
+      'git -C . commit -m "fix push"',
+    ]) {
+      assert.equal(decide(builder, command), "deny", command);
+    }
+  });
+
+  test("builder asks for the gated git commands", () => {
+    for (const command of [
+      "git stash push -m x",
+      "git stash list",
+      "git checkout -b topic",
+      "git restore .",
+      "git switch -c topic",
+      "git push origin main",
+      "git -C . push",
+      "git reset --hard HEAD",
+      "git clean -fd",
+    ]) {
+      assert.equal(decide(builder, command), "ask", command);
+    }
+  });
+
+  test("builder allows routine commands", () => {
+    for (const command of ["git status --porcelain", "git diff HEAD", "ls -la", "npm test"]) {
+      assert.equal(decide(builder, command), "allow", command);
+    }
+  });
+
+  test("builder denies the shell escape routes", () => {
+    assert.equal(decide(builder, "command git status"), "deny");
+    assert.equal(decide(builder, "env git status"), "deny");
+  });
+
+  test("orchestrator asks before commit and push", () => {
+    for (const command of ["git commit -m x", "git push origin main", "git -C . push"]) {
+      assert.equal(decide(orchestrator, command), "ask", command);
+    }
+    assert.equal(decide(orchestrator, "git status --porcelain"), "allow");
   });
 });

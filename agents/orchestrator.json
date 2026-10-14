@@ -33,6 +33,7 @@
       "git * checkout*": "ask",
       "git restore*": "ask",
       "git * restore*": "ask",
+      "git switch*": "ask",
       "git stash*": "ask",
       "git * stash*": "ask",
       "rm -r -f*": "ask",
