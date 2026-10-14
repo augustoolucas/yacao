@@ -11,7 +11,14 @@
       "*": "allow",
       "*.env": "ask",
       "*.env.*": "ask",
-      "*.env.example": "allow"
+      "*.env.example": "allow",
+      ".opencode/plans/*": "deny"
+    },
+    "skill": {
+      "*": "allow",
+      "yacao-planning": "deny",
+      "yacao-implementation": "deny",
+      "yacao-review": "deny"
     },
     "bash": {
       "*": "allow",
@@ -37,7 +44,6 @@
     },
     "task": {
       "*": "deny",
-      "general": "allow",
       "explore": "allow"
     }
   },

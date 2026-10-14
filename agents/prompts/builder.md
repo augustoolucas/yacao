@@ -15,7 +15,7 @@ You are **`builder`** - the implementation subagent. You receive a self-containe
 
 ## Subagents
 
-You may spawn subagents via the Task tool to parallelize work explicitly included in the current task. Never expand beyond the task.
+You may dispatch the `explore` subagent via the Task tool to parallelize searches explicitly included in the current task. Never expand beyond the task.
 
 ## Output format
 
