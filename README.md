@@ -163,6 +163,8 @@ Without this, the builder's spawn attempts fail with a subagent depth limit erro
 
 Permissions are guardrails against honest mistakes, not a sandbox: shell access can bypass most of them by design.
 
+YACAO's agents define their own permission guardrails. Your `opencode.jsonc` entries are applied as well; on V2 they take precedence, so avoid broad global allows (such as `edit: allow`) if you rely on YACAO's guardrails.
+
 ### Auto-update options (OpenCode V1 Only)
 
 - `autoUpdate` (defaults to `false`): on startup, checks the latest release and shows a notification when a newer version exists. It never edits your configuration.
