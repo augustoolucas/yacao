@@ -46,6 +46,7 @@ TL;DR: the orchestrator receives your prompt. Questions and discussions are answ
 
 - small changes go straight to the builder and back for review;
 - larger changes get a written plan you approve first, then the builder implements it, with review and fixes until it's right.
+- every approved task is committed to your branch, each commit behind your approval;
 
 ## Install
 
@@ -163,7 +164,7 @@ Without this, the builder's spawn attempts fail with a subagent depth limit erro
 
 Permissions are guardrails against honest mistakes, not a sandbox: shell access can bypass most of them by design.
 
-YACAO's agents define their own permission guardrails. Your `opencode.jsonc` entries are applied as well; on V2 they take precedence, so avoid broad global allows (such as `edit: allow`) if you rely on YACAO's guardrails.
+YACAO's agents define their own permission guardrails. Your `opencode.jsonc` entries are applied as well; on V2 they take precedence, so avoid broad global allows (such as `edit: allow`) if you rely on YACAO's guardrails. To loosen one of their rules, override it per agent: `agent.<name>.permission` on V1, `agents.<name>.permissions` on V2.
 
 ### Auto-update options (OpenCode V1 Only)
 

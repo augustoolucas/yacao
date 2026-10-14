@@ -196,8 +196,9 @@ const parseModelRef = (value) => {
 };
 
 // Registers the agents in memory through the V2 agent transform. Model is
-// propagated; mode is forced; permissions replace the host scaffold so YACAO's
-// role invariants cannot be overridden by global permission defaults.
+// propagated; mode is forced; permissions replace the host scaffold so the
+// host's blanket allow cannot override our rules. User configuration is applied
+// after the transform and still wins (last match wins).
 // Per-agent temperature is not part of Agent.Info, so it stays V1-only.
 const applyAgentDefinitions = (editor, definitions) => {
   for (const { name, definition } of definitions) {
