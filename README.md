@@ -91,6 +91,14 @@ Add the plugin:
 
 Then restart OpenCode.
 
+### Updating YACAO
+
+OpenCode caches the installed plugin, so restarting alone fetches nothing new.
+
+- With a pinned spec, point the tag at the new release; the spec string is the cache key, so the next start installs it.
+- With an unpinned spec, remove the cached copy under `~/.cache/opencode/packages/` and restart.
+- This applies to both V1 and V2.
+
 ## Configuration
 
 On V1 YACAO sets `orchestrator` as the default agent automatically **if no `default_agent` is already set**.
@@ -157,22 +165,7 @@ Permissions are guardrails against honest mistakes, not a sandbox: shell access 
 
 ### Auto-update options (OpenCode V1 Only)
 
-- `autoUpdate` (defaults to `false`): on startup, checks the latest release and pins the plugin spec forward (`#vX.Y.Z`) when a newer version exists, so the next restart installs it.
-- `updateScope` (defaults to `globalOnly`): which configs may be updated - `"globalOnly"` updates only the global config, `"all"` also updates the project's `.opencode/opencode.jsonc` or `opencode.json`.
-
-```jsonc
-{
-  "plugin": [
-    [
-      "yacao@git+https://github.com/augustoolucas/yacao.git",
-      {
-        "autoUpdate": true,
-        "updateScope": "all"
-      }
-    ]
-  ]
-}
-```
+- `autoUpdate` (defaults to `false`): on startup, checks the latest release and shows a notification when a newer version exists. It never edits your configuration.
 
 ## Development
 
