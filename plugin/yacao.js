@@ -229,6 +229,8 @@ const applyAgentDefinitions = (editor, definitions) => {
   }
 };
 
+export { parseSemver, isNewer, mergeDefinition, agentPermissionRules, parseModelRef, applyAgentDefinitions };
+
 export default {
   id: "yacao",
 

@@ -7,5 +7,8 @@
     ".": "./plugin/yacao.js"
   },
   "license": "MIT",
-  "description": "Yet Another Coding Agent Orchestrator - a minimal 2-agent, 3-skill workflow plugin for OpenCode."
+  "description": "Yet Another Coding Agent Orchestrator - a minimal 2-agent, 3-skill workflow plugin for OpenCode.",
+  "scripts": {
+    "test": "node --test"
+  }
 }
