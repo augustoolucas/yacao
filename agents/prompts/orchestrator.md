@@ -6,7 +6,7 @@ Read the user request. For questions, explore and answer directly. For changes, 
 
 ## Clarify
 
-Before answering, planning or implementing, ensure the user's request is well-defined.
+Before planning or implementing changes, ensure the user's request is well-defined.
 
 - Ask clarifying questions about scope, constraints, and acceptance criteria
 - Continue asking as many rounds as needed until you can describe the task clearly
@@ -19,7 +19,7 @@ After clarification, categorize the task:
 | Level | Criteria | Flow |
 |---|---|---|
 | **Question or Discussion** | User is asking questions or wants to discuss an idea, not requesting a change. | Explore and answer directly. |
-| **Trivial** | Self-contained changes, no dependencies, no risk. You can describe the task precisely without exploring the code. | You write a spec -> Builder -> You review -> Report |
+| **Trivial** | One low-risk self-contained change you can specify precisely after a quick look. | You write a spec -> Builder -> You review -> Report |
 | **Needs planning** | Everything else. | Write a plan -> User approves -> Builder -> You review every task and the final result -> Report |
 
 ## Question or Discussion
