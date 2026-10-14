@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.5.0-rc (2026-10-14)
+
+- Commit every approved task behind your approval: the orchestrator commits, the builder
+  no longer does.
+- Cap the adjustment loop at two rounds per task, and require real command output as review
+  evidence before approving.
+- Route a rejected plan, an abandoned plan, and a refused commit back to you instead of
+  letting the flow continue.
+- Reword the Trivial criterion and the Clarify section of the orchestrator prompt.
+- Tighten the git guards: destructive and commit-creating commands (merge, rebase,
+  cherry-pick, revert, am, pull, reset) ask for approval, read-only stash commands do not,
+  and the builder's commit denies always win.
+- Isolate the builder: no `general` subagent, no YACAO skills, no reading plan files.
+- Make the update check notify-only: it no longer edits your configuration, and a
+  pre-release no longer freezes it.
+- Replace the V2 permission scaffold instead of prepending to it, and always force the
+  agent mode so a builder never stays primary.
+- Add a zero-dependency `node --test` suite for the plugin helpers and the shell rule order.
+- Document the commit flow, the per-agent permission overrides, and the guardrails caveat.
+
 ## v0.4.4 (2026-10-13)
 
 - Keep the orchestrator focused on the question at hand: explore with the tools when that
