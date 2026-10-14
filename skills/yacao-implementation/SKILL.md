@@ -35,6 +35,8 @@ For a builder response:
 
 A blocked or escalated task may resume without a new plan approval only if the approved task and approach remain unchanged; a material plan, approach, or scope change goes back to planning for a revised, approved plan. On the trivial path, where no overview exists, a material change is categorized as **Needs planning** and enters the planning flow first.
 
+If the user abandons or supersedes the plan during execution, stop, record the plan as abandoned in the overview, and do not dispatch further tasks.
+
 ## Reusing the builder session
 
 - Always reuse the `task_id` for corrections to the same task.
