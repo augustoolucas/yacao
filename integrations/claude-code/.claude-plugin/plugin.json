@@ -1,0 +1,9 @@
+{
+  "name": "yacao",
+  "description": "Yet Another Coding Agent Orchestrator - a minimal 2-agent, 3-skill workflow plugin for Claude Code.",
+  "version": "0.5.0",
+  "license": "MIT",
+  "settings": {
+    "agent": "orchestrator"
+  }
+}

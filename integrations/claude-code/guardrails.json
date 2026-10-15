@@ -1,0 +1,406 @@
+{
+  "yacao:orchestrator": {
+    "bash": [
+      {
+        "pattern": "*",
+        "decision": "allow"
+      },
+      {
+        "pattern": "git * commit*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git commit*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * push*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git push*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "command git*",
+        "decision": "deny"
+      },
+      {
+        "pattern": "env git*",
+        "decision": "deny"
+      },
+      {
+        "pattern": "cat *.env*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * merge*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * cherry-pick*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * revert*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * am*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * rebase*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * pull*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * reset*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * switch*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * clean*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git clean*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "rm -rf *",
+        "decision": "ask"
+      },
+      {
+        "pattern": "rm -fr *",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git checkout*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * checkout*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git restore*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * restore*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git switch*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git merge*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git cherry-pick*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git revert*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git am*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git rebase*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git pull*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git reset*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git stash*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * stash*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "rm -r -f*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "rm -f -r*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git stash list*",
+        "decision": "allow"
+      },
+      {
+        "pattern": "git stash show*",
+        "decision": "allow"
+      }
+    ],
+    "read": [
+      {
+        "pattern": "*",
+        "decision": "allow"
+      },
+      {
+        "pattern": "*.env",
+        "decision": "ask"
+      },
+      {
+        "pattern": "*.env.*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "*.env.example",
+        "decision": "allow"
+      }
+    ],
+    "edit": [
+      {
+        "pattern": "*",
+        "decision": "deny"
+      },
+      {
+        "pattern": ".yacao/plans/*.md",
+        "decision": "allow"
+      }
+    ],
+    "task": [
+      {
+        "pattern": "*",
+        "decision": "deny"
+      },
+      {
+        "pattern": "yacao:builder",
+        "decision": "allow"
+      },
+      {
+        "pattern": "Explore",
+        "decision": "allow"
+      }
+    ]
+  },
+  "yacao:builder": {
+    "bash": [
+      {
+        "pattern": "*",
+        "decision": "allow"
+      },
+      {
+        "pattern": "command git*",
+        "decision": "deny"
+      },
+      {
+        "pattern": "env git*",
+        "decision": "deny"
+      },
+      {
+        "pattern": "cat *.env*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * push*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * stash*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * checkout*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * restore*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * merge*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * cherry-pick*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * revert*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * am*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * rebase*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * pull*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * reset*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * switch*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * clean*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git clean*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "rm -rf *",
+        "decision": "ask"
+      },
+      {
+        "pattern": "rm -fr *",
+        "decision": "ask"
+      },
+      {
+        "pattern": "rm -r -f*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "rm -f -r*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git * commit*",
+        "decision": "deny"
+      },
+      {
+        "pattern": "git push*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git stash*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git checkout*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git restore*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git switch*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git merge*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git cherry-pick*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git revert*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git am*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git rebase*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git pull*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git reset*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "git stash list*",
+        "decision": "allow"
+      },
+      {
+        "pattern": "git stash show*",
+        "decision": "allow"
+      },
+      {
+        "pattern": "git commit*",
+        "decision": "deny"
+      }
+    ],
+    "read": [
+      {
+        "pattern": "*",
+        "decision": "allow"
+      },
+      {
+        "pattern": "*.env",
+        "decision": "ask"
+      },
+      {
+        "pattern": "*.env.*",
+        "decision": "ask"
+      },
+      {
+        "pattern": "*.env.example",
+        "decision": "allow"
+      },
+      {
+        "pattern": ".yacao/plans/*",
+        "decision": "deny"
+      }
+    ],
+    "skill": [
+      {
+        "pattern": "*",
+        "decision": "allow"
+      },
+      {
+        "pattern": "yacao:planning",
+        "decision": "deny"
+      },
+      {
+        "pattern": "yacao:implementation",
+        "decision": "deny"
+      },
+      {
+        "pattern": "yacao:review",
+        "decision": "deny"
+      }
+    ],
+    "task": [
+      {
+        "pattern": "*",
+        "decision": "deny"
+      },
+      {
+        "pattern": "Explore",
+        "decision": "allow"
+      }
+    ]
+  }
+}
