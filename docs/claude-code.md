@@ -15,7 +15,7 @@ This guide distinguishes three levels of evidence:
    documentation and the published npm package metadata (checked 2026-10-15
    during design). Documented contracts are the design basis; they are not
    observed behavior.
-2. **Offline tests in this repository** - `test/claude-code.test.js` (68 tests)
+2. **Offline tests in this repository** - `test/claude-code.test.js` (71 tests)
    and `npm run check:claude-code` verify the generated bundle against the
    canonical sources: file set, determinism, namespaces, drift detection, and
    the guard hook's input/output contracts against synthetic inputs shaped like

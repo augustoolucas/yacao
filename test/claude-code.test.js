@@ -1083,6 +1083,26 @@ describe("claude-code role guard hook", () => {
     });
   });
 
+  test("a backslash is a filename character here, never a directory separator", () => {
+    withProject((dir) => {
+      const options = { projectDir: dir, cwd: dir };
+      // ".yacao\plans\outside.md" is a single file name under the project root
+      // on this platform, not a plan path, so it must fall to the edit
+      // category's blanket deny rule instead of matching the plans allow rule.
+      const fake = path.join(dir, ".yacao\\plans\\outside.md");
+      for (const tool of ["Edit", "Write"]) {
+        askOrDeny(call("yacao:orchestrator", tool, { file_path: fake }, options), "deny");
+      }
+      // A genuine nested plan Markdown path is unaffected and falls through.
+      mkdirSync(path.join(dir, ".yacao", "plans"), { recursive: true });
+      for (const tool of ["Edit", "Write"]) {
+        noDecision(
+          call("yacao:orchestrator", tool, { file_path: path.join(dir, ".yacao", "plans", "plan.md") }, options),
+        );
+      }
+    });
+  });
+
   test("read rules: .env asks, plan reads deny for the builder only", () => {
     withProject((dir) => {
       const options = { projectDir: dir, cwd: dir };
@@ -1144,6 +1164,48 @@ describe("claude-code role guard hook", () => {
     });
   });
 
+  test("dangling symlinks cannot masquerade as missing plan paths", () => {
+    withProject((dir) => {
+      const options = { projectDir: dir, cwd: dir };
+      const plans = path.join(dir, ".yacao", "plans");
+      mkdirSync(plans, { recursive: true });
+      // A leaf symlink under the allowed plans directory that points at a
+      // missing file outside plans resolves nowhere: it must be denied, not
+      // reconstructed as an ordinary plans path and allowed.
+      const leafTarget = path.join(dir, "escape-target.md");
+      const leaf = path.join(plans, "escape.md");
+      symlinkSync(leafTarget, leaf);
+      for (const tool of ["Edit", "Write"]) {
+        askOrDeny(call("yacao:orchestrator", tool, { file_path: leaf }, options), "deny");
+      }
+      // A dangling symlink standing as an ancestor inside plans completes a
+      // plans-shaped path whose real location is a missing directory outside
+      // plans. The old reconstruction resolved it to the missing name under
+      // plans and allowed it; it must be denied for the same reason.
+      const ancestorTarget = path.join(dir, "escape-directory");
+      const ancestor = path.join(plans, "linked");
+      symlinkSync(ancestorTarget, ancestor);
+      for (const tool of ["Edit", "Write"]) {
+        askOrDeny(
+          call("yacao:orchestrator", tool, { file_path: path.join(ancestor, "plan.md") }, options),
+          "deny",
+        );
+      }
+      // A genuinely missing nested plan path beneath real directories still
+      // falls through.
+      noDecision(
+        call(
+          "yacao:orchestrator",
+          "Write",
+          { file_path: path.join(plans, "plan-a", "tasks", "task-01.md") },
+          options,
+        ),
+      );
+      assert.ok(!existsSync(leafTarget), "the hook leaves the dangling leaf target absent");
+      assert.ok(!existsSync(ancestorTarget), "the hook leaves the dangling ancestor target absent");
+    });
+  });
+
   test("skill calls: YACAO skills deny for the builder, everything else falls through", () => {
     for (const skill of ["yacao:planning", "yacao:implementation", "yacao:review"]) {
       askOrDeny(call("yacao:builder", "Skill", { skill }), "deny");
@@ -1197,6 +1259,46 @@ describe("claude-code role guard hook", () => {
         const output = askOrDeny(guardDecision(runGuard(benign, { guard })), "deny");
         assert.match(output.permissionDecisionReason, /cannot be enforced/);
         noDecision(guardDecision(runGuard({ ...benign, agent_type: "builder" }, { guard })));
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("a recognized role missing any one mandatory policy category fails closed", () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), "yacao-guard-policy-"));
+    try {
+      const hooksDir = path.join(dir, "hooks");
+      mkdirSync(hooksDir, { recursive: true });
+      copyFileSync(GUARD, path.join(hooksDir, "guard.mjs"));
+      const guard = path.join(hooksDir, "guard.mjs");
+      const allowAll = [{ pattern: "*", decision: "allow" }];
+      const full = {
+        "yacao:orchestrator": { bash: allowAll, read: allowAll, edit: allowAll, task: allowAll },
+        "yacao:builder": { bash: allowAll, read: allowAll, skill: allowAll, task: allowAll },
+      };
+      const mandatory = {
+        "yacao:orchestrator": ["bash", "read", "edit", "task"],
+        "yacao:builder": ["bash", "read", "skill", "task"],
+      };
+      for (const [role, categories] of Object.entries(mandatory)) {
+        for (const category of categories) {
+          // A few remaining categories are legitimate omissions (the two roles
+          // differ), so load the full valid policy and drop exactly one
+          // mandatory category from exactly one role per iteration.
+          const dropped = { ...full[role] };
+          delete dropped[category];
+          const policy = { ...full, [role]: dropped };
+          writeFileSync(path.join(dir, "guardrails.json"), `${JSON.stringify(policy, null, 2)}\n`);
+          const benign = { agent_type: role, tool_name: "Bash", tool_input: { command: "ls" } };
+          const output = askOrDeny(guardDecision(runGuard(benign, { guard })), "deny");
+          const label = `${role} without ${category}`;
+          assert.match(output.permissionDecisionReason, /cannot be enforced/, label);
+          assert.match(output.permissionDecisionReason, new RegExp(`"${category}"`), label);
+          assert.match(output.permissionDecisionReason, /refusing/, label);
+          // An unrelated identity still falls through untouched.
+          noDecision(guardDecision(runGuard({ ...benign, agent_type: "builder" }, { guard })));
+        }
       }
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -1260,13 +1362,26 @@ describe("claude-code packaged self-containment", () => {
         "the fixture holds the bundle and nothing else",
       );
       // The copied policy is replaced with a distinctive one, so a decision
-      // can only come from the copy, never from this checkout.
+      // can only come from the copy, never from this checkout. Only the bash
+      // rules are exercised below; every other mandatory category carries one
+      // inert placeholder rule so the policy still loads.
+      const placeholder = [{ pattern: "copied-policy-placeholder", decision: "deny" }];
       writeFileSync(
         path.join(bundle, "guardrails.json"),
         `${JSON.stringify(
           {
-            "yacao:orchestrator": { bash: [{ pattern: "*", decision: "allow" }] },
-            "yacao:builder": { bash: [{ pattern: "probe-*", decision: "deny" }] },
+            "yacao:orchestrator": {
+              bash: [{ pattern: "*", decision: "allow" }],
+              read: placeholder,
+              edit: placeholder,
+              task: placeholder,
+            },
+            "yacao:builder": {
+              bash: [{ pattern: "probe-*", decision: "deny" }],
+              read: placeholder,
+              skill: placeholder,
+              task: placeholder,
+            },
           },
           null,
           2,

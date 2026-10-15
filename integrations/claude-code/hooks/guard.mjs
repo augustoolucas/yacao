@@ -37,12 +37,22 @@
 // Output contract: exit status 0 always; either a single JSON decision object
 // on stdout, or empty output for "no decision" (fall through).
 
-import { readFileSync, realpathSync } from "node:fs";
+import { lstatSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 // The only identities this hook speaks for: plugin-qualified agent names.
 const ROLE_IDS = new Set(["yacao:orchestrator", "yacao:builder"]);
+
+// The rule categories each recognized role must package. A category quietly
+// dropped from the bundle would disable enforcement for that tool class
+// without any signal, so a missing one is a load error per exact role.
+// Categories outside a role's list stay optional (the two roles differ), and
+// unrelated policy entries are not constrained.
+const REQUIRED_CATEGORIES = {
+  "yacao:orchestrator": ["bash", "read", "edit", "task"],
+  "yacao:builder": ["bash", "read", "skill", "task"],
+};
 
 // Tools this hook is wired for in hooks.json.
 const COVERED_TOOLS = new Set(["Bash", "Read", "Edit", "Write", "Skill", "Agent"]);
@@ -113,11 +123,16 @@ const loadPolicy = () => {
     if (!isPlainObject(policy[roleId])) {
       return { error: `the packaged guardrails.json has no rule object for ${roleId}` };
     }
-    // A role without any rule category would silently disable enforcement.
-    // (A category being absent is legitimate - the canonical roles differ -
-    // but a role carrying nothing is not.)
-    if (Object.keys(policy[roleId]).length === 0) {
-      return { error: `the rule object for ${roleId} in guardrails.json carries no rule category` };
+    // Every recognized role must declare each of its mandatory categories: a
+    // category silently dropped from the bundle would disable enforcement for
+    // that tool class without any signal. Categories outside the role's list
+    // stay optional, and the other policy entries are not constrained here.
+    for (const category of REQUIRED_CATEGORIES[roleId]) {
+      if (!(category in policy[roleId])) {
+        return {
+          error: `the rule object for ${roleId} in guardrails.json has no "${category}" rule category`,
+        };
+      }
     }
   }
   for (const [roleId, categories] of Object.entries(policy)) {
@@ -143,11 +158,19 @@ const loadPolicy = () => {
   return { policy };
 };
 
-const toPosix = (value) => value.split("\\").join("/");
+// Policy patterns use "/" separators. Translate only this platform's actual
+// separator to "/": where a backslash is not the separator it is an ordinary
+// filename character and must not be reinterpreted as a directory break.
+const toPosix = (value) => value.split(path.sep).join("/");
 
 // Real path of the deepest existing ancestor of "absolute" with the
 // non-existing remainder re-appended, so symlinked ancestors are resolved
 // for targets that do not exist yet. Reads only; never changes anything.
+// A path whose descendant does not resolve need not be missing: a dangling
+// symlink, or an entry reached through a non-directory, exists yet resolves
+// nowhere. lstat tells the two apart, and such an unresolvable path is
+// rejected rather than rebuilt as an ordinary name that would be classified
+// as if it lived where it is merely linked.
 const realpathDeepest = (absolute) => {
   let current = absolute;
   const missing = [];
@@ -156,6 +179,14 @@ const realpathDeepest = (absolute) => {
       return path.join(realpathSync(current), ...missing);
     } catch (error) {
       if (error.code !== "ENOENT" && error.code !== "ENOTDIR") throw error;
+      let present = true;
+      try {
+        lstatSync(current);
+      } catch (lstatError) {
+        if (lstatError.code !== "ENOENT" && lstatError.code !== "ENOTDIR") throw lstatError;
+        present = false;
+      }
+      if (present) throw error;
       const parent = path.dirname(current);
       if (parent === current) throw error;
       missing.unshift(path.basename(current));
