@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.5.1 (2026-10-15)
+
+- Work without a Git baseline: implementation no longer requires a Git repository or an
+  initial commit, and review inspects the resulting files when no diff baseline exists. A
+  commit requested without a usable Git is surfaced as unsatisfiable instead of being
+  worked around.
+
 ## v0.5.0 (2026-10-15)
 
 - Move commits to the orchestrator: the builder can no longer commit, and approved work is
