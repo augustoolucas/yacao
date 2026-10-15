@@ -394,6 +394,16 @@ describe("agent shell rule order", () => {
     }
   });
 
+  test("builder keeps prefixed mutating commands with stash-read arguments as ask", () => {
+    for (const command of [
+      "git -C . clean -fd -e 'keep stash list'",
+      "git -C . merge --no-ff -m 'fix stash show' topic",
+      "git -C . stash push -m 'fix stash list'",
+    ]) {
+      assert.equal(decide(builder, command), "ask", command);
+    }
+  });
+
   test("builder commit denies hold over messages mentioning gated words", () => {
     for (const command of [
       'git commit -m "please switch now"',
@@ -473,6 +483,16 @@ describe("agent shell rule order", () => {
     for (const command of [
       'git merge main -m "stash list docs"',
       'git stash push -m "stash show docs"',
+    ]) {
+      assert.equal(decide(orchestrator, command), "ask", command);
+    }
+  });
+
+  test("orchestrator keeps prefixed mutating commands with stash-read arguments as ask", () => {
+    for (const command of [
+      "git -C . clean -fd -e 'keep stash list'",
+      "git -C . merge --no-ff -m 'fix stash show' topic",
+      "git -C . stash push -m 'fix stash list'",
     ]) {
       assert.equal(decide(orchestrator, command), "ask", command);
     }
@@ -662,7 +682,12 @@ describe("plugin.setup - V2 agents", () => {
   test("registers the shipped agents with forced mode, resolved prompts and replaced permissions", async () => {
     const editor = createEditor({
       ...hostAgents(),
-      builder: { model: { providerID: "anthropic", id: "claude" } },
+      builder: {
+        mode: "primary",
+        permissions: structuredClone(HOST_BLANKET_ALLOW),
+        model: { providerID: "anthropic", id: "claude" },
+      },
+      orchestrator: { permissions: structuredClone(HOST_BLANKET_ALLOW) },
     });
     const capture = captureTransform(editor);
     await plugin.setup({ agent: { transform: capture.transform } });
