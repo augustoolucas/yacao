@@ -51,7 +51,7 @@ TL;DR: the orchestrator receives your prompt. Questions and discussions are answ
 
 The three skills - `yacao-planning`, `yacao-implementation` and `yacao-review` - own the detailed mechanics behind this behavior.
 
-YACAO needs a Git repository with a valid HEAD. It stops rather than touching your work when an intended target already has changes whose ownership is unclear, and it leaves unrelated changes and staged work alone. Declining a commit preserves your changes and staging and asks whether to continue without commits or stop. Approved task commits are ordinary Git commits you can amend or squash after the workflow finishes, and an approved task whose change is a verified no-op produces no empty commit.
+YACAO needs a Git repository with a valid HEAD. It stops rather than touching your work when an intended target already has changes whose ownership is unclear, and it leaves unrelated changes and staged work alone. Declining a commit creates no commit and leaves your changes intact - anything already staged during commit preparation stays staged - and asks whether to continue without commits or stop. Approved task commits are ordinary Git commits you can amend or squash after the workflow finishes, and an approved task whose change is a verified no-op produces no empty commit.
 
 ## Install
 
