@@ -20,11 +20,11 @@ A preference change needs no reapproval of an otherwise unchanged approach. Reco
 
 ## Preflight
 
-Before the first dispatch, require a valid Git HEAD, then record the fixed initial review base and a separate expected HEAD (see **Overview ledger**). Reject ambiguous pre-existing changes that overlap the intended task targets when ownership is uncertain; record and exclude unrelated work.
+Before the first dispatch, check Git availability. When a valid Git HEAD exists, record the fixed initial review base and a separate expected HEAD (see **Overview ledger**); otherwise explicitly record both as not applicable and review the resulting files directly, without blocking on absent Git or an absent initial commit. Once recorded, the initial review base stays fixed for the workflow - a Git repository or HEAD that appears later must not silently reset it and exclude earlier changes. Reject ambiguous pre-existing changes that overlap the intended task targets when ownership is uncertain; record and exclude unrelated work, and inspect relevant pre-existing files as usual. Never initialize Git or create an initial commit without authorization.
 
 In the default noncommit path, unrelated staged and unstaged work is permitted - never stage or commit there, and preserve user work and the index contents. Later tasks may modify already-approved dirty paths; do not re-apply a blanket clean-target gate to those approved changes.
 
-Stop on ambiguous ownership or unexpected history movement; advance expected HEAD only for authorized commits. Never reset, unstage, stash or discard user work to repair uncertainty.
+When a baseline applies, stop on unexpected history movement and advance the expected HEAD only for authorized commits; stop on ambiguous ownership regardless. Never reset, unstage, stash or discard user work to repair uncertainty.
 
 ## Trivial tasks
 
@@ -42,7 +42,7 @@ Follow the approved plan overview's ordered task list, one yacao:builder at a ti
 
 1. Read the current task contract at `.yacao/plans/plan-<slug>/tasks/task-XX-<name>.md`.
 2. Send the yacao:builder the task's `Goal`, `Changes`, `File scope`, `Dependencies`, and `Verification commands`, plus concise task-relevant invariants, rationale, risks and prior decisions - nothing else. Never send the full plan overview or future task contracts.
-3. Keep the ledger current (see **Overview ledger**). Start the next task only after the current task's review is approved - in a new session or after compaction, reconstruct progress, the ledger and the review base from the overview, the contracts, Git state and the current code, never from memory. After the last task, run the final full-plan review (see the `yacao:review` skill).
+3. Keep the ledger current (see **Overview ledger**). Start the next task only after the current task's review is approved - in a new session or after compaction, reconstruct progress, the ledger and the review base from the overview, the contracts, the current code and - when a baseline applies - Git state, never from memory. After the last task, run the final full-plan review (see the `yacao:review` skill).
 
 ## yacao:builder status routing
 
@@ -65,11 +65,11 @@ If the user switches to per-task commits mid-workflow, the commit composition an
 
 ## Overview ledger
 
-Maintain the ledger in the existing plan overview; trivial work has no ledger, so its preference, fixed initial review base and expected HEAD stay in the direct spec or conversation. Never add a new ledger, snapshots, hidden commits, stashes or a checkpoint system. Record the commit preference, the fixed initial review base and the expected HEAD, and for each task: state, the actual yacao:builder agent ID, the unsuccessful review-adjustment count, the actual changed paths and the commit outcome (`not requested`, `pending`, the hash, `refused`, `failed`, `no-op`).
+Maintain the ledger in the existing plan overview; trivial work has no ledger, so its preference and, when a baseline applies, its fixed initial review base and expected HEAD stay in the direct spec or conversation. Never add a new ledger, snapshots, hidden commits, stashes or a checkpoint system. Record the commit preference and, when a baseline applies, the fixed initial review base and the expected HEAD, and for each task: state, the actual yacao:builder agent ID, the unsuccessful review-adjustment count, the actual changed paths and the commit outcome (`not requested`, `pending`, the hash, `refused`, `failed`, `no-op`).
 
 ## Recovery
 
-After a new session or compaction, resume an approved uncommitted task as approved: it is neither a missing commit nor a no-op. Cross-check the ledger against the overview, the contracts, Git state and the current code before trusting it - a commit subject never establishes task approval or an agent ID, and missing or contradictory records stop recovery instead of being filled in. Preserve already-approved dirty paths for later tasks. Track a pending commit request, a refusal plus the user's explicit continue-without-commits or stop choice, a failure and a verified no-op distinctly. The preflight gates still apply (see **Preflight**).
+After a new session or compaction, resume an approved uncommitted task as approved: it is neither a missing commit nor a no-op. Cross-check the ledger against the overview, the contracts, the current code and - when a baseline applies - Git state before trusting it; when no baseline applies, do not fail recovery for its absence. A commit subject never establishes task approval or an agent ID, and missing or contradictory records stop recovery instead of being filled in. Preserve already-approved dirty paths for later tasks. Track a pending commit request, a refusal plus the user's explicit continue-without-commits or stop choice, a failure and a verified no-op distinctly. The preflight gates still apply (see **Preflight**).
 
 ## Reusing the yacao:builder session
 
