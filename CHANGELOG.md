@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.0-rc (2026-10-14)
+## v0.5.0 (2026-10-15)
 
 - Move commits to the orchestrator: the builder can no longer commit, and approved work is
   committed only when you ask - after each approved task or once at the end.
