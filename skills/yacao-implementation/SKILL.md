@@ -42,7 +42,7 @@ Follow the approved plan overview's ordered task list, one builder at a time:
 
 1. Read the current task contract at `.opencode/plans/plan-<slug>/tasks/task-XX-<name>.md`.
 2. Send the builder the task's `Goal`, `Changes`, `File scope`, `Dependencies`, and `Verification commands`, plus concise task-relevant invariants, rationale, risks and prior decisions - nothing else. Never send the full plan overview or future task contracts.
-3. Keep the ledger current (see **Overview ledger**). Start the next task only after the current task's review is approved - in a new session or after compaction, reconstruct progress, the ledger and the review base from the overview and `git log --oneline`, never from memory. After the last task, run the final full-plan review (see the `yacao-review` skill).
+3. Keep the ledger current (see **Overview ledger**). Start the next task only after the current task's review is approved - in a new session or after compaction, reconstruct progress, the ledger and the review base from the overview, the contracts, Git state and the current code, never from memory. After the last task, run the final full-plan review (see the `yacao-review` skill).
 
 ## Builder status routing
 
@@ -69,7 +69,7 @@ Maintain the ledger in the existing plan overview; trivial work has no ledger, s
 
 ## Recovery
 
-After a new session or compaction, resume an approved uncommitted task as approved: it is neither a missing commit nor a no-op. Preserve already-approved dirty paths for later tasks. Track a pending commit request, a refusal plus the user's explicit continue-without-commits or stop choice, a failure and a verified no-op distinctly. The preflight gates still apply (see **Preflight**).
+After a new session or compaction, resume an approved uncommitted task as approved: it is neither a missing commit nor a no-op. Cross-check the ledger against the overview, the contracts, Git state and the current code before trusting it - a commit subject never establishes task approval or a session reference, and missing or contradictory records stop recovery instead of being filled in. Preserve already-approved dirty paths for later tasks. Track a pending commit request, a refusal plus the user's explicit continue-without-commits or stop choice, a failure and a verified no-op distinctly. The preflight gates still apply (see **Preflight**).
 
 ## Reusing the builder session
 
