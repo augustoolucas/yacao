@@ -20,6 +20,10 @@
 // policy rules of each category (bash/read/edit/skill/task), every rule
 // { "pattern", "decision" } with decision allow/ask/deny; a later rule
 // overrides an earlier one, like the canonical wildcard semantics.
+//
+// The files under the plugin's hooks/ directory are hand-authored bundle
+// statics (STATIC_PATHS): generation never writes them, it scans their text
+// when present, and --check reports them as missing when absent.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -36,6 +40,15 @@ export const OUTPUT_PATHS = Object.freeze([
   "skills/implementation/SKILL.md",
   "skills/review/SKILL.md",
   "guardrails.json",
+]);
+
+// Hand-authored files that ship inside the plugin bundle but are not derived
+// from the canonical sources, so the generator never writes them: the guard
+// hook wiring and the guard itself. Generation scans their text like any
+// generated file, and --check additionally requires them to be present.
+export const STATIC_PATHS = Object.freeze([
+  "hooks/hooks.json",
+  "hooks/guard.mjs",
 ]);
 
 // Claude Code agent definitions: native frontmatter fields only. The
@@ -298,17 +311,28 @@ const renderMarkdown = (fields, body) => {
 
 const assertCleanOutput = (rel, content) => {
   if (/[^\x09\x0A\x20-\x7E]/.test(content)) {
-    throw new Error(`generated ${rel} is not ASCII-only`);
+    throw new Error(`bundle file ${rel} is not ASCII-only`);
   }
   for (const { pattern, reason } of FORBIDDEN_OUTPUT) {
     const match = pattern.exec(content);
     if (match) {
-      throw new Error(`generated ${rel} still contains ${reason}: ${JSON.stringify(match[0])}`);
+      throw new Error(`bundle file ${rel} still contains ${reason}: ${JSON.stringify(match[0])}`);
     }
   }
 };
 
-// Pure generation: reads the canonical sources and returns the bundle as
+// The hand-authored statics are held to the same text checks as the
+// generated files. A missing static is not a generation error - the
+// generator cannot recreate it; --check reports it as a mismatch instead.
+const scanStaticPaths = (root) => {
+  for (const rel of STATIC_PATHS) {
+    const abs = path.join(root, PLUGIN_ROOT, rel);
+    if (existsSync(abs)) assertCleanOutput(rel, readFileSync(abs, "utf8"));
+  }
+};
+
+// Pure generation: reads the canonical sources, scans the hand-authored
+// statics, and returns the bundle as
 // { "<path relative to the plugin root>": "<content>" } without writing.
 export function generatePlugin({ root = defaultRoot() } = {}) {
   const pkg = readSourceJson(root, "package.json");
@@ -354,6 +378,7 @@ export function generatePlugin({ root = defaultRoot() } = {}) {
     throw new Error(`internal error: generated file set ${emitted.join(", ")} does not match the allowlist`);
   }
   for (const rel of OUTPUT_PATHS) assertCleanOutput(rel, files[rel]);
+  scanStaticPaths(root);
   return files;
 }
 
@@ -371,13 +396,20 @@ export function checkPlugin({ root = defaultRoot() } = {}) {
       mismatches.push({ path: rel, reason: "differs" });
     }
   }
+  for (const rel of STATIC_PATHS) {
+    const abs = path.join(root, PLUGIN_ROOT, rel);
+    if (!existsSync(abs)) {
+      mismatches.push({ path: rel, reason: "missing" });
+    }
+  }
   return { ok: mismatches.length === 0, mismatches };
 }
 
 const USAGE = `usage: node scripts/build-claude-code.mjs [--check] [--root <dir>]
 
 Writes the Claude Code plugin bundle under ${PLUGIN_ROOT}/ from the canonical
-YACAO sources. --check verifies the committed bundle without writing or
+YACAO sources. --check verifies the committed bundle (${OUTPUT_PATHS.length} generated
+files plus the ${STATIC_PATHS.length} hand-authored hooks statics) without writing or
 deleting anything.`;
 
 const parseArgs = (args) => {
@@ -418,13 +450,15 @@ const runCli = (argv) => {
     if (options.check) {
       const { ok, mismatches } = checkPlugin({ root: options.root });
       if (ok) {
-        console.log(`claude-code plugin is up to date (${OUTPUT_PATHS.length} files)`);
+        console.log(`claude-code plugin is up to date (${OUTPUT_PATHS.length + STATIC_PATHS.length} files)`);
         return 0;
       }
       for (const mismatch of mismatches) {
         console.error(`${mismatch.reason}: ${path.posix.join(PLUGIN_ROOT, mismatch.path)}`);
       }
-      console.error(`claude-code plugin is out of date (${mismatches.length} of ${OUTPUT_PATHS.length} files)`);
+      console.error(
+        `claude-code plugin is out of date (${mismatches.length} of ${OUTPUT_PATHS.length + STATIC_PATHS.length} files)`,
+      );
       return 1;
     }
     const files = generatePlugin({ root: options.root });

@@ -13,6 +13,7 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import os from "node:os";
@@ -24,10 +25,13 @@ import {
   generatePlugin,
   OUTPUT_PATHS,
   PLUGIN_ROOT,
+  STATIC_PATHS,
 } from "../scripts/build-claude-code.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = path.join(ROOT, "scripts", "build-claude-code.mjs");
+const GUARD = path.join(ROOT, PLUGIN_ROOT, "hooks", "guard.mjs");
+const HOOKS_JSON = path.join(ROOT, PLUGIN_ROOT, "hooks", "hooks.json");
 
 const SOURCE_FILES = [
   "package.json",
@@ -40,9 +44,13 @@ const SOURCE_FILES = [
   "skills/yacao-review/SKILL.md",
 ];
 
+// The hand-authored statics complete the fixture: --check requires them, and
+// generation scans their text.
+const STATIC_FILES = STATIC_PATHS.map((rel) => path.posix.join(PLUGIN_ROOT, rel));
+
 const createFixture = () => {
   const dir = mkdtempSync(path.join(os.tmpdir(), "yacao-claude-code-"));
-  for (const rel of SOURCE_FILES) {
+  for (const rel of [...SOURCE_FILES, ...STATIC_FILES]) {
     const destination = path.join(dir, rel);
     mkdirSync(path.dirname(destination), { recursive: true });
     copyFileSync(path.join(ROOT, rel), destination);
@@ -145,7 +153,7 @@ describe("claude-code bundle generation", () => {
   });
 
   test("generation leaves the canonical sources and runtime untouched", () => {
-    const tracked = [...SOURCE_FILES, "index.js", "plugin/yacao.js"];
+    const tracked = [...SOURCE_FILES, ...STATIC_FILES, "index.js", "plugin/yacao.js"];
     const before = new Map(tracked.map((rel) => [rel, readFileSync(path.join(ROOT, rel), "utf8")]));
     generatePlugin({ root: ROOT });
     for (const rel of tracked) {
@@ -226,21 +234,31 @@ describe("claude-code agent and skill frontmatter", () => {
 describe("claude-code host binding", () => {
   const files = generatePlugin({ root: ROOT });
 
+  // Generated text plus the hand-authored statics: the scans cover the whole
+  // bundle, not only the generated files.
+  const bundleTexts = () => {
+    const texts = { ...files };
+    for (const rel of STATIC_PATHS) texts[rel] = readFileSync(pluginFile(ROOT, rel), "utf8");
+    return texts;
+  };
+
   test("no stale OpenCode host terms or paths survive", () => {
-    for (const rel of OUTPUT_PATHS) {
+    const bundle = bundleTexts();
+    for (const rel of Object.keys(bundle)) {
       for (const pattern of FORBIDDEN) {
-        assert.ok(!pattern.test(files[rel]), `${rel} must not match ${pattern}`);
+        assert.ok(!pattern.test(bundle[rel]), `${rel} must not match ${pattern}`);
       }
     }
   });
 
-  test("every file path in the generated text lives under the plugin root or .yacao/plans", () => {
+  test("every file path in the bundle text lives under the plugin root or .yacao/plans", () => {
     const pathToken = /(?<![\w./<>*?-])((?:[\w<>.*?-]+\/)+[\w<>.*?-]+\.(?:md|json|mjs|js|ts|yml|yaml))\b/g;
-    for (const rel of OUTPUT_PATHS) {
-      for (const token of files[rel].match(pathToken) ?? []) {
+    const bundle = bundleTexts();
+    for (const rel of Object.keys(bundle)) {
+      for (const token of bundle[rel].match(pathToken) ?? []) {
         assert.ok(token.startsWith(".yacao/plans/"), `${rel} references ${token}, outside .yacao/plans`);
       }
-      assert.ok(!/(^|\s)\/(?:home|Users|etc|var|tmp|usr)\//.test(files[rel]), `${rel} has no absolute host path`);
+      assert.ok(!/(^|\s)\/(?:home|Users|etc|var|tmp|usr)\//.test(bundle[rel]), `${rel} has no absolute host path`);
     }
   });
 
@@ -453,11 +471,11 @@ describe("claude-code --check mode", () => {
     assert.match(result.stdout, /up to date/);
   });
 
-  test("writes exactly the allowlist and repeated builds are byte-identical", () => {
+  test("produces exactly the generated allowlist beside the statics, byte-identical on rebuild", () => {
     withFixture((dir) => {
       assert.equal(runCli(["--root", dir]).status, 0);
       const pluginDir = path.join(dir, PLUGIN_ROOT);
-      assert.deepEqual(listFiles(pluginDir), [...OUTPUT_PATHS].sort());
+      assert.deepEqual(listFiles(pluginDir), [...OUTPUT_PATHS, ...STATIC_PATHS].sort());
       const first = snapshotDir(pluginDir);
       const second = runCli(["--root", dir]);
       assert.equal(second.status, 0, second.stderr);
@@ -510,5 +528,400 @@ describe("claude-code --check mode", () => {
       assert.deepEqual(result.mismatches, [{ path: "skills/review/SKILL.md", reason: "differs" }]);
       assert.deepEqual(snapshotDir(pluginDir), before);
     });
+  });
+});
+
+// A throwaway project root for the file-tool cases: absolute file_path inputs
+// are classified against CLAUDE_PROJECT_DIR.
+const withProject = (body) => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "yacao-guard-project-"));
+  try {
+    return body(dir);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+};
+
+// Drive the hook exactly as Claude Code does: JSON on stdin, decision JSON or
+// nothing on stdout, exit 0 either way. projectDir: null drops
+// CLAUDE_PROJECT_DIR; CLAUDE_PLUGIN_ROOT is never set, so the packaged policy
+// must be found relative to the hook itself.
+const runGuard = (payload, options = {}) => {
+  const env = { ...process.env };
+  delete env.CLAUDE_PLUGIN_ROOT;
+  if (options.projectDir === null) delete env.CLAUDE_PROJECT_DIR;
+  else env.CLAUDE_PROJECT_DIR = options.projectDir ?? ROOT;
+  return spawnSync(process.execPath, [options.guard ?? GUARD], {
+    cwd: options.cwd ?? ROOT,
+    encoding: "utf8",
+    input: typeof payload === "string" ? payload : JSON.stringify(payload),
+    env,
+  });
+};
+
+// The full output contract: exit 0, silent stderr, and either empty stdout
+// (no decision) or exactly the documented PreToolUse ask/deny object. It
+// never allows, so the native gate keeps its say.
+const guardDecision = (result) => {
+  assert.equal(result.status, 0, `exit 0: ${result.stderr}`);
+  assert.equal(result.stderr, "");
+  if (result.stdout === "") return null;
+  assert.ok(result.stdout.endsWith("\n"), "decision output ends with a newline");
+  const parsed = JSON.parse(result.stdout);
+  assert.deepEqual(Object.keys(parsed), ["hookSpecificOutput"]);
+  const output = parsed.hookSpecificOutput;
+  assert.deepEqual(Object.keys(output).sort(), [
+    "hookEventName",
+    "permissionDecision",
+    "permissionDecisionReason",
+  ]);
+  assert.equal(output.hookEventName, "PreToolUse");
+  assert.ok(["ask", "deny"].includes(output.permissionDecision), "ask or deny, never allow");
+  assert.equal(typeof output.permissionDecisionReason, "string");
+  assert.ok(output.permissionDecisionReason.length > 0, "a deny/ask carries a reason");
+  return output;
+};
+
+const call = (role, toolName, toolInput, options) =>
+  guardDecision(runGuard({ agent_type: role, tool_name: toolName, tool_input: toolInput }, options));
+
+const bash = (role, command, options) => call(role, "Bash", { command }, options);
+
+const noDecision = (output) => assert.equal(output, null, "falls through with no decision");
+
+const askOrDeny = (output, decision) => {
+  assert.ok(output, `a ${decision} decision is emitted`);
+  assert.equal(output.permissionDecision, decision);
+  return output;
+};
+
+describe("claude-code bundle statics", () => {
+  test("the guard hook files are hand-authored statics outside the generated set", () => {
+    assert.deepEqual([...STATIC_PATHS], ["hooks/hooks.json", "hooks/guard.mjs"]);
+    for (const rel of STATIC_PATHS) {
+      assert.ok(!OUTPUT_PATHS.includes(rel), `${rel} is not generated`);
+      assert.deepEqual(rel, path.posix.normalize(rel), `${rel} is a plugin-root relative posix path`);
+      assert.ok(existsSync(pluginFile(ROOT, rel)), `${rel} exists`);
+      const text = readFileSync(pluginFile(ROOT, rel), "utf8");
+      assert.ok(!/[^\x09\x0A\x20-\x7E]/.test(text), `${rel} is ASCII-only`);
+      for (const pattern of FORBIDDEN) {
+        assert.ok(!pattern.test(text), `${rel} must not match ${pattern}`);
+      }
+    }
+  });
+
+  test("hooks.json is one synchronous PreToolUse matcher over the six covered tools", () => {
+    const config = JSON.parse(readFileSync(HOOKS_JSON, "utf8"));
+    assert.deepEqual(Object.keys(config), ["hooks"]);
+    assert.deepEqual(Object.keys(config.hooks), ["PreToolUse"]);
+    const entries = config.hooks.PreToolUse;
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0].matcher, "Bash|Read|Edit|Write|Skill|Agent");
+    const hooks = entries[0].hooks;
+    assert.equal(hooks.length, 1);
+    assert.equal(hooks[0].type, "command");
+    assert.equal(hooks[0].command, 'node "${CLAUDE_PLUGIN_ROOT}/hooks/guard.mjs"');
+    assert.ok(!("async" in hooks[0]), "the matcher runs synchronously");
+  });
+
+  test("generation fails on a static that leaks forbidden host terms", () => {
+    withFixture((dir) => {
+      const target = pluginFile(dir, "hooks/guard.mjs");
+      writeFileSync(target, `${readFileSync(target, "utf8")}\n// opencode\n`);
+      assert.throws(
+        () => generatePlugin({ root: dir }),
+        /bundle file hooks\/guard\.mjs still contains an OpenCode reference/,
+      );
+    });
+  });
+
+  test("--check reports a missing static without recreating it", () => {
+    withFixture((dir) => {
+      assert.equal(runCli(["--root", dir]).status, 0);
+      const target = pluginFile(dir, "hooks/guard.mjs");
+      rmSync(target);
+      const pluginDir = path.join(dir, PLUGIN_ROOT);
+      const before = snapshotDir(pluginDir);
+      const result = runCli(["--check", "--root", dir]);
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, /missing: integrations\/claude-code\/hooks\/guard\.mjs/);
+      assert.ok(!existsSync(target), "the check does not recreate the static");
+      assert.deepEqual(snapshotDir(pluginDir), before);
+    });
+  });
+});
+
+describe("claude-code role guard hook", () => {
+  test("only the exact qualified identities are enforced", () => {
+    askOrDeny(bash("yacao:builder", "git commit -m x"), "deny");
+    for (const role of [
+      "builder",
+      "orchestrator",
+      "yacao:build",
+      "yacao:builder ",
+      "YACAO:BUILDER",
+      "yacao:orchestrator-x",
+      "",
+    ]) {
+      noDecision(bash(role, "git commit -m x"));
+    }
+    noDecision(guardDecision(runGuard({ tool_name: "Bash", tool_input: { command: "git commit -m x" } })));
+    noDecision(guardDecision(runGuard({ agent_type: 7, tool_name: "Bash", tool_input: { command: "ls" } })));
+    noDecision(call("yacao:builder", "WebFetch", { url: "https://example.com" }));
+  });
+
+  test("malformed or absent hook input produces no decision and exit 0", () => {
+    for (const raw of ["", "not json", "null", "42", '"yacao:builder"', "[]"]) {
+      noDecision(guardDecision(runGuard(raw)));
+    }
+    noDecision(guardDecision(runGuard({})));
+    noDecision(guardDecision(runGuard({ agent_type: "yacao:builder" })));
+    noDecision(guardDecision(runGuard({ agent_type: "yacao:builder", tool_name: 7, tool_input: {} })));
+  });
+
+  test("never emits allow and never rewrites tool input", () => {
+    const allowed = [
+      ["yacao:builder", "Bash", { command: "ls -la" }],
+      ["yacao:builder", "Read", { file_path: path.join(ROOT, "index.js") }],
+      ["yacao:orchestrator", "Edit", { file_path: path.join(ROOT, ".yacao", "plans", "p", "t.md") }],
+      ["yacao:builder", "Skill", { skill: "anything" }],
+      ["yacao:builder", "Agent", { subagent_type: "Explore" }],
+    ];
+    for (const [role, tool, input] of allowed) {
+      const result = runGuard({ agent_type: role, tool_name: tool, tool_input: input });
+      assert.equal(result.stdout, "", `${role} ${tool} falls through silently`);
+      noDecision(guardDecision(result));
+    }
+    const denied = runGuard({
+      agent_type: "yacao:builder",
+      tool_name: "Bash",
+      tool_input: { command: "git commit -m x" },
+    });
+    assert.ok(!/updatedInput/.test(denied.stdout), "the decision never rewrites input");
+    assert.ok(!/"allow"/.test(denied.stdout), "the decision is never an allow");
+  });
+
+  test("plain and prefixed commits: builder denies, orchestrator asks", () => {
+    for (const command of ["git commit", "git commit -m x", "git -C repo commit -m x"]) {
+      askOrDeny(bash("yacao:builder", command), "deny");
+      askOrDeny(bash("yacao:orchestrator", command), "ask");
+    }
+    const denied = askOrDeny(bash("yacao:builder", "git commit -m x"), "deny");
+    assert.match(denied.permissionDecisionReason, /yacao:builder/);
+    assert.match(denied.permissionDecisionReason, /git commit\*/);
+    askOrDeny(bash("yacao:builder", "git push"), "ask");
+    askOrDeny(bash("yacao:orchestrator", "git push origin main"), "ask");
+  });
+
+  test("command/env prefixes hit the canonical deny rules", () => {
+    for (const role of ["yacao:builder", "yacao:orchestrator"]) {
+      askOrDeny(bash(role, "command git status"), "deny");
+      askOrDeny(bash(role, "env git status"), "deny");
+    }
+  });
+
+  test("ordinary controls and the read-only stash exceptions fall through", () => {
+    for (const command of ["git status", "ls -la", "grep -rn commit .", "cat package.json"]) {
+      noDecision(bash("yacao:builder", command));
+      noDecision(bash("yacao:orchestrator", command));
+    }
+    for (const command of ["git stash list", "git stash list --stat", "git stash show", "git stash show -p"]) {
+      noDecision(bash("yacao:builder", command));
+      noDecision(bash("yacao:orchestrator", command));
+    }
+    askOrDeny(bash("yacao:builder", "git stash"), "ask");
+    askOrDeny(bash("yacao:builder", "git stash drop"), "ask");
+    askOrDeny(bash("yacao:orchestrator", "git stash"), "ask");
+  });
+
+  test("destructive rules and argument-keyword collisions follow the ordered policy", () => {
+    for (const command of ["rm -rf build", "rm -fr /tmp/x", "rm -r -f x", "rm -f -r x"]) {
+      askOrDeny(bash("yacao:builder", command), "ask");
+      askOrDeny(bash("yacao:orchestrator", command), "ask");
+    }
+    noDecision(bash("yacao:builder", "rm -rf"));
+    noDecision(bash("yacao:builder", "echo rm -rf build"));
+    // A keyword in argument position still matches the canonical wildcard, so
+    // the builder is denied on a read-only log query - faithful to the policy.
+    askOrDeny(bash("yacao:builder", "git log --grep commit"), "deny");
+    askOrDeny(bash("yacao:orchestrator", "git log --grep commit"), "ask");
+    noDecision(bash("yacao:builder", 'echo "git commit"'));
+  });
+
+  test("orchestrator edits may only target Markdown under .yacao/plans", () => {
+    withProject((dir) => {
+      const plans = path.join(dir, ".yacao", "plans");
+      const options = { projectDir: dir, cwd: dir };
+      const cases = [
+        [path.join(plans, "plan-a", "plan.md"), null],
+        [path.join(plans, "plan-a", "tasks", "task-01-x.md"), null],
+        [path.join(dir, "src", "index.js"), "deny"],
+        [path.join(plans, "x.js"), "deny"],
+        [path.join(plans, "x.sh"), "deny"],
+        [path.join(plans, "x.md.js"), "deny"],
+        [path.join(plans, "..", "secrets.md"), "deny"],
+        [path.join(plans, "..", "..", "outside.md"), "deny"],
+        [path.join(os.tmpdir(), "yacao-guard-outside.md"), "deny"],
+      ];
+      for (const [filePath, expected] of cases) {
+        for (const tool of ["Edit", "Write"]) {
+          const output = call("yacao:orchestrator", tool, { file_path: filePath }, options);
+          if (expected === null) noDecision(output);
+          else askOrDeny(output, expected);
+        }
+      }
+    });
+  });
+
+  test("read rules: .env asks, plan reads deny for the builder only", () => {
+    withProject((dir) => {
+      const options = { projectDir: dir, cwd: dir };
+      const reads = [
+        [".env", "yacao:orchestrator", "ask"],
+        [".env", "yacao:builder", "ask"],
+        ["config.env", "yacao:orchestrator", "ask"],
+        ["config.env.local", "yacao:builder", "ask"],
+        ["config.env.example", "yacao:orchestrator", null],
+        ["config.env.example", "yacao:builder", null],
+        ["src/index.js", "yacao:builder", null],
+        ["src/index.js", "yacao:orchestrator", null],
+      ];
+      for (const [rel, role, expected] of reads) {
+        const output = call(role, "Read", { file_path: path.join(dir, rel) }, options);
+        if (expected === null) noDecision(output);
+        else askOrDeny(output, expected);
+      }
+      const plan = path.join(dir, ".yacao", "plans", "plan-a", "tasks", "task-01-x.md");
+      askOrDeny(call("yacao:builder", "Read", { file_path: plan }, options), "deny");
+      noDecision(call("yacao:orchestrator", "Read", { file_path: plan }, options));
+      assert.match(
+        askOrDeny(call("yacao:builder", "Read", { file_path: plan }, options), "deny").permissionDecisionReason,
+        /\.yacao\/plans\/\*/,
+      );
+      // The builder has no canonical edit policy: edits stay on the native gate.
+      noDecision(call("yacao:builder", "Edit", { file_path: path.join(dir, "src", "index.js") }, options));
+    });
+  });
+
+  test("file tools deny when the target cannot be classified", () => {
+    askOrDeny(call("yacao:orchestrator", "Edit", {}), "deny");
+    askOrDeny(call("yacao:orchestrator", "Edit", undefined), "deny");
+    askOrDeny(call("yacao:orchestrator", "Edit", { file_path: "relative/path.md" }), "deny");
+    askOrDeny(
+      call("yacao:orchestrator", "Write", { file_path: path.join(ROOT, "x.md") }, { projectDir: null }),
+      "deny",
+    );
+    const output = askOrDeny(call("yacao:orchestrator", "Edit", {}), "deny");
+    assert.match(output.permissionDecisionReason, /"file_path"/);
+  });
+
+  test("symlinked ancestors cannot smuggle edits out of the project", () => {
+    withProject((dir) => {
+      const options = { projectDir: dir, cwd: dir };
+      mkdirSync(path.join(dir, ".yacao"), { recursive: true });
+      symlinkSync(ROOT, path.join(dir, ".yacao", "plans"));
+      askOrDeny(
+        call("yacao:orchestrator", "Write", { file_path: path.join(dir, ".yacao", "plans", "escape.md") }, options),
+        "deny",
+      );
+    });
+    withProject((real) => {
+      const link = path.join(real, "link");
+      symlinkSync(real, link);
+      const target = path.join(real, ".yacao", "plans", "a.md");
+      noDecision(call("yacao:orchestrator", "Edit", { file_path: target }, { projectDir: link, cwd: link }));
+      noDecision(call("yacao:orchestrator", "Edit", { file_path: path.join(link, ".yacao", "plans", "a.md") }, { projectDir: real, cwd: real }));
+    });
+  });
+
+  test("skill calls: YACAO skills deny for the builder, everything else falls through", () => {
+    for (const skill of ["yacao:planning", "yacao:implementation", "yacao:review"]) {
+      askOrDeny(call("yacao:builder", "Skill", { skill }), "deny");
+      noDecision(call("yacao:orchestrator", "Skill", { skill }));
+    }
+    for (const skill of ["pdf", "yacao", "yacao:other", "webapp-testing"]) {
+      noDecision(call("yacao:builder", "Skill", { skill }));
+      noDecision(call("yacao:orchestrator", "Skill", { skill }));
+    }
+    askOrDeny(call("yacao:builder", "Skill", {}), "deny");
+    askOrDeny(call("yacao:builder", "Skill", undefined), "deny");
+    noDecision(call("yacao:orchestrator", "Skill", {}));
+  });
+
+  test("agent calls: the builder may only spawn Explore", () => {
+    noDecision(call("yacao:builder", "Agent", { subagent_type: "Explore" }));
+    for (const type of ["explore", "general-purpose", "yacao:builder", "fork", ""]) {
+      askOrDeny(call("yacao:builder", "Agent", { subagent_type: type }), "deny");
+    }
+    askOrDeny(call("yacao:builder", "Agent", {}), "deny");
+    askOrDeny(call("yacao:builder", "Agent", undefined), "deny");
+    // The orchestrator spawn allowlist is native frontmatter; the hook stays out.
+    noDecision(call("yacao:orchestrator", "Agent", { subagent_type: "general-purpose" }));
+    noDecision(call("yacao:orchestrator", "Agent", { subagent_type: "Explore" }));
+  });
+
+  test("a corrupt or absent packaged policy fails closed for recognized roles", () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), "yacao-guard-plugin-"));
+    try {
+      const hooksDir = path.join(dir, "hooks");
+      mkdirSync(hooksDir, { recursive: true });
+      copyFileSync(GUARD, path.join(hooksDir, "guard.mjs"));
+      const guard = path.join(hooksDir, "guard.mjs");
+      const builder = { agent_type: "yacao:builder", tool_name: "Bash", tool_input: { command: "git commit -m x" } };
+      const benign = { agent_type: "yacao:orchestrator", tool_name: "Bash", tool_input: { command: "ls" } };
+      const missing = askOrDeny(guardDecision(runGuard(builder, { guard })), "deny");
+      assert.match(missing.permissionDecisionReason, /guardrails\.json/);
+      assert.match(missing.permissionDecisionReason, /cannot be read/);
+      noDecision(guardDecision(runGuard({ ...builder, agent_type: "builder" }, { guard })));
+      const policies = [
+        "not json",
+        "[]",
+        '{"yacao:builder": {}}',
+        '{"yacao:orchestrator": {}, "yacao:builder": {}}',
+        '{"yacao:orchestrator": {"bash": []}, "yacao:builder": {}}',
+        '{"yacao:orchestrator": {"bash": [{"pattern": "*", "decision": "maybe"}]}, "yacao:builder": {}}',
+        '{"yacao:orchestrator": {"bash": {"pattern": "*"}}, "yacao:builder": {}}',
+      ];
+      for (const policy of policies) {
+        writeFileSync(path.join(dir, "guardrails.json"), policy);
+        const output = askOrDeny(guardDecision(runGuard(benign, { guard })), "deny");
+        assert.match(output.permissionDecisionReason, /cannot be enforced/);
+        noDecision(guardDecision(runGuard({ ...benign, agent_type: "builder" }, { guard })));
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("the hook never changes the filesystem", () => {
+    withProject((dir) => {
+      const before = snapshotDir(dir);
+      const battery = [
+        { agent_type: "yacao:builder", tool_name: "Bash", tool_input: { command: "git commit -m x" } },
+        { agent_type: "yacao:orchestrator", tool_name: "Bash", tool_input: { command: "rm -rf /" } },
+        {
+          agent_type: "yacao:orchestrator",
+          tool_name: "Write",
+          tool_input: { file_path: path.join(dir, ".yacao", "plans", "x.md") },
+        },
+        {
+          agent_type: "yacao:orchestrator",
+          tool_name: "Write",
+          tool_input: { file_path: path.join(dir, "outside.js") },
+        },
+        { agent_type: "yacao:builder", tool_name: "Read", tool_input: { file_path: path.join(dir, ".env") } },
+      ];
+      for (const payload of battery) guardDecision(runGuard(payload, { projectDir: dir, cwd: dir }));
+      assert.deepEqual(snapshotDir(dir), before);
+    });
+    const pluginDir = path.join(ROOT, PLUGIN_ROOT);
+    const before = snapshotDir(pluginDir);
+    for (const payload of [
+      { agent_type: "yacao:builder", tool_name: "Bash", tool_input: { command: "rm -rf /" } },
+      { agent_type: "yacao:orchestrator", tool_name: "Edit", tool_input: { file_path: "relative.md" } },
+    ]) {
+      guardDecision(runGuard(payload));
+    }
+    assert.deepEqual(snapshotDir(pluginDir), before);
   });
 });
