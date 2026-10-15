@@ -51,8 +51,6 @@ TL;DR: the orchestrator receives your prompt. Questions and discussions are answ
 
 The three skills - `yacao-planning`, `yacao-implementation` and `yacao-review` - own the detailed mechanics behind this behavior.
 
-YACAO needs a Git repository with a valid HEAD. It stops rather than touching your work when an intended target already has changes whose ownership is unclear, and it leaves unrelated changes and staged work alone. Declining a commit creates no commit and leaves your changes intact - anything already staged during commit preparation stays staged - and asks whether to continue without commits or stop. Approved task commits are ordinary Git commits you can amend or squash after the workflow finishes, and an approved task whose change is a verified no-op produces no empty commit.
-
 ## Install
 
 ### OpenCode V1
@@ -192,13 +190,7 @@ These rules are limits of what the tools guard, not content isolation: the plan-
 
 I personally use YACAO daily, so I am constantly fine tuning and adjusting it.
 
-Run the test suite with:
-
-```sh
-npm test
-```
-
-It is a zero-dependency `node:test` suite. It establishes the plugin's own offline behavior - version parsing, definition merging, permission rule mapping and ordering - and does not prove live host refresh, the permission UI or operational acceptance. Manual acceptance still requires a real OpenCode session:
+Manual acceptance requires a real OpenCode session:
 
 - install the plugin and confirm the orchestrator is the default agent;
 - ask for a small change and confirm the builder implements it and the orchestrator reviews it;
