@@ -190,12 +190,6 @@ These rules are limits of what the tools guard, not content isolation: the plan-
 
 I personally use YACAO daily, so I am constantly fine tuning and adjusting it.
 
-Manual acceptance requires a real OpenCode session:
-
-- install the plugin and confirm the orchestrator is the default agent;
-- ask for a small change and confirm the builder implements it and the orchestrator reviews it;
-- decline a commit and confirm your changes and staging survive and you are asked whether to continue without commits or stop.
-
 Contributions are very welcome.
 
 ## License
