@@ -1,0 +1,14 @@
+{
+  "name": "yacao",
+  "owner": {
+    "name": "augustoolucas",
+    "url": "https://github.com/augustoolucas/yacao"
+  },
+  "plugins": [
+    {
+      "name": "yacao",
+      "source": "./integrations/claude-code",
+      "description": "Yet Another Coding Agent Orchestrator - a minimal 2-agent, 3-skill workflow plugin for Claude Code."
+    }
+  ]
+}

@@ -24,12 +24,28 @@
 // The files under the plugin's hooks/ directory are hand-authored bundle
 // statics (STATIC_PATHS): generation never writes them, it scans their text
 // when present, and --check reports them as missing when absent.
+//
+// The root marketplace (.claude-plugin/marketplace.json) registers the bundle
+// for installation from this repository and is hand-authored as well: --check
+// validates it (agreeing identifier names, owner metadata, one local plugin
+// entry resolving to PLUGIN_ROOT and no second version) and reports it as
+// missing when absent.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 export const PLUGIN_ROOT = "integrations/claude-code";
+
+// The plugin's shipped identity: the manifest name and the marketplace name
+// both derive from it.
+export const PLUGIN_NAME = "yacao";
+
+// The root marketplace that registers the plugin for installation:
+//   claude plugin marketplace add <repo> && claude plugin install yacao@yacao
+// It is hand-authored like the hooks statics - the generator never writes it,
+// and --check validates it instead of comparing generated content.
+export const MARKETPLACE_PATH = ".claude-plugin/marketplace.json";
 
 // The complete, closed set of files the generator may write.
 export const OUTPUT_PATHS = Object.freeze([
@@ -50,6 +66,10 @@ export const STATIC_PATHS = Object.freeze([
   "hooks/hooks.json",
   "hooks/guard.mjs",
 ]);
+
+// Total files --check verifies: the generated allowlist, the hand-authored
+// hooks statics and the root marketplace.
+const CHECKED_FILE_COUNT = OUTPUT_PATHS.length + STATIC_PATHS.length + 1;
 
 // Claude Code agent definitions: native frontmatter fields only. The
 // orchestrator may spawn only the plugin builder and the built-in explorer;
@@ -347,7 +367,7 @@ export function generatePlugin({ root = defaultRoot() } = {}) {
 
   const files = {};
   files[".claude-plugin/plugin.json"] = jsonText({
-    name: "yacao",
+    name: PLUGIN_NAME,
     description: pkg.description.replace(/\bOpenCode\b/g, "Claude Code"),
     version: pkg.version,
     license: "MIT",
@@ -382,7 +402,86 @@ export function generatePlugin({ root = defaultRoot() } = {}) {
   return files;
 }
 
-// Read-only comparison of the generated bundle against the files on disk.
+// Read-only validation of the hand-authored root marketplace against the
+// plugin it registers. Out of the marketplace repository none of this is
+// generated, so any structural or containment problem is reported as
+// "invalid" with a detail instead of a content diff.
+export function checkMarketplace({ root = defaultRoot() } = {}) {
+  const invalid = (detail) => ({
+    ok: false,
+    mismatches: [{ path: MARKETPLACE_PATH, reason: "invalid", detail }],
+  });
+  const abs = path.join(root, MARKETPLACE_PATH);
+  if (!existsSync(abs)) {
+    return { ok: false, mismatches: [{ path: MARKETPLACE_PATH, reason: "missing" }] };
+  }
+  let marketplace;
+  try {
+    marketplace = JSON.parse(readFileSync(abs, "utf8"));
+  } catch (error) {
+    return invalid(`it is not valid JSON (${error.message})`);
+  }
+  if (!isPlainObject(marketplace)) return invalid("it must be a JSON object");
+  if ("version" in marketplace) {
+    return invalid("it carries a version; the generated plugin manifest carries the only version");
+  }
+  if (
+    typeof marketplace.name !== "string" ||
+    !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(marketplace.name) ||
+    marketplace.name.includes("..")
+  ) {
+    return invalid(`the name ${JSON.stringify(marketplace.name)} is not an identifier`);
+  }
+  if (marketplace.name !== PLUGIN_NAME) {
+    return invalid(
+      `the name ${JSON.stringify(marketplace.name)} does not match the plugin name ${JSON.stringify(PLUGIN_NAME)}`,
+    );
+  }
+  const owner = marketplace.owner;
+  if (!isPlainObject(owner) || typeof owner.name !== "string" || owner.name.trim() === "") {
+    return invalid("the owner must be an object with a non-empty name");
+  }
+  for (const field of ["email", "url"]) {
+    if (field in owner && (typeof owner[field] !== "string" || owner[field].trim() === "")) {
+      return invalid(`the owner ${field} must be a non-empty string`);
+    }
+  }
+  if (!Array.isArray(marketplace.plugins) || marketplace.plugins.length !== 1) {
+    return invalid("plugins must hold exactly one plugin entry");
+  }
+  const entry = marketplace.plugins[0];
+  if (!isPlainObject(entry)) return invalid("the plugin entry must be an object");
+  if ("version" in entry) {
+    return invalid("the plugin entry carries a version; the generated plugin manifest carries the only version");
+  }
+  if (entry.name !== PLUGIN_NAME) {
+    return invalid(
+      `the plugin entry name ${JSON.stringify(entry.name)} does not match the plugin name ${JSON.stringify(PLUGIN_NAME)}`,
+    );
+  }
+  if ("description" in entry && (typeof entry.description !== "string" || entry.description.trim() === "")) {
+    return invalid("the plugin entry description must be a non-empty string");
+  }
+  const source = entry.source;
+  if (typeof source !== "string" || !source.startsWith("./")) {
+    return invalid(`the plugin source ${JSON.stringify(source)} must be a ./-relative path`);
+  }
+  const resolved = path.resolve(root, source);
+  const relative = path.relative(root, resolved);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    return invalid(`the plugin source ${JSON.stringify(source)} escapes the repository`);
+  }
+  if (resolved !== path.join(root, PLUGIN_ROOT)) {
+    return invalid(`the plugin source ${JSON.stringify(source)} does not resolve to ${PLUGIN_ROOT}`);
+  }
+  if (!existsSync(resolved) || !statSync(resolved).isDirectory()) {
+    return invalid(`the plugin source ${JSON.stringify(source)} does not exist`);
+  }
+  return { ok: true, mismatches: [] };
+}
+
+// Read-only comparison of the generated bundle against the files on disk,
+// plus validation of the hand-authored root marketplace.
 export function checkPlugin({ root = defaultRoot() } = {}) {
   const files = generatePlugin({ root });
   const mismatches = [];
@@ -402,6 +501,7 @@ export function checkPlugin({ root = defaultRoot() } = {}) {
       mismatches.push({ path: rel, reason: "missing" });
     }
   }
+  mismatches.push(...checkMarketplace({ root }).mismatches);
   return { ok: mismatches.length === 0, mismatches };
 }
 
@@ -409,8 +509,8 @@ const USAGE = `usage: node scripts/build-claude-code.mjs [--check] [--root <dir>
 
 Writes the Claude Code plugin bundle under ${PLUGIN_ROOT}/ from the canonical
 YACAO sources. --check verifies the committed bundle (${OUTPUT_PATHS.length} generated
-files plus the ${STATIC_PATHS.length} hand-authored hooks statics) without writing or
-deleting anything.`;
+files plus the ${STATIC_PATHS.length} hand-authored hooks statics) and the root
+${MARKETPLACE_PATH} without writing or deleting anything.`;
 
 const parseArgs = (args) => {
   const options = { check: false, help: false, root: defaultRoot() };
@@ -450,14 +550,16 @@ const runCli = (argv) => {
     if (options.check) {
       const { ok, mismatches } = checkPlugin({ root: options.root });
       if (ok) {
-        console.log(`claude-code plugin is up to date (${OUTPUT_PATHS.length + STATIC_PATHS.length} files)`);
+        console.log(`claude-code plugin is up to date (${CHECKED_FILE_COUNT} files)`);
         return 0;
       }
       for (const mismatch of mismatches) {
-        console.error(`${mismatch.reason}: ${path.posix.join(PLUGIN_ROOT, mismatch.path)}`);
+        const display =
+          mismatch.path === MARKETPLACE_PATH ? mismatch.path : path.posix.join(PLUGIN_ROOT, mismatch.path);
+        console.error(`${mismatch.reason}: ${display}${mismatch.detail ? ` (${mismatch.detail})` : ""}`);
       }
       console.error(
-        `claude-code plugin is out of date (${mismatches.length} of ${OUTPUT_PATHS.length + STATIC_PATHS.length} files)`,
+        `claude-code plugin is out of date (${mismatches.length} of ${CHECKED_FILE_COUNT} files)`,
       );
       return 1;
     }

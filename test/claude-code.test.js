@@ -8,11 +8,13 @@ import { spawnSync } from "node:child_process";
 import {
   copyFileSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
   rmSync,
+  statSync,
   symlinkSync,
   writeFileSync,
 } from "node:fs";
@@ -21,8 +23,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  checkMarketplace,
   checkPlugin,
   generatePlugin,
+  MARKETPLACE_PATH,
   OUTPUT_PATHS,
   PLUGIN_ROOT,
   STATIC_PATHS,
@@ -48,9 +52,14 @@ const SOURCE_FILES = [
 // generation scans their text.
 const STATIC_FILES = STATIC_PATHS.map((rel) => path.posix.join(PLUGIN_ROOT, rel));
 
+// The shipped bundle exactly as committed, and the root marketplace that
+// registers it for installation.
+const SHIPPED_BUNDLE = [...OUTPUT_PATHS, ...STATIC_PATHS];
+const MARKETPLACE_FILES = [MARKETPLACE_PATH];
+
 const createFixture = () => {
   const dir = mkdtempSync(path.join(os.tmpdir(), "yacao-claude-code-"));
-  for (const rel of [...SOURCE_FILES, ...STATIC_FILES]) {
+  for (const rel of [...SOURCE_FILES, ...MARKETPLACE_FILES, ...STATIC_FILES]) {
     const destination = path.join(dir, rel);
     mkdirSync(path.dirname(destination), { recursive: true });
     copyFileSync(path.join(ROOT, rel), destination);
@@ -531,6 +540,307 @@ describe("claude-code --check mode", () => {
   });
 });
 
+// The shipped bundle as committed on disk, not as regenerated: these cases
+// read the exact artifacts Claude Code would load from this repository.
+describe("claude-code shipped bundle", () => {
+  const pluginDir = path.join(ROOT, PLUGIN_ROOT);
+  const shipped = listFiles(pluginDir);
+
+  test("ships exactly the nine bundle files: two agents, three skills, no canonical copies", () => {
+    assert.deepEqual(shipped, [...SHIPPED_BUNDLE].sort());
+    assert.deepEqual(shipped.filter((rel) => rel.startsWith("agents/")), [
+      "agents/builder.md",
+      "agents/orchestrator.md",
+    ]);
+    assert.deepEqual(shipped.filter((rel) => rel.startsWith("skills/")), [
+      "skills/implementation/SKILL.md",
+      "skills/planning/SKILL.md",
+      "skills/review/SKILL.md",
+    ]);
+    for (const rel of shipped) {
+      assert.ok(!/yacao-(planning|implementation|review)/.test(rel), `${rel} is not a canonical skill copy`);
+      assert.ok(!rel.includes("prompts/"), `${rel} is not a canonical prompt copy`);
+    }
+  });
+
+  test("every shipped file is a regular file and the guard imports only Node built-ins", () => {
+    for (const rel of shipped) {
+      assert.ok(!lstatSync(pluginFile(ROOT, rel)).isSymbolicLink(), `${rel} is a regular file`);
+    }
+    const guard = readFileSync(pluginFile(ROOT, "hooks/guard.mjs"), "utf8");
+    const specifiers = [...guard.matchAll(/from\s+"([^"]+)"/g)].map((match) => match[1]);
+    assert.ok(specifiers.length > 0, "the guard imports its runtime");
+    for (const specifier of specifiers) {
+      assert.match(specifier, /^node:/, `${specifier} is a Node built-in`);
+    }
+  });
+
+  test("the root marketplace is local, versionless and registers exactly this plugin", () => {
+    assert.deepEqual(listFiles(path.join(ROOT, ".claude-plugin")), ["marketplace.json"]);
+    assert.ok(!existsSync(path.join(ROOT, ".claude-plugin", "plugin.json")), "no root plugin manifest");
+    const marketplace = readJson(ROOT, MARKETPLACE_PATH);
+    assert.equal(marketplace.name, "yacao");
+    assert.deepEqual(marketplace.owner, {
+      name: "augustoolucas",
+      url: "https://github.com/augustoolucas/yacao",
+    });
+    assert.ok(!("version" in marketplace), "no manually maintained marketplace version");
+    assert.equal(marketplace.plugins.length, 1);
+    const [entry] = marketplace.plugins;
+    assert.equal(entry.name, "yacao");
+    assert.equal(entry.source, "./integrations/claude-code");
+    assert.ok(!/^https?:/.test(entry.source), "the source is a local path, not a hosted URL");
+    assert.equal(typeof entry.description, "string");
+    assert.ok(entry.description.trim().length > 0, "the entry carries a short description");
+    assert.ok(!("version" in entry), "the plugin version lives only in the generated manifest");
+    assert.equal(path.resolve(ROOT, entry.source), path.join(ROOT, PLUGIN_ROOT));
+    assert.ok(statSync(path.resolve(ROOT, entry.source)).isDirectory());
+  });
+
+  test("names agree across the shipped manifest, marketplace, agents, skills and policy", () => {
+    const manifest = readJson(ROOT, `${PLUGIN_ROOT}/.claude-plugin/plugin.json`);
+    const marketplace = readJson(ROOT, MARKETPLACE_PATH);
+    assert.equal(manifest.name, "yacao");
+    assert.equal(marketplace.name, manifest.name);
+    assert.equal(marketplace.plugins[0].name, manifest.name);
+    const agentFiles = shipped.filter((rel) => rel.startsWith("agents/"));
+    const agentNames = agentFiles.map(
+      (rel) => frontmatter(readFileSync(pluginFile(ROOT, rel), "utf8")).fields.name,
+    );
+    assert.deepEqual(agentNames.sort(), ["builder", "orchestrator"]);
+    for (const rel of agentFiles) {
+      const name = frontmatter(readFileSync(pluginFile(ROOT, rel), "utf8")).fields.name;
+      assert.equal(name, path.basename(rel, ".md"), `${rel} frontmatter name matches its file name`);
+    }
+    for (const rel of shipped.filter((entry) => entry.startsWith("skills/"))) {
+      const skill = frontmatter(readFileSync(pluginFile(ROOT, rel), "utf8"));
+      assert.equal(skill.fields.name, path.basename(path.dirname(rel)), `${rel} name matches its directory`);
+    }
+    const guardrails = readJson(ROOT, `${PLUGIN_ROOT}/guardrails.json`);
+    assert.deepEqual(Object.keys(guardrails), [
+      `${manifest.name}:orchestrator`,
+      `${manifest.name}:builder`,
+    ]);
+    // Every namespaced skill the shipped policy names must be a shipped skill.
+    for (const rule of guardrails[`${manifest.name}:builder`].skill) {
+      if (!rule.pattern.startsWith(`${manifest.name}:`)) continue;
+      const skillDir = rule.pattern.slice(manifest.name.length + 1);
+      assert.ok(
+        existsSync(pluginFile(ROOT, `skills/${skillDir}/SKILL.md`)),
+        `${rule.pattern} resolves to a shipped skill`,
+      );
+    }
+  });
+
+  test("manifest defaults, hook commands and generated references resolve inside the bundle", () => {
+    const manifest = readJson(ROOT, `${PLUGIN_ROOT}/.claude-plugin/plugin.json`);
+    assert.equal(manifest.settings.agent, "orchestrator");
+    assert.ok(
+      statSync(pluginFile(ROOT, `agents/${manifest.settings.agent}.md`)).isFile(),
+      "the default agent file exists inside the bundle",
+    );
+    const hooks = readJson(ROOT, `${PLUGIN_ROOT}/hooks/hooks.json`);
+    for (const group of Object.values(hooks.hooks).flat()) {
+      for (const hook of group.hooks) {
+        const referenced = /"\$\{CLAUDE_PLUGIN_ROOT\}\/([^"]+)"/.exec(hook.command);
+        assert.ok(referenced, `the hook command names a plugin-root path: ${hook.command}`);
+        assert.ok(!referenced[1].includes(".."), `${referenced[1]} does not escape the plugin root`);
+        assert.ok(statSync(pluginFile(ROOT, referenced[1])).isFile(), `${referenced[1]} exists in the bundle`);
+      }
+    }
+    for (const rel of OUTPUT_PATHS) {
+      assert.ok(readFileSync(pluginFile(ROOT, rel), "utf8").length > 0, `${rel} is shipped non-empty`);
+    }
+  });
+
+  test("the repository stays a package, not a script host: no install or release hooks", () => {
+    const pkg = readJson(ROOT, "package.json");
+    assert.deepEqual(Object.keys(pkg.scripts).sort(), [
+      "build:claude-code",
+      "check:claude-code",
+      "test",
+    ]);
+    for (const name of Object.keys(pkg.scripts)) {
+      assert.ok(
+        !/^(pre|post)?(install|prepare|release|publish)$/.test(name),
+        `${name} is not an install or release hook`,
+      );
+    }
+  });
+});
+
+// Drift detection: a check must never regenerate, and every canonical source
+// edit must surface as a mismatch until the bundle is rebuilt on purpose.
+describe("claude-code adapter drift detection", () => {
+  const writeBundle = (dir) => {
+    const result = runCli(["--root", dir]);
+    assert.equal(result.status, 0, result.stderr);
+  };
+
+  test("the check API passes on the committed checkout and on a fresh fixture", () => {
+    assert.deepEqual(checkPlugin({ root: ROOT }), { ok: true, mismatches: [] });
+    assert.deepEqual(checkMarketplace({ root: ROOT }), { ok: true, mismatches: [] });
+    withFixture((dir) => {
+      writeBundle(dir);
+      assert.deepEqual(checkPlugin({ root: dir }), { ok: true, mismatches: [] });
+    });
+  });
+
+  test("a package version bump fails the check until the manifest is regenerated", () => {
+    withFixture((dir) => {
+      writeBundle(dir);
+      const manifestPath = pluginFile(dir, ".claude-plugin/plugin.json");
+      const before = readFileSync(manifestPath, "utf8");
+      const packagePath = path.join(dir, "package.json");
+      const pkg = JSON.parse(readFileSync(packagePath, "utf8"));
+      pkg.version = "9.9.9";
+      writeFileSync(packagePath, `${JSON.stringify(pkg, null, 2)}\n`);
+      assert.deepEqual(checkPlugin({ root: dir }).mismatches, [
+        { path: ".claude-plugin/plugin.json", reason: "differs" },
+      ]);
+      assert.equal(readFileSync(manifestPath, "utf8"), before, "the check does not regenerate the manifest");
+      const cli = runCli(["--check", "--root", dir]);
+      assert.equal(cli.status, 1);
+      assert.match(cli.stderr, /differs: integrations\/claude-code\/\.claude-plugin\/plugin\.json/);
+      writeBundle(dir);
+      assert.equal(JSON.parse(readFileSync(manifestPath, "utf8")).version, "9.9.9");
+      assert.deepEqual(checkPlugin({ root: dir }), { ok: true, mismatches: [] });
+    });
+  });
+
+  test("a changed prompt fails the check until the agents are regenerated", () => {
+    withFixture((dir) => {
+      writeBundle(dir);
+      const promptPath = path.join(dir, "agents/prompts/builder.md");
+      writeFileSync(promptPath, `${readFileSync(promptPath, "utf8")}\nA drift line appended to the prompt.\n`);
+      const agentPath = pluginFile(dir, "agents/builder.md");
+      const before = readFileSync(agentPath, "utf8");
+      assert.deepEqual(checkPlugin({ root: dir }).mismatches, [
+        { path: "agents/builder.md", reason: "differs" },
+      ]);
+      assert.equal(readFileSync(agentPath, "utf8"), before, "the check does not regenerate the agent");
+      writeBundle(dir);
+      assert.deepEqual(checkPlugin({ root: dir }), { ok: true, mismatches: [] });
+    });
+  });
+
+  test("a changed skill fails the check until the skills are regenerated", () => {
+    withFixture((dir) => {
+      writeBundle(dir);
+      const sourcePath = path.join(dir, "skills/yacao-review/SKILL.md");
+      writeFileSync(sourcePath, `${readFileSync(sourcePath, "utf8")}\nA drift line appended to the skill.\n`);
+      const outputPath = pluginFile(dir, "skills/review/SKILL.md");
+      const before = readFileSync(outputPath, "utf8");
+      assert.deepEqual(checkPlugin({ root: dir }).mismatches, [
+        { path: "skills/review/SKILL.md", reason: "differs" },
+      ]);
+      assert.equal(readFileSync(outputPath, "utf8"), before, "the check does not regenerate the skill");
+      writeBundle(dir);
+      assert.deepEqual(checkPlugin({ root: dir }), { ok: true, mismatches: [] });
+    });
+  });
+
+  test("changed policy sources fail the check until the guardrails are regenerated", () => {
+    withFixture((dir) => {
+      writeBundle(dir);
+      const sourcePath = path.join(dir, "agents/builder.json");
+      const definition = JSON.parse(readFileSync(sourcePath, "utf8"));
+      definition.permission.bash = "ask";
+      writeFileSync(sourcePath, `${JSON.stringify(definition, null, 2)}\n`);
+      const guardrailsPath = pluginFile(dir, "guardrails.json");
+      const before = readFileSync(guardrailsPath, "utf8");
+      assert.deepEqual(checkPlugin({ root: dir }).mismatches, [
+        { path: "guardrails.json", reason: "differs" },
+      ]);
+      assert.equal(readFileSync(guardrailsPath, "utf8"), before, "the check does not regenerate the policy");
+      writeBundle(dir);
+      assert.deepEqual(checkPlugin({ root: dir }), { ok: true, mismatches: [] });
+    });
+  });
+
+  test("a missing generated artifact fails the check without being recreated", () => {
+    withFixture((dir) => {
+      writeBundle(dir);
+      const target = pluginFile(dir, "skills/implementation/SKILL.md");
+      rmSync(target);
+      assert.deepEqual(checkPlugin({ root: dir }).mismatches, [
+        { path: "skills/implementation/SKILL.md", reason: "missing" },
+      ]);
+      assert.ok(!existsSync(target), "the check does not recreate the artifact");
+    });
+  });
+
+  test("a drifted or missing root marketplace fails the check without being rewritten", () => {
+    withFixture((dir) => {
+      writeBundle(dir);
+      const marketplacePath = path.join(dir, MARKETPLACE_PATH);
+      const original = readFileSync(marketplacePath, "utf8");
+      const cases = [
+        [
+          "a repointed plugin source",
+          (marketplace) => {
+            marketplace.plugins[0].source = "./integrations/elsewhere";
+          },
+          /does not resolve to integrations\/claude-code/,
+        ],
+        [
+          "a second marketplace version",
+          (marketplace) => {
+            marketplace.version = "1.0.0";
+          },
+          /only version/,
+        ],
+        [
+          "a renamed marketplace",
+          (marketplace) => {
+            marketplace.name = "other";
+          },
+          /does not match the plugin name/,
+        ],
+        [
+          "an extra plugin entry",
+          (marketplace) => {
+            marketplace.plugins.push({ name: "extra", source: "./integrations/claude-code" });
+          },
+          /exactly one plugin entry/,
+        ],
+        [
+          "missing owner metadata",
+          (marketplace) => {
+            delete marketplace.owner;
+          },
+          /owner/,
+        ],
+      ];
+      for (const [label, mutate, pattern] of cases) {
+        const marketplace = JSON.parse(original);
+        mutate(marketplace);
+        writeFileSync(marketplacePath, `${JSON.stringify(marketplace, null, 2)}\n`);
+        const tampered = readFileSync(marketplacePath, "utf8");
+        const result = checkPlugin({ root: dir });
+        assert.equal(result.ok, false, label);
+        assert.equal(result.mismatches.length, 1, label);
+        const [mismatch] = result.mismatches;
+        assert.equal(mismatch.path, MARKETPLACE_PATH, label);
+        assert.equal(mismatch.reason, "invalid", label);
+        assert.match(mismatch.detail, pattern, label);
+        assert.equal(readFileSync(marketplacePath, "utf8"), tampered, `${label}: the check does not rewrite`);
+        const cli = runCli(["--check", "--root", dir]);
+        assert.equal(cli.status, 1, label);
+        assert.match(cli.stderr, /invalid: \.claude-plugin\/marketplace\.json \(/, label);
+        writeFileSync(marketplacePath, original);
+        assert.deepEqual(checkMarketplace({ root: dir }), { ok: true, mismatches: [] }, label);
+      }
+      rmSync(marketplacePath);
+      assert.deepEqual(checkPlugin({ root: dir }), {
+        ok: false,
+        mismatches: [{ path: MARKETPLACE_PATH, reason: "missing" }],
+      });
+      assert.ok(!existsSync(marketplacePath), "the check does not recreate the marketplace");
+    });
+  });
+});
+
 // A throwaway project root for the file-tool cases: absolute file_path inputs
 // are classified against CLAUDE_PROJECT_DIR.
 const withProject = (body) => {
@@ -923,5 +1233,80 @@ describe("claude-code role guard hook", () => {
       guardDecision(runGuard(payload));
     }
     assert.deepEqual(snapshotDir(pluginDir), before);
+  });
+});
+
+// Packaged self-containment: a bare copy of the bundle must enforce its own
+// policy with nothing from this repository reachable, and the shipped hooks
+// command must survive a plugin root path containing spaces. This proves the
+// packaging, not a native Claude Code installation.
+const copyBundle = (destination) => {
+  for (const rel of SHIPPED_BUNDLE) {
+    const target = path.join(destination, rel);
+    mkdirSync(path.dirname(target), { recursive: true });
+    copyFileSync(pluginFile(ROOT, rel), target);
+  }
+  return destination;
+};
+
+describe("claude-code packaged self-containment", () => {
+  test("a bare copy of the bundle enforces its own policy with no repository sources present", () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), "yacao-selfcontained-"));
+    try {
+      const bundle = copyBundle(path.join(dir, "plugin"));
+      assert.deepEqual(
+        listFiles(dir),
+        SHIPPED_BUNDLE.map((rel) => path.join("plugin", rel)).sort(),
+        "the fixture holds the bundle and nothing else",
+      );
+      // The copied policy is replaced with a distinctive one, so a decision
+      // can only come from the copy, never from this checkout.
+      writeFileSync(
+        path.join(bundle, "guardrails.json"),
+        `${JSON.stringify(
+          {
+            "yacao:orchestrator": { bash: [{ pattern: "*", decision: "allow" }] },
+            "yacao:builder": { bash: [{ pattern: "probe-*", decision: "deny" }] },
+          },
+          null,
+          2,
+        )}\n`,
+      );
+      const options = { guard: path.join(bundle, "hooks", "guard.mjs"), projectDir: bundle, cwd: bundle };
+      const probe = askOrDeny(bash("yacao:builder", "probe-one", options), "deny");
+      assert.match(probe.permissionDecisionReason, /"probe-\*"/, "the decision names the copied policy rule");
+      // This checkout's policy decides these; the copy's policy does not.
+      noDecision(bash("yacao:builder", "git commit -m x", options));
+      noDecision(bash("yacao:builder", "git push", options));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("the shipped hooks command survives a plugin root path with spaces", () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), "yacao plugin with spaces-"));
+    try {
+      const bundle = copyBundle(path.join(dir, "bundle with spaces"));
+      const command = readJson(bundle, "hooks/hooks.json").hooks.PreToolUse[0].hooks[0].command;
+      assert.ok(command.includes("${CLAUDE_PLUGIN_ROOT}"), `observed command: ${command}`);
+      assert.ok(bundle.includes(" "), "the fixture path contains spaces");
+      const result = spawnSync(command, {
+        shell: "/bin/sh",
+        cwd: bundle,
+        encoding: "utf8",
+        input: JSON.stringify({
+          agent_type: "yacao:builder",
+          tool_name: "Bash",
+          tool_input: { command: "git commit -m x" },
+        }),
+        env: { ...process.env, CLAUDE_PLUGIN_ROOT: bundle, CLAUDE_PROJECT_DIR: bundle },
+      });
+      assert.equal(result.status, 0, `stderr: ${result.stderr}`);
+      const output = JSON.parse(result.stdout);
+      assert.equal(output.hookSpecificOutput.permissionDecision, "deny");
+      assert.match(output.hookSpecificOutput.permissionDecisionReason, /yacao:builder/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
