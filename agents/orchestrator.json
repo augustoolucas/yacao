@@ -32,6 +32,8 @@
       "git * rebase*": "ask",
       "git * pull*": "ask",
       "git * reset*": "ask",
+      "git * switch*": "ask",
+      "git * clean*": "ask",
       "git clean*": "ask",
       "rm -rf *": "ask",
       "rm -fr *": "ask",

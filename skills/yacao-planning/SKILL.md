@@ -14,12 +14,15 @@ Write a plan overview and self-contained task contracts before implementation. M
 
    The plan overview contains:
    - **Goal** - what the complete change accomplishes
+   - **Repository path** - the repository this plan targets
    - **Scope** - files touched and boundaries
    - **Reasoning** - brief explanation for the proposed approach
    - **References** - table of relevant files and their roles
+   - **Acceptance criteria** - the original user acceptance criteria the completed work must satisfy
    - **Tasks** - the ordered task list with each task's dependencies
    - **Risks** - things that could go wrong and regressions to watch for
    - **Verification commands** - final checks that only make sense after all tasks complete (omit only when nothing needs to be verified)
+   - **Implementation metadata** - the commit preference, the fixed initial review base, the expected HEAD and the task ledger, owned and recorded as the `yacao-implementation` skill describes
 
    Each task contract is self-contained and contains only:
    - **Goal** - the independently testable increment it delivers
@@ -29,5 +32,5 @@ Write a plan overview and self-contained task contracts before implementation. M
    - **Verification commands** - exact commands that prove the task works
 
    Keep tasks meaningful and independently testable. A plan may consist of a single task when the work does not split into verifiable increments. Order the tasks so each one can be implemented and verified before the next; per-task verification is required even when the overview also has final verification commands. Keep the complete plan in the overview, never in a task contract.
-3. **Present for approval** - show a summary to the user. One approval covers the complete plan before writing code; do not ask for approval between tasks. Wait for `Approve` or `Revise`. If the user abandons or supersedes the plan instead, stop and note the plan as abandoned in the overview.
+3. **Present for approval** - show a summary to the user. One approval covers the complete plan before writing code; do not ask for approval between tasks. An unchanged task needs no new plan approval. Accept clear approval or revision intent rather than a literal token. If the user abandons or supersedes the plan instead, stop and note the plan as abandoned in the overview.
 4. On **Revise**: update the overview and task contracts, then re-present.

@@ -46,7 +46,12 @@ TL;DR: the orchestrator receives your prompt. Questions and discussions are answ
 
 - small changes go straight to the builder and back for review;
 - larger changes get a written plan you approve first, then the builder implements it, with review and fixes until it's right.
-- every approved task is committed to your branch, each commit behind your approval;
+- by default the approved work stays uncommitted; you can ask for a commit after each approved task, or for a single commit at the end;
+- each task is still reviewed before the next one starts, and a task that needs fixes gets at most two adjustment rounds before it comes back to you.
+
+The three skills - `yacao-planning`, `yacao-implementation` and `yacao-review` - own the detailed mechanics behind this behavior.
+
+YACAO needs a Git repository with a valid HEAD. It stops rather than touching your work when an intended target already has changes whose ownership is unclear, and it leaves unrelated changes and staged work alone. Declining a commit preserves your changes and staging and asks whether to continue without commits or stop. Approved task commits are ordinary Git commits you can amend or squash after the workflow finishes, and an approved task whose change is a verified no-op produces no empty commit.
 
 ## Install
 
@@ -94,11 +99,22 @@ Then restart OpenCode.
 
 ### Updating YACAO
 
-OpenCode caches the installed plugin, so restarting alone fetches nothing new.
+OpenCode caches the installed plugin, so a plain restart alone re-fetches nothing.
 
-- With a pinned spec, point the tag at the new release; the spec string is the cache key, so the next start installs it.
-- With an unpinned spec, remove the cached copy under `~/.cache/opencode/packages/` and restart.
-- This applies to both V1 and V2.
+On V1 the spec string is the cache key:
+
+- with a pinned spec, point the tag at the new release;
+- with an unpinned spec, remove only YACAO's cached package under `~/.cache/opencode/packages/` and restart - never clear the whole plugin cache.
+
+On V2 use the native command:
+
+```sh
+opencode plugin update <configured-target>
+```
+
+Omit the target to update all outdated plugins.
+
+This is the configured behavior from the installed CLI help and the versioned source; it has not been exercised end to end here.
 
 ## Configuration
 
@@ -166,6 +182,8 @@ Permissions are guardrails against honest mistakes, not a sandbox: shell access 
 
 YACAO's agents define their own permission guardrails. Your `opencode.jsonc` entries are applied as well; on V2 they take precedence, so avoid broad global allows (such as `edit: allow`) if you rely on YACAO's guardrails. To loosen one of their rules, override it per agent: `agent.<name>.permission` on V1, `agents.<name>.permissions` on V2.
 
+These rules are limits of what the tools guard, not content isolation: the plan-read rule restricts the read tool, not what an agent can reach through shell; `explore` may still use shell; and the Git guards cover the common commands, not every possible commit-producing operation. Plain stash reads are allowed while prefixed forms ask, and a later user configuration can change the agent mode.
+
 ### Auto-update options (OpenCode V1 Only)
 
 - `autoUpdate` (defaults to `false`): on startup, checks the latest release and shows a notification when a newer version exists. It never edits your configuration.
@@ -173,6 +191,18 @@ YACAO's agents define their own permission guardrails. Your `opencode.jsonc` ent
 ## Development
 
 I personally use YACAO daily, so I am constantly fine tuning and adjusting it.
+
+Run the test suite with:
+
+```sh
+npm test
+```
+
+It is a zero-dependency `node:test` suite. It establishes the plugin's own offline behavior - version parsing, definition merging, permission rule mapping and ordering - and does not prove live host refresh, the permission UI or operational acceptance. Manual acceptance still requires a real OpenCode session:
+
+- install the plugin and confirm the orchestrator is the default agent;
+- ask for a small change and confirm the builder implements it and the orchestrator reviews it;
+- decline a commit and confirm your changes and staging survive and you are asked whether to continue without commits or stop.
 
 Contributions are very welcome.
 
