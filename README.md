@@ -114,6 +114,18 @@ Omit the target to update all outdated plugins.
 
 This is the configured behavior from the installed CLI help and the versioned source; it has not been exercised end to end here.
 
+### Claude Code (experimental, unvalidated)
+
+[`integrations/claude-code/`](./integrations/claude-code) ships an experimental Claude Code adapter generated from the same canonical sources: two agents (`yacao:orchestrator`, `yacao:builder`), three skills and a guard hook. It is unvalidated: no Claude Code CLI has loaded it, no native gate has run, and none of its runtime behavior has been observed.
+
+Load the committed bundle from an unrelated disposable project (no build step; Node.js 22 or newer is required for the guard hook):
+
+```sh
+claude --plugin-dir /absolute/path/to/yacao/integrations/claude-code --agent yacao:orchestrator
+```
+
+Local installation is preferred for now. Git marketplace installation becomes available only after the maintainer merges the adapter and publishes a release; the default branch and the current release do not contain it yet. Full guide, install options and the native acceptance checklist: [`docs/claude-code.md`](./docs/claude-code.md).
+
 ## Configuration
 
 On V1 YACAO sets `orchestrator` as the default agent automatically **if no `default_agent` is already set**.
