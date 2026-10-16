@@ -236,10 +236,9 @@ const categoryFor = (roleId, toolName) => {
   if (toolName === "Read") return "read";
   if (toolName === "Edit" || toolName === "Write") return "edit";
   if (toolName === "Skill") return "skill";
-  // Only yacao:builder has its spawn scope enforced here: the orchestrator's
-  // subagent allowlist ("yacao:builder", "Explore") is native to the Agent
-  // tool frontmatter, so its task policy stays adapter data.
-  if (toolName === "Agent" && roleId === "yacao:builder") return "task";
+  // Both roles enforce dispatch here: the orchestrator may spawn only
+  // yacao:builder and Explore, and yacao:builder only Explore.
+  if (toolName === "Agent") return "task";
   return null;
 };
 

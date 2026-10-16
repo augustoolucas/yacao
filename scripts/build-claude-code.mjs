@@ -71,33 +71,19 @@ export const STATIC_PATHS = Object.freeze([
 // hooks statics and the root marketplace.
 const CHECKED_FILE_COUNT = OUTPUT_PATHS.length + STATIC_PATHS.length + 1;
 
-// Claude Code agent definitions: native frontmatter fields only. The
-// orchestrator may spawn only the plugin builder and the built-in explorer;
-// the builder inherits the caller's model and must not ask user questions.
+// Claude Code agent definitions: native frontmatter fields only. Both agents
+// inherit the session's tools (MCP servers included); the adapter pins no tool
+// roster or denylist, and the dispatch scope of both roles is enforced by the
+// guard hook.
 const AGENT_SPECS = [
   {
     name: "orchestrator",
     mode: "primary",
-    tools: [
-      "Agent(yacao:builder, Explore)",
-      "SendMessage",
-      "Skill",
-      "Read",
-      "Grep",
-      "Glob",
-      "WebFetch",
-      "WebSearch",
-      "Bash",
-      "AskUserQuestion",
-      "Edit",
-      "Write",
-    ],
   },
   {
     name: "builder",
     mode: "subagent",
     model: "inherit",
-    tools: ["Read", "Grep", "Glob", "WebFetch", "WebSearch", "Bash", "Edit", "Write", "Agent"],
   },
 ];
 
@@ -382,7 +368,6 @@ export function generatePlugin({ root = defaultRoot() } = {}) {
     const fields = [
       ["name", agent.spec.name],
       ["description", agent.description],
-      ["tools", agent.spec.tools],
     ];
     if (agent.spec.model) fields.push(["model", agent.spec.model]);
     files[`agents/${agent.spec.name}.md`] = renderMarkdown(fields, agent.prompt);

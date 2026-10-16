@@ -192,8 +192,6 @@ describe("claude-code agent and skill frontmatter", () => {
       canonicalDescription("orchestrator").replace("delegates to builder", "delegates to yacao:builder"),
     );
     assert.equal(builder.fields.description, canonicalDescription("builder"));
-    assert.ok(Array.isArray(orchestrator.fields.tools));
-    assert.ok(Array.isArray(builder.fields.tools));
   });
 
   test("skills carry the names Claude Code invokes as yacao:<name>", () => {
@@ -222,22 +220,13 @@ describe("claude-code agent and skill frontmatter", () => {
     }
   });
 
-  test("tool lists match the scoped roles", () => {
-    const orchestrator = frontmatter(files["agents/orchestrator.md"]).fields.tools;
-    const builder = frontmatter(files["agents/builder.md"]).fields.tools;
-    assert.ok(orchestrator.includes("Agent(yacao:builder, Explore)"));
-    assert.ok(orchestrator.includes("SendMessage"));
-    assert.ok(orchestrator.includes("AskUserQuestion"));
-    for (const tool of ["Read", "Grep", "Glob", "WebFetch", "WebSearch", "Bash", "Edit", "Write"]) {
-      assert.ok(orchestrator.includes(tool), `orchestrator has ${tool}`);
-    }
-    assert.ok(builder.includes("Agent"));
-    assert.ok(!builder.includes("AskUserQuestion"));
-    for (const tool of ["Read", "Grep", "Glob", "WebFetch", "WebSearch", "Bash", "Edit", "Write"]) {
-      assert.ok(builder.includes(tool), `builder has ${tool}`);
-    }
-    assert.ok(orchestrator.includes("Skill"));
-    assert.ok(!builder.includes("Skill"));
+  test("agents inherit the session tools; no frontmatter allowlist is pinned", () => {
+    const orchestrator = frontmatter(files["agents/orchestrator.md"]).fields;
+    const builder = frontmatter(files["agents/builder.md"]).fields;
+    assert.ok(!("tools" in orchestrator));
+    assert.ok(!("tools" in builder));
+    assert.ok(!("disallowedTools" in orchestrator));
+    assert.ok(!("disallowedTools" in builder));
   });
 });
 
@@ -1339,16 +1328,19 @@ describe("claude-code role guard hook", () => {
     noDecision(call("yacao:orchestrator", "Skill", {}));
   });
 
-  test("agent calls: the builder may only spawn Explore", () => {
+  test("agent calls: dispatch scope is hook-enforced for both roles", () => {
     noDecision(call("yacao:builder", "Agent", { subagent_type: "Explore" }));
     for (const type of ["explore", "general-purpose", "yacao:builder", "fork", ""]) {
       askOrDeny(call("yacao:builder", "Agent", { subagent_type: type }), "deny");
     }
     askOrDeny(call("yacao:builder", "Agent", {}), "deny");
     askOrDeny(call("yacao:builder", "Agent", undefined), "deny");
-    // The orchestrator spawn allowlist is native frontmatter; the hook stays out.
-    noDecision(call("yacao:orchestrator", "Agent", { subagent_type: "general-purpose" }));
+    // The orchestrator's dispatch scope moved off native frontmatter onto the
+    // hook: yacao:builder and Explore pass, everything else is denied.
+    askOrDeny(call("yacao:orchestrator", "Agent", { subagent_type: "general-purpose" }), "deny");
     noDecision(call("yacao:orchestrator", "Agent", { subagent_type: "Explore" }));
+    noDecision(call("yacao:orchestrator", "Agent", { subagent_type: "yacao:builder" }));
+    askOrDeny(call("yacao:orchestrator", "Agent", {}), "deny");
   });
 
   test("a corrupt or absent packaged policy fails closed for recognized roles", () => {

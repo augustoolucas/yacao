@@ -1,7 +1,6 @@
 ---
 name: "builder"
 description: "Implements scoped coding tasks from self-contained instructions."
-tools: ["Read","Grep","Glob","WebFetch","WebSearch","Bash","Edit","Write","Agent"]
 model: "inherit"
 ---
 
