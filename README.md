@@ -24,17 +24,17 @@
 
 ## What is YACAO?
 
-YACAO is a truly minimal agent workflow for OpenCode: just 2 agents and 3 skills to handle all planning, building, and reviewing.
+YACAO is a truly minimal agent workflow for OpenCode and Claude Code: just 2 agents and 3 skills to handle all planning, building, and reviewing.
 
 The main orchestrator agent handles code exploration, implementation planning, and review. Each workflow phase has specific guidance defined as skills, loaded on demand. Implementation is delegated to the builder agent.
 
-The goal is to streamline the natural workflow of vanilla OpenCode, with little to no learning curve. There is no need to learn and memorize a bunch of commands, fancily named agents and skills. Work the same way you already do, just without tabbing.
+The goal is to streamline the natural coding-agent workflow, with little to no learning curve. There is no need to learn and memorize a bunch of commands, fancily named agents and skills. Work the same way you already do, without manually switching between planning and implementation.
 
-YACAO is intended for small, incremental tasks built through iterative processes rather than single-shot solutions, although it can handle those too. It is not necessarily better, cheaper, or more effective than vanilla OpenCode; it is simply more practical.
+YACAO is intended for small, incremental tasks built through iterative processes rather than single-shot solutions, although it can handle those too. It is not necessarily better, cheaper, or more effective than your host's native workflow; it is simply more practical.
 
 ## Why YACAO?
 
-Most "slim" or "minimal" multi-agent frameworks for OpenCode still feel too bloated for my taste, packed with too many agents and commands and skills and whatever. So I decided to build my own version, and it has been working well for my use case so far.
+Most "slim" or "minimal" multi-agent frameworks still feel too bloated for my taste, packed with too many agents and commands and skills and whatever. So I decided to build my own version, and it has been working well for my use case so far.
 
 I used to discuss ideas with the built-in Plan Agent, plan solutions, then manually switch to the Build Agent to implement it, and then ask the Plan Agent to review the output, which often led to further adjustments.
 
@@ -49,7 +49,7 @@ TL;DR: the orchestrator receives your prompt. Questions and discussions are answ
 - by default the approved work stays uncommitted; you can ask for a commit after each approved task, or for a single commit at the end;
 - each task is still reviewed before the next one starts, and a task that needs fixes gets at most two adjustment rounds before it comes back to you.
 
-The three skills - `yacao-planning`, `yacao-implementation` and `yacao-review` - own the detailed mechanics behind this behavior.
+The three skills - planning, implementation and review - own the detailed mechanics behind this behavior.
 
 ## Install
 
@@ -95,7 +95,7 @@ Add the plugin:
 
 Then restart OpenCode.
 
-### Updating YACAO
+### Updating YACAO on OpenCode
 
 OpenCode caches the installed plugin, so a plain restart alone re-fetches nothing.
 
@@ -114,9 +114,9 @@ Omit the target to update all outdated plugins.
 
 This is the configured behavior from the installed CLI help and the versioned source; it has not been exercised end to end here.
 
-### Claude Code (experimental, unvalidated)
+### Claude Code (experimental)
 
-[`integrations/claude-code/`](./integrations/claude-code) ships an experimental Claude Code adapter generated from the same canonical sources: two agents (`yacao:orchestrator`, `yacao:builder`), three skills and a guard hook. A user reported an actual native session (version/mode unknown), including blocked skill calls and a compound-command commit bypass on the old hook. Fixes need runtime re-testing; full validation, default-agent/user override, workflow and copied-bundle/local-marketplace checks remain pending.
+[`integrations/claude-code/`](./integrations/claude-code) ships an experimental Claude Code adapter generated from the same canonical sources: two agents (`yacao:orchestrator`, `yacao:builder`), three skills and a guard hook.
 
 Load the committed bundle from an unrelated disposable project (no build step; Node.js 22 or newer is required for the guard hook):
 
@@ -124,15 +124,17 @@ Load the committed bundle from an unrelated disposable project (no build step; N
 claude --plugin-dir /absolute/path/to/yacao/integrations/claude-code --agent yacao:orchestrator
 ```
 
-Local installation is preferred for now. A remote install has to pin the `claude-code` branch ref (`augustoolucas/yacao#claude-code`) until the adapter is validated and released; the default branch and the current release do not contain it yet. Full guide, install options and the native acceptance checklist: [`docs/claude-code.md`](./docs/claude-code.md).
+Local installation is preferred for now. A remote install has to pin the `claude-code` branch ref (`augustoolucas/yacao#claude-code`) until the adapter is validated and released; the default branch and the current release do not contain it yet. Full guide and install options: [`docs/claude-code.md`](./docs/claude-code.md).
 
 ## Configuration
 
-On V1 YACAO sets `orchestrator` as the default agent automatically **if no `default_agent` is already set**.
+### OpenCode
 
-On V2 you need to set `"default_agent": "orchestrator"`.
+On OpenCode V1 YACAO sets `orchestrator` as the default agent automatically **if no `default_agent` is already set**.
 
-### Setup builder model
+On OpenCode V2 you need to set `"default_agent": "orchestrator"`.
+
+#### Setup builder model
 
 Builder inherits the model set for the Orchestrator.
 
@@ -160,7 +162,7 @@ On V2, use the `agents` key:
 }
 ```
 
-### Setup builder subagents
+#### Setup builder subagents
 
 The builder can dispatch OpenCode's `explore` subagent to parallelize searches inside a task.
 
@@ -186,7 +188,7 @@ On V2, the key lives under `experimental`:
 
 Without this, the builder's spawn attempts fail with a subagent depth limit error.
 
-### Agent permissions
+#### Agent permissions
 
 Permissions are guardrails against honest mistakes, not a sandbox: shell access can bypass most of them by design.
 
@@ -194,9 +196,13 @@ YACAO's agents define their own permission guardrails. Your `opencode.jsonc` ent
 
 These rules are limits of what the tools guard, not content isolation: the plan-read rule restricts the read tool, not what an agent can reach through shell; `explore` may still use shell; and the Git guards cover the common commands, not every possible commit-producing operation. Plain stash reads are allowed while prefixed forms ask, and a later user configuration can change the agent mode.
 
-### Auto-update options (OpenCode V1 Only)
+#### Auto-update options (OpenCode V1 Only)
 
 - `autoUpdate` (defaults to `false`): on startup, checks the latest release and shows a notification when a newer version exists. It never edits your configuration.
+
+### Claude Code
+
+See [the Claude Code guide](./docs/claude-code.md) for model selection and host-specific permissions.
 
 ## Development
 
