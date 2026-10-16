@@ -1,11 +1,10 @@
 # YACAO for Claude Code
 
-**Status: experimental and unvalidated.** This adapter was built on the
-`claude-code` development branch and **has never run in a live Claude Code
-session**. No `claude` executable has loaded it, no native gate has passed, and
-nothing in this guide claims runtime support or tested behavior. Treat every
-statement as documentation-based until the native acceptance checklist at the
-end has been executed and recorded.
+**Status: experimental; partial user-reported native evidence, not full
+validation.** The user ran an actual Claude Code session on the `claude-code`
+adapter with an explicitly selected main agent. The exact client version and
+mode were not supplied. The fixes below still need a runtime re-test; this
+guide does not claim the native acceptance checklist passed.
 
 ## Evidence levels
 
@@ -15,16 +14,21 @@ This guide distinguishes three levels of evidence:
    documentation and the published npm package metadata (checked 2026-10-15
    during design). Documented contracts are the design basis; they are not
    observed behavior.
-2. **Offline tests in this repository** - `test/claude-code.test.js` (71 tests)
+2. **Offline tests in this repository** - `test/claude-code.test.js`
    and `npm run check:claude-code` verify the generated bundle against the
    canonical sources: file set, determinism, namespaces, drift detection, and
    the guard hook's input/output contracts against synthetic inputs shaped like
    the documented hook payloads. They prove the bundle is internally
    consistent; they prove nothing about the host.
-3. **Actual host results** - **none.** No Claude Code CLI was installed in the
-   development environment, so no gate A/B/C result exists. Everything that
-   depends on the host - plugin loading, default agent, hook delivery, modals,
-   dispatch and continuation - is unverified.
+3. **Actual host results (user-reported; version/mode unknown)** - explicit
+   main-agent/session use occurred; missing `Skill` blocked skill invocations
+   (tool-list fix pending re-test). With the old hook, `mkdir ... && git commit
+   ...` created a commit without the expected confirmation. Plan writes were
+   restricted to the session root. Continuation via `SendMessage` needed
+   `SubagentHandback` to deliver the report in that session. Plugin validation
+   warned about missing author metadata (now added; validation re-test pending).
+   These observations do not establish full workflow, default-agent behavior,
+   hook enforcement or installation support.
 
 The documented target is **Claude Code 2.1.301** (published npm metadata and
 the official changelog agree) on **interactive Linux terminals**. That is a
@@ -40,10 +44,10 @@ YACAO's canonical sources ([`package.json`](../package.json),
 
 - two agents: `yacao:orchestrator` (main) and `yacao:builder` (subagent);
 - three skills: `yacao:planning`, `yacao:implementation`, `yacao:review`;
-- one guard hook: [`hooks/hooks.json`](../integrations/claude-code/hooks/hooks.json)
-  wires a single `PreToolUse` command
+- guard handlers: [`hooks/hooks.json`](../integrations/claude-code/hooks/hooks.json)
+  preserve the base `PreToolUse` command
   (`node "${CLAUDE_PLUGIN_ROOT}/hooks/guard.mjs"`) for the tools
-  `Bash|Read|Edit|Write|Skill|Agent`;
+  `Bash|Read|Edit|Write|Skill|Agent`, plus conditional native Bash handlers;
 - the policy that hook reads,
   [`guardrails.json`](../integrations/claude-code/guardrails.json).
 
@@ -54,12 +58,16 @@ checklist (item 10).
 
 **Plugin users need no build step.** The generated files are committed, so
 loading the adapter runs no generator, npm install or repository dependency.
-That is a property of the packaging; loading itself is still unverified.
+That is a property of the packaging; copied-bundle loading is still unverified.
 
 ### Requirements
 
 - **Claude Code CLI**: documented target 2.1.301, interactive Linux terminal
-  (unvalidated).
+  (unvalidated). The installed version must support native hook-handler `if`
+  conditions and Bash subcommand matching as documented in
+  [Hooks: common fields](https://code.claude.com/docs/en/hooks.md#common-fields).
+  That requirement is unvalidated on the user's installation; no version floor
+  is inferred from the unknown version used in the reported session.
 - **Node.js 22 or newer** on `PATH`, for two independent reasons:
   - the guard hook is a Node script that runs on every matched tool call, so
     the prerequisite applies even to plugin users who never build anything;
@@ -87,8 +95,8 @@ the root marketplace descriptor
 reports drift or missing files and never rewrites them. Run it (or `npm test`)
 after any change to the canonical sources.
 
-To validate and load the bundle locally (documented CLI forms; not executed in
-this environment):
+To validate and load the updated bundle locally (documented CLI forms; fixes
+pending user re-test):
 
 ```sh
 claude plugin validate ./integrations/claude-code
@@ -155,12 +163,17 @@ different content. Once the adapter is merged and released, the unpinned form
 
 - Agents: `yacao:orchestrator`, `yacao:builder`.
 - Skills: `yacao:planning`, `yacao:implementation`, `yacao:review`.
-- Plan protocol path: `.yacao/plans/plan-<slug>/` in the **target project**
-  (plan overview, task contracts, ledger). The adapter uses `.yacao` instead of
+- Plan protocol paths are relative to the **session root**, not the target
+  project root: for a project below it, use
+  `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use
+  `.yacao/plans/plan-<slug>/` (plan overview, task contracts, ledger).
+  The adapted planning skill adds this grouping instruction; permissions remain
+  unchanged, including the Markdown-only `.yacao/plans/*.md` edit rule.
+  The adapter uses `.yacao` instead of
   `.claude` to keep protocol artifacts out of Claude Code's protected
   configuration area. OpenCode paths (`.opencode/plans`) stay unchanged.
 - **Generated files** (the 7 the generator writes): the plugin manifest
-  `integrations/claude-code/.claude-plugin/plugin.json`, the two agent files
+  `integrations/claude-code/.claude-plugin/plugin.json`, `guardrails.json`, the two agent files
   `integrations/claude-code/agents/orchestrator.md` and
   `integrations/claude-code/agents/builder.md`, and the three skill files
   `integrations/claude-code/skills/planning/SKILL.md`,
@@ -186,7 +199,7 @@ target project is configured for you.
 
 ## Permissions and enforcement on Claude Code
 
-The guard is one small `PreToolUse` hook, not a port of OpenCode's permission
+The guard uses small `PreToolUse` handlers, not a port of OpenCode's permission
 system. Documented differences that matter:
 
 - **Exact agents only.** Rules apply only when the host identifies the caller
@@ -213,12 +226,34 @@ system. Documented differences that matter:
   open shell access, `Grep`, `Glob` and `Explore` can still reach content the
   rules do not cover. Open shell access is a deliberate tradeoff, and `Explore`
   is not restricted to read-only behavior by this hook.
-- **Partial Bash coverage.** A Bash command is matched as one opaque string
-  against anchored wildcard patterns (the last matching YACAO rule wins).
-  Compound commands (`a && b`, pipes, substitutions), aliases, shell
-  functions, quoting tricks and script files are not fully covered: a guarded
-  verb hidden inside a compound command can fall through to the native gate.
-  The hook never parses, rewrites or executes the command.
+- **Partial Bash coverage.** The base handler still matches the raw command as
+  one opaque string against anchored wildcards (last matching rule wins).
+  Additional handlers use native `if` filters for direct and Git-option-prefixed
+  commit, push, merge, cherry-pick, revert, am, rebase, pull, reset, checkout,
+  restore, switch and clean commands, explicit stash mutations and recursive or
+  force `rm` forms. `--native-commit` denies the builder and asks the
+  orchestrator; `--native-sensitive` asks both. Both validate the exact role,
+  Bash payload and packaged policy before deciding; unknown modes deny covered
+  YACAO calls. Other identities receive no decision. No mode emits `allow`.
+  The host's documented filter checks subcommands in `&&`, `$()` and backticks,
+  but stdin remains the full original command. Modes therefore do not apply
+  raw-command `lastMatch` again to decide the filtered subcommand. If multiple
+  handlers fire, deny dominates ask. Offline tests verify handler output and
+  wiring, not native triggering or modals; the installed host must be re-tested.
+  Native matching is best-effort and can be conservative, including triggering
+  argument-specific filters on unresolved substitutions or variables. It is
+  not a security guarantee. Wrappers, aliases, functions, scripts, quoting and
+  unlisted command forms remain limitations; the guard never parses, splits,
+  rewrites or executes commands.
+  Stash filters cover push/pop/apply/drop/clear/branch/store/create, explicit
+  save, bare stash and option-led default-save forms, not list/show. Unlisted
+  verbs, unusual option placement and implicit-save forms not starting with an
+  option are not promised coverage. Git-option-prefixed filters start `git -*`,
+  not `git *`, to avoid treating ordinary stash-show arguments as verbs.
+  Existing raw-command wildcard collisions remain possible; conservative native
+  matching can also prompt on read-only forms. Recursive/force `rm` filters
+  deliberately ask even without both flags; arbitrary operand/option ordering
+  is not fully covered.
 - **Native prompts remain.** When no YACAO rule matches, or the match is
   `allow`, the hook returns no decision and the native permission machinery
   still runs, including its own prompts. Falling through never means
@@ -250,9 +285,11 @@ Host-specific bindings those skills rely on:
   returned by the dispatch; references are never fabricated, and `Explore`
   runs return no resumable ID.
 - **Continuation.** Corrections and follow-ups continue the same builder via
-  `SendMessage` targeted at the recorded agent ID (documented mechanism; not
-  observed here; the changelog's fix for finding subagents by name after a
-  restart landed in 2.1.299, which is another reason the adapter records IDs).
+  `SendMessage` targeted at the recorded agent ID. The user reported needing
+  `SubagentHandback` to deliver a continuation report. Official
+  [subagent documentation](https://code.claude.com/docs/en/sub-agents) describes
+  mode-dependent tool availability; this is not an unconditional requirement
+  or a reason to preload skills. Re-test report delivery in the actual mode.
 - **Asynchronous completion.** A dispatch may complete asynchronously under
   current defaults; the orchestrator waits for the actual completion before
   reviewing or advancing. This scheduling behavior is unverified here.
@@ -266,15 +303,18 @@ Models and tools: the builder declares `model: inherit`, so it uses the model
 context selected by the host and the user; the adapter pins no provider or
 model and translates no temperature. The orchestrator keeps the host and user
 model selection as well. Tool rosters are native frontmatter lists
-(orchestrator: `Agent(yacao:builder, Explore)`, `SendMessage`, read/search/web
-tools, `Bash`, `AskUserQuestion`, `Edit`, `Write`; builder: read/search/web
-tools, `Bash`, `Edit`, `Write`, `Agent`); plugin subagents do not support
-`hooks`, `mcpServers` or `permissionMode` frontmatter, and the adapter does not
-use them.
+(orchestrator: `Agent(yacao:builder, Explore)`, `SendMessage`, `Skill`,
+read/search/web tools, `Bash`, `AskUserQuestion`, `Edit`, `Write`; builder:
+read/search/web tools, `Bash`, `Edit`, `Write`, `Agent`); plugin subagents do
+not support `hooks`, `mcpServers` or `permissionMode` frontmatter, and the
+adapter does not use them.
 
-## Native acceptance checklist (not run yet)
+## Native acceptance checklist (partial observations; re-test pending)
 
-Nothing in this checklist has been executed. Run it only in a disposable
+The observations above cover parts of items 1-4, not their full acceptance
+criteria. Default-agent activation and user override remain pending, as do the
+full workflow checks 6, 7 and 11 and copied bundle/local marketplace check 10.
+No unchecked item is implied to have passed. Run or re-run only in a disposable
 fixture (a Git repository when the checklist exercises commits) with an
 isolated Claude config, only with the user's explicit approval, and record the
 exact client version and mode. Do not copy
@@ -299,6 +339,10 @@ a child report cannot prove a modal appeared.
    skill denied; builder `Explore` allowed, another Agent type denied; builder
    direct and prefixed commit dry-runs denied; orchestrator commit and
    mutating Git dry-runs ask **[user observation for the modals]**.
+   Re-test native-filter triggering on safe compound and substitution fixtures,
+   including `mkdir x && git commit ...` for both roles, Git-option-prefixed
+   forms and stash list/show controls. Confirm builder deny wins if commit and
+   sensitive handlers both fire. Handler-only offline tests do not prove this.
 5. **Safe modal controls.** **[user observation]** Confirm the ask modals
    appear for the ask rules and decline them; verify that declining performed
    no destructive operation.

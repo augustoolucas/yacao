@@ -116,7 +116,7 @@ This is the configured behavior from the installed CLI help and the versioned so
 
 ### Claude Code (experimental, unvalidated)
 
-[`integrations/claude-code/`](./integrations/claude-code) ships an experimental Claude Code adapter generated from the same canonical sources: two agents (`yacao:orchestrator`, `yacao:builder`), three skills and a guard hook. It is unvalidated: no Claude Code CLI has loaded it, no native gate has run, and none of its runtime behavior has been observed.
+[`integrations/claude-code/`](./integrations/claude-code) ships an experimental Claude Code adapter generated from the same canonical sources: two agents (`yacao:orchestrator`, `yacao:builder`), three skills and a guard hook. A user reported an actual native session (version/mode unknown), including blocked skill calls and a compound-command commit bypass on the old hook. Fixes need runtime re-testing; full validation, default-agent/user override, workflow and copied-bundle/local-marketplace checks remain pending.
 
 Load the committed bundle from an unrelated disposable project (no build step; Node.js 22 or newer is required for the guard hook):
 

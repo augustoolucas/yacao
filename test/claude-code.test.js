@@ -236,7 +236,8 @@ describe("claude-code agent and skill frontmatter", () => {
     for (const tool of ["Read", "Grep", "Glob", "WebFetch", "WebSearch", "Bash", "Edit", "Write"]) {
       assert.ok(builder.includes(tool), `builder has ${tool}`);
     }
-    for (const tools of [orchestrator, builder]) assert.ok(!tools.includes("Skill"));
+    assert.ok(orchestrator.includes("Skill"));
+    assert.ok(!builder.includes("Skill"));
   });
 });
 
@@ -296,6 +297,21 @@ describe("claude-code host binding", () => {
       /`\.yacao\/plans\/plan-<slug>\/tasks\/task-XX-<name>\.md`/,
     );
   });
+
+  test("planning adds session-root project grouping exactly once without changing permissions", () => {
+    const instruction = 'When working on a project below the session root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.';
+    const content = files["skills/planning/SKILL.md"];
+    assert.equal(content.split(instruction).length - 1, 1);
+    assert.match(content, /relative to the session root, not the target project root/);
+    for (const rel of ["skills/implementation/SKILL.md", "skills/review/SKILL.md"]) {
+      assert.ok(!files[rel].includes(instruction));
+    }
+    const policy = JSON.parse(files["guardrails.json"]);
+    assert.deepEqual(policy["yacao:orchestrator"].edit, [
+      { pattern: "*", decision: "deny" },
+      { pattern: ".yacao/plans/*.md", decision: "allow" },
+    ]);
+  });
 });
 
 describe("claude-code implementation skill dispatch guidance", () => {
@@ -327,6 +343,7 @@ describe("claude-code manifest", () => {
   test("name, MIT license and the default agent", () => {
     assert.equal(manifest.name, "yacao");
     assert.equal(manifest.license, "MIT");
+    assert.deepEqual(manifest.author, { name: "augustoolucas" });
     assert.deepEqual(manifest.settings, { agent: "orchestrator" });
   });
 
@@ -852,7 +869,7 @@ const withProject = (body) => {
   }
 };
 
-// Drive the hook exactly as Claude Code does: JSON on stdin, decision JSON or
+// Drive the handler's documented I/O contract (not host triggering): JSON on stdin, decision JSON or
 // nothing on stdout, exit 0 either way. projectDir: null drops
 // CLAUDE_PROJECT_DIR; CLAUDE_PLUGIN_ROOT is never set, so the packaged policy
 // must be found relative to the hook itself.
@@ -861,7 +878,7 @@ const runGuard = (payload, options = {}) => {
   delete env.CLAUDE_PLUGIN_ROOT;
   if (options.projectDir === null) delete env.CLAUDE_PROJECT_DIR;
   else env.CLAUDE_PROJECT_DIR = options.projectDir ?? ROOT;
-  return spawnSync(process.execPath, [options.guard ?? GUARD], {
+  return spawnSync(process.execPath, [options.guard ?? GUARD, ...(options.args ?? [])], {
     cwd: options.cwd ?? ROOT,
     encoding: "utf8",
     input: typeof payload === "string" ? payload : JSON.stringify(payload),
@@ -920,18 +937,46 @@ describe("claude-code bundle statics", () => {
     }
   });
 
-  test("hooks.json is one synchronous PreToolUse matcher over the six covered tools", () => {
+  test("hooks.json preserves the base synchronous matcher over the six covered tools", () => {
     const config = JSON.parse(readFileSync(HOOKS_JSON, "utf8"));
     assert.deepEqual(Object.keys(config), ["hooks"]);
     assert.deepEqual(Object.keys(config.hooks), ["PreToolUse"]);
     const entries = config.hooks.PreToolUse;
-    assert.equal(entries.length, 1);
+    assert.equal(entries.length, 2);
     assert.equal(entries[0].matcher, "Bash|Read|Edit|Write|Skill|Agent");
     const hooks = entries[0].hooks;
     assert.equal(hooks.length, 1);
     assert.equal(hooks[0].type, "command");
     assert.equal(hooks[0].command, 'node "${CLAUDE_PLUGIN_ROOT}/hooks/guard.mjs"');
     assert.ok(!("async" in hooks[0]), "the matcher runs synchronously");
+  });
+
+  test("native Bash handlers wire explicit direct/option-prefixed filters, not a shell parser", () => {
+    const entries = readJson(ROOT, `${PLUGIN_ROOT}/hooks/hooks.json`).hooks.PreToolUse;
+    assert.equal(entries[1].matcher, "Bash");
+    const handlers = entries[1].hooks;
+    const expected = new Map();
+    for (const verb of ["commit", "push", "merge", "cherry-pick", "revert", "am", "rebase", "pull", "reset", "checkout", "restore", "switch", "clean"]) {
+      for (const prefix of ["git ", "git -* "]) {
+        expected.set(`Bash(${prefix}${verb}*)`, verb === "commit" ? "--native-commit" : "--native-sensitive");
+      }
+    }
+    for (const form of ["stash", "stash -*", ...["save", "push", "pop", "apply", "drop", "clear", "branch", "store", "create"].map((verb) => `stash ${verb}*`)]) {
+      for (const prefix of ["git ", "git -* "]) expected.set(`Bash(${prefix}${form})`, "--native-sensitive");
+    }
+    for (const form of ["-*r*", "-*R*", "-*f*", "--recursive*", "--force*"]) expected.set(`Bash(rm ${form})`, "--native-sensitive");
+    assert.equal(handlers.length, expected.size);
+    for (const handler of handlers) {
+      assert.deepEqual(Object.keys(handler).sort(), ["command", "if", "type"]);
+      assert.equal(handler.type, "command");
+      assert.ok(expected.has(handler.if), handler.if);
+      assert.equal(handler.command, `node "\${CLAUDE_PLUGIN_ROOT}/hooks/guard.mjs" ${expected.get(handler.if)}`);
+      expected.delete(handler.if);
+    }
+    assert.equal(expected.size, 0);
+    // Only wiring is checked: no imitation of Claude's native subcommand parser.
+    assert.ok(handlers.every((handler) => !handler.if.includes("git * ")));
+    assert.ok(handlers.every((handler) => !/stash (list|show)/.test(handler.if)));
   });
 
   test("generation fails on a static that leaks forbidden host terms", () => {
@@ -957,6 +1002,73 @@ describe("claude-code bundle statics", () => {
       assert.match(result.stderr, /missing: integrations\/claude-code\/hooks\/guard\.mjs/);
       assert.ok(!existsSync(target), "the check does not recreate the static");
       assert.deepEqual(snapshotDir(pluginDir), before);
+    });
+  });
+});
+
+describe("claude-code native-filter handler output (native triggering pending)", () => {
+  test("full original compound stdin produces commit deny/ask without rewriting or executing it", () => {
+    withProject((dir) => {
+      const before = snapshotDir(dir);
+      for (const [role, decision] of [["yacao:builder", "deny"], ["yacao:orchestrator", "ask"]]) {
+        const result = runGuard({ agent_type: role, tool_name: "Bash", tool_input: { command: "mkdir x && git commit -m native-test" } }, { args: ["--native-commit"], cwd: dir });
+        const output = askOrDeny(guardDecision(result), decision);
+        assert.match(output.permissionDecisionReason, /native Bash filter/);
+        assert.ok(!/updatedInput|native-test|"allow"/.test(result.stdout));
+      }
+      assert.deepEqual(snapshotDir(dir), before);
+    });
+  });
+
+  test("sensitive mode asks for both roles, regardless of opaque compound lastMatch", () => {
+    for (const role of ["yacao:builder", "yacao:orchestrator"]) {
+      askOrDeny(bash(role, "mkdir x && git push", { args: ["--native-sensitive"] }), "ask");
+    }
+  });
+
+  test("native modes validate payloads and isolate unrelated identities and tools", () => {
+    for (const mode of ["--native-commit", "--native-sensitive"]) {
+      const options = { args: [mode] };
+      for (const role of ["builder", "orchestrator", "yacao:build", "yacao:builder ", "YACAO:BUILDER", "yacao:orchestrator-x", "", undefined, 7]) {
+        noDecision(bash(role, "mkdir x && git commit -m x", options));
+      }
+      for (const raw of ["", "not json", "null", "[]"]) noDecision(guardDecision(runGuard(raw, options)));
+      for (const role of ["yacao:builder", "yacao:orchestrator"]) {
+        for (const toolInput of [undefined, [], {}, { command: "" }, { command: 7 }]) {
+          askOrDeny(call(role, "Bash", toolInput, options), "deny");
+        }
+        noDecision(call(role, "Read", { file_path: path.join(ROOT, "index.js") }, options));
+        noDecision(call(role, "WebFetch", {}, options));
+      }
+    }
+  });
+
+  test("unknown or extra modes deny recognized covered calls, never bypass silently", () => {
+    for (const args of [["--unknown"], ["--native-commit", "extra"]]) {
+      for (const role of ["yacao:builder", "yacao:orchestrator"]) {
+        assert.match(askOrDeny(bash(role, "ls", { args }), "deny").permissionDecisionReason, /unknown guard mode/);
+      }
+      noDecision(bash("builder", "ls", { args }));
+    }
+  });
+
+  test("native modes fail closed on missing, corrupt or incomplete packaged policy", () => {
+    withFixture((dir) => {
+      const guard = pluginFile(dir, "hooks/guard.mjs");
+      const policyPath = pluginFile(dir, "guardrails.json");
+      for (const policy of [null, "not json", '{}']) {
+        if (policy === null) {
+          assert.ok(!existsSync(policyPath));
+        } else writeFileSync(policyPath, policy);
+        for (const mode of ["--native-commit", "--native-sensitive"]) {
+          for (const role of ["yacao:builder", "yacao:orchestrator"]) {
+            const output = askOrDeny(bash(role, "mkdir x && git push", { guard, args: [mode] }), "deny");
+            assert.match(output.permissionDecisionReason, /cannot be enforced/);
+          }
+          noDecision(bash("builder", "git commit", { guard, args: [mode] }));
+          noDecision(call("yacao:builder", "Read", { file_path: path.join(ROOT, "index.js") }, { guard, args: [mode] }));
+        }
+      }
     });
   });
 });
@@ -1021,6 +1133,13 @@ describe("claude-code role guard hook", () => {
     assert.match(denied.permissionDecisionReason, /git commit\*/);
     askOrDeny(bash("yacao:builder", "git push"), "ask");
     askOrDeny(bash("yacao:orchestrator", "git push origin main"), "ask");
+  });
+
+  test("base raw-command known limit: a guarded verb inside a compound can fall through", () => {
+    // No native handler mode is selected here; native triggering remains pending.
+    for (const role of ["yacao:builder", "yacao:orchestrator"]) {
+      noDecision(bash(role, "mkdir x && git commit -m x"));
+    }
   });
 
   test("command/env prefixes hit the canonical deny rules", () => {

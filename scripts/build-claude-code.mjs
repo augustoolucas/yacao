@@ -81,6 +81,7 @@ const AGENT_SPECS = [
     tools: [
       "Agent(yacao:builder, Explore)",
       "SendMessage",
+      "Skill",
       "Read",
       "Grep",
       "Glob",
@@ -276,7 +277,10 @@ const loadSkill = (root, spec) => {
     );
   }
   const description = adaptText(requireText(fields.description, `${spec.source} description`));
-  const adapted = spec.name === "implementation" ? adaptImplementationBody(body) : body;
+  let adapted = spec.name === "implementation" ? adaptImplementationBody(body) : body;
+  if (spec.name === "planning") {
+    adapted += "\nWhen working on a project below the session root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.\nThese paths are relative to the session root, not the target project root; use the selected plan directory for all overview, task and ledger paths in this skill.\n";
+  }
   return { spec, description, body: adaptText(adapted) };
 };
 
@@ -371,6 +375,7 @@ export function generatePlugin({ root = defaultRoot() } = {}) {
     description: pkg.description.replace(/\bOpenCode\b/g, "Claude Code"),
     version: pkg.version,
     license: "MIT",
+    author: { name: "augustoolucas" },
     settings: { agent: "orchestrator" },
   });
   for (const agent of agents) {

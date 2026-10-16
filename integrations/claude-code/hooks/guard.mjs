@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// YACAO guard for Claude Code: one PreToolUse hook that applies the ordered
+// YACAO guard for Claude Code: PreToolUse handlers that apply the ordered
 // per-role policy packaged in guardrails.json to the direct tool calls of the
 // two plugin agents - and only to those two.
 //
@@ -18,13 +18,17 @@
 //     policy pattern; command text and file contents are never echoed.
 //
 // Coverage limits:
-//   - Bash matches the whole command string against the canonical patterns
+//   - The base Bash handler matches the whole command string against the canonical patterns
 //     translated to anchored wildcards ("*" spans any characters, separators
 //     and spaces included; the last matching rule wins). The command is never
 //     split, rewritten or executed. Raw compound commands ("a && b", pipes,
 //     substitutions), aliases, shell functions, quoting tricks and script
 //     files are NOT fully covered: such a command is one opaque string here,
 //     so a guarded verb hidden inside it can fall through to the native gate.
+//     Additional native-filter handlers select explicit commit/sensitive modes.
+//     The host filters subcommands but still sends the full original stdin;
+//     these modes decide without re-matching that opaque command. Native
+//     filtering is best-effort and may conservatively trigger on substitutions.
 //   - Read/Edit/Write classify the absolute file_path against the project
 //     root (CLAUDE_PROJECT_DIR), normalizing path separators, "." and ".."
 //     and resolving symlinked ancestors, then match the root-relative path
@@ -295,11 +299,28 @@ const run = (input) => {
   if (typeof roleId !== "string" || !ROLE_IDS.has(roleId)) return null;
   const toolName = input.tool_name;
   if (typeof toolName !== "string" || !COVERED_TOOLS.has(toolName)) return null;
+  const args = process.argv.slice(2);
+  const nativeMode = args.length === 1 && ["--native-commit", "--native-sensitive"].includes(args[0]);
+  if (nativeMode && toolName !== "Bash") return null;
   const loaded = loadPolicy();
   if (loaded.error) {
     return {
       decision: "deny",
       reason: `YACAO guard (${roleId}): the role policy cannot be enforced because ${loaded.error}; refusing ${toolName} instead of allowing it unchecked.`,
+    };
+  }
+  if (args.length > 0) {
+    const mode = args[0];
+    if (!nativeMode) {
+      return { decision: "deny", reason: `YACAO guard (${roleId}): unknown guard mode; refusing ${toolName}.` };
+    }
+    if (!isPlainObject(input.tool_input) || typeof input.tool_input.command !== "string" || input.tool_input.command.trim() === "") {
+      return missingInputDeny(roleId, toolName, "command", "it is missing or not a non-empty string");
+    }
+    const decision = mode === "--native-commit" && roleId === "yacao:builder" ? "deny" : "ask";
+    return {
+      decision,
+      reason: `YACAO guard (${roleId}): native Bash filter selected ${mode} (${decision}); the native permission gate still applies on top.`,
     };
   }
   return evaluate(loaded.policy, roleId, toolName, input.tool_input);

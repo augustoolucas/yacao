@@ -3,6 +3,9 @@
   "description": "Yet Another Coding Agent Orchestrator - a minimal 2-agent, 3-skill workflow plugin for Claude Code.",
   "version": "0.5.1",
   "license": "MIT",
+  "author": {
+    "name": "augustoolucas"
+  },
   "settings": {
     "agent": "orchestrator"
   }

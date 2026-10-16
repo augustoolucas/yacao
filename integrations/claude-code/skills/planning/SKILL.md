@@ -34,3 +34,6 @@ Write a plan overview and self-contained task contracts before implementation. M
    Keep tasks meaningful and independently testable. A plan may consist of a single task when the work does not split into verifiable increments. Order the tasks so each one can be implemented and verified before the next; per-task verification is required even when the overview also has final verification commands. Keep the complete plan in the overview, never in a task contract.
 3. **Present for approval** - show a summary to the user. One approval covers the complete plan before writing code; do not ask for approval between tasks. An unchanged task needs no new plan approval. Accept clear approval or revision intent rather than a literal token. If the user abandons or supersedes the plan instead, stop and note the plan as abandoned in the overview.
 4. On **Revise**: update the overview and task contracts, then re-present.
+
+When working on a project below the session root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.
+These paths are relative to the session root, not the target project root; use the selected plan directory for all overview, task and ledger paths in this skill.
