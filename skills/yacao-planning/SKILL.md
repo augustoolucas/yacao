@@ -22,7 +22,7 @@ Write a plan overview and self-contained task contracts before implementation. M
    - **Tasks** - the ordered task list with each task's dependencies
    - **Risks** - things that could go wrong and regressions to watch for
    - **Verification commands** - final checks that only make sense after all tasks complete (omit only when nothing needs to be verified)
-   - **Implementation metadata** - the commit preference, the task ledger and, when a Git baseline applies, the fixed initial review base and the expected HEAD, owned and recorded as the `yacao-implementation` skill describes
+   - **Implementation metadata** - the commit preference, the progress and, when Git applies, the fixed initial review base, owned and recorded as the `yacao-implementation` skill describes
 
    Each task contract is self-contained and contains only:
    - **Goal** - the independently testable increment it delivers

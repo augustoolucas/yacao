@@ -115,12 +115,11 @@ const AGENT_FIELDS = new Set(["description", "mode", "temperature", "permission"
 const SKILL_FIELDS = new Set(["name", "description"]);
 const DECISIONS = new Set(["allow", "ask", "deny"]);
 
-// The canonical host-terminology paragraph of the implementation skill. The
-// generator replaces it with the Claude Code dispatch wording and fails if the
-// source no longer carries it, so source drift cannot pass silently.
-const TERMINOLOGY_PARAGRAPH =
-  "> **Delegation tool terminology.** The delegation tool is host-specific: V1 exposes it as `Task` and returns `task_id`; V2 exposes it as `subagent` and returns `sessionID`. This skill calls it the delegation tool and its return value the session reference. Record the actual returned reference and never fabricate one.";
-
+// The Claude Code dispatch wording inserted once into the generated
+// implementation skill, right after its intro. The canonical source stays
+// host-neutral and carries no glossary or placeholder to anchor this; the
+// generator inserts it before the first section heading and fails if that
+// anchor is gone, so source drift cannot pass silently.
 const DISPATCH_PARAGRAPH =
   "> **Dispatch and continuation.** In Claude Code the dispatch tool is the **Agent** tool: dispatch the explicit custom agent type `yacao:builder` - never a fork or a teammate - and record the actual returned agent ID; never fabricate one. Continue an existing task by sending a follow-up message with the **SendMessage** tool targeted at that recorded agent ID on the same dispatched agent, and wait for the agent to actually complete before reviewing its work or advancing to the next task.";
 
@@ -188,12 +187,13 @@ const adaptText = (text) =>
     .replace(/(?<![\w:])(?:builder|Builder)\b/g, "yacao:builder");
 
 const adaptImplementationBody = (body) => {
-  if (!body.includes(TERMINOLOGY_PARAGRAPH)) {
+  const anchor = body.indexOf("\n## ");
+  if (anchor === -1) {
     throw new Error(
-      "unsupported source: skills/yacao-implementation/SKILL.md no longer contains the canonical delegation-terminology paragraph - update scripts/build-claude-code.mjs",
+      "unsupported source: skills/yacao-implementation/SKILL.md has no section heading to anchor the Claude Code dispatch guidance",
     );
   }
-  return body.replace(TERMINOLOGY_PARAGRAPH, DISPATCH_PARAGRAPH);
+  return `${body.slice(0, anchor)}\n${DISPATCH_PARAGRAPH}\n${body.slice(anchor)}`;
 };
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n)*/;

@@ -283,7 +283,7 @@ describe("claude-code host binding", () => {
     assert.match(files["skills/planning/SKILL.md"], /`\.yacao\/plans\/plan-<slug>\/plan\.md`/);
     assert.match(
       files["skills/implementation/SKILL.md"],
-      /`\.yacao\/plans\/plan-<slug>\/tasks\/task-XX-<name>\.md`/,
+      /Read the current task contract at the path listed in the approved plan overview\./,
     );
   });
 
@@ -306,7 +306,7 @@ describe("claude-code host binding", () => {
 describe("claude-code implementation skill dispatch guidance", () => {
   const content = generatePlugin({ root: ROOT })["skills/implementation/SKILL.md"];
 
-  test("carries explicit Claude Code dispatch and continuation wording", () => {
+  test("carries explicit Claude Code dispatch and continuation wording exactly once", () => {
     assert.match(content, /dispatch the explicit custom agent type `yacao:builder`/);
     assert.match(content, /never a fork or a teammate/);
     assert.match(content, /record the actual returned agent ID/);
@@ -314,6 +314,8 @@ describe("claude-code implementation skill dispatch guidance", () => {
     assert.match(content, /the \*\*SendMessage\*\* tool/);
     assert.match(content, /wait for the agent to actually complete before reviewing/);
     assert.ok(!/V1 exposes|V2 exposes|sessionID|task_id|delegation tool/.test(content));
+    const dispatch = content.match(/^> \*\*Dispatch and continuation\.\*\*.*$/gm) ?? [];
+    assert.equal(dispatch.length, 1);
   });
 
   test("keeps the narrow builder context and the task status rules", () => {
@@ -467,14 +469,14 @@ describe("claude-code generation failures", () => {
     });
   });
 
-  test("fails when the canonical terminology paragraph is gone", () => {
+  test("fails when the canonical implementation has no section to anchor the dispatch guidance", () => {
     withFixture((dir) => {
       const rel = path.join(dir, "skills/yacao-implementation/SKILL.md");
       const content = readFileSync(rel, "utf8");
-      const stripped = content.replace(/^> \*\*Delegation tool terminology\.\*\*.*$/m, "");
-      assert.notEqual(stripped, content, "fixture keeps the paragraph");
+      const stripped = content.replace(/^## .*$/gm, "");
+      assert.notEqual(stripped, content, "fixture keeps a section heading");
       writeFileSync(rel, stripped);
-      assert.throws(() => generatePlugin({ root: dir }), /terminology paragraph/);
+      assert.throws(() => generatePlugin({ root: dir }), /dispatch guidance/);
     });
   });
 });

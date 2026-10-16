@@ -5,26 +5,17 @@ description: "Guides ordered task dispatch, yacao:builder session reuse, and yac
 
 # Implementation
 
-You delegate code changes to **yacao:builder** via the Agent tool - you construct the task, hand it off, and handle the response. You own the commit preference, the preflight, dispatch, the plan overview ledger and progression. Capture the returned agent ID for potential follow-up reuse.
+You delegate code changes to **yacao:builder** via the Agent tool - you construct the task, hand it off, and handle the response. Capture the returned agent ID for potential follow-up reuse.
 
 > **Dispatch and continuation.** In Claude Code the dispatch tool is the **Agent** tool: dispatch the explicit custom agent type `yacao:builder` - never a fork or a teammate - and record the actual returned agent ID; never fabricate one. Continue an existing task by sending a follow-up message with the **SendMessage** tool targeted at that recorded agent ID on the same dispatched agent, and wait for the agent to actually complete before reviewing its work or advancing to the next task.
 
 ## Commit preference
 
-Default to leaving the yacao:builder's changes uncommitted and do not ask a preference question. Honor explicit user instructions instead:
-
-- A per-task commit request commits each approved task.
-- A final-only request commits once at the end; it never permits intermediate commits. A request to commit when finished is not authorization for intermediate commits.
-
-A preference change needs no reapproval of an otherwise unchanged approach. Record the preference as described in **Overview ledger**.
+Leave changes uncommitted unless the user requests commits. Distinguish commits after each approved task from a single commit after final review; a request to commit when finished does not authorize intermediate commits.
 
 ## Preflight
 
-Before the first dispatch, check Git availability. When a valid Git HEAD exists, record the fixed initial review base and a separate expected HEAD (see **Overview ledger**); otherwise explicitly record both as not applicable and review the resulting files directly, without blocking on absent Git or an absent initial commit. Once recorded, the initial review base stays fixed for the workflow - a Git repository or HEAD that appears later must not silently reset it and exclude earlier changes. Reject ambiguous pre-existing changes that overlap the intended task targets when ownership is uncertain; record and exclude unrelated work, and inspect relevant pre-existing files as usual. Never initialize Git or create an initial commit without authorization.
-
-In the default noncommit path, unrelated staged and unstaged work is permitted - never stage or commit there, and preserve user work and the index contents. Later tasks may modify already-approved dirty paths; do not re-apply a blanket clean-target gate to those approved changes.
-
-When a baseline applies, stop on unexpected history movement and advance the expected HEAD only for authorized commits; stop on ambiguous ownership regardless. Never reset, unstage, stash or discard user work to repair uncertainty.
+Before the first dispatch, inspect existing work and preserve user changes and staging; clarify ambiguous overlap before proceeding. If a valid Git HEAD exists, record it as the fixed review base; otherwise review resulting files without requiring or initializing Git. Do not stage changes unless a commit was requested.
 
 ## Trivial tasks
 
@@ -40,36 +31,26 @@ Send the yacao:builder a direct spec containing:
 
 Follow the approved plan overview's ordered task list, one yacao:builder at a time:
 
-1. Read the current task contract at `.yacao/plans/plan-<slug>/tasks/task-XX-<name>.md`.
+1. Read the current task contract at the path listed in the approved plan overview.
 2. Send the yacao:builder the task's `Goal`, `Changes`, `File scope`, `Dependencies`, and `Verification commands`, plus concise task-relevant invariants, rationale, risks and prior decisions - nothing else. Never send the full plan overview or future task contracts.
-3. Keep the ledger current (see **Overview ledger**). Start the next task only after the current task's review is approved - in a new session or after compaction, reconstruct progress, the ledger and the review base from the overview, the contracts, the current code and - when a baseline applies - Git state, never from memory. After the last task, run the final full-plan review (see the `yacao:review` skill).
+3. Review each result before advancing. Complete any requested task commit first unless the user chooses to continue without commits; final-only commits wait until the final review. After the last task, run the `yacao:review` final review.
 
 ## yacao:builder status routing
 
 For a yacao:builder response:
 
 - `complete` -> invoke the `yacao:review` flow for the current task.
-- `partial` -> hold the current task, reuse the same yacao:builder session to complete it, and do not advance to another task. Repeated `partial` results that bring no measurable progress are surfaced as a blocker without resetting the review-adjustment cap; a productive partial does not consume that allowance merely for being partial.
+- `partial` -> hold the current task, reuse the same yacao:builder session to complete it, and do not advance to another task. Surface repeated lack of progress as a blocker.
 - `blocked` -> stop, surface the blocker, and do not advance.
 - `escalate` -> read `GAPS`; resolve it from the plan overview or codebase when you can, otherwise surface it to the user; do not advance.
 
-A blocked or escalated task may resume without a new plan approval only if the approved task and approach remain unchanged; a material plan, approach, or scope change goes back to planning for a revised, approved plan. On the trivial path, where no overview exists, a material change is categorized as **Needs planning** and enters the planning flow first.
+A blocked or escalated task may resume without a new plan approval only if the approved task and approach remain unchanged; a material plan, approach, or scope change requires a revised, approved plan. On the trivial path, a material change becomes **Needs planning** and enters the planning flow first.
 
 If the user abandons or supersedes the plan during execution, stop, record the plan as abandoned in the overview, and do not dispatch further tasks.
 
-## Progression
+## Progress in the overview
 
-Advance only when implementation is complete, the verification evidence is satisfactory and review approves. Default approval alone permits advancing: an approved task with uncommitted changes is not a no-op. When a task commit was requested it must complete, or the user must explicitly choose to continue without commits. A final-only commit happens after full-plan approval (planned work) or after complete task review (trivial work), using the same safe-commit checks as a per-task commit.
-
-If the user switches to per-task commits mid-workflow, the commit composition and labeling rules are in the `yacao:review` skill.
-
-## Overview ledger
-
-Maintain the ledger in the existing plan overview; trivial work has no ledger, so its preference and, when a baseline applies, its fixed initial review base and expected HEAD stay in the direct spec or conversation. Never add a new ledger, snapshots, hidden commits, stashes or a checkpoint system. Record the commit preference and, when a baseline applies, the fixed initial review base and the expected HEAD, and for each task: state, the actual yacao:builder agent ID, the unsuccessful review-adjustment count, the actual changed paths and the commit outcome (`not requested`, `pending`, the hash, `refused`, `failed`, `no-op`).
-
-## Recovery
-
-After a new session or compaction, resume an approved uncommitted task as approved: it is neither a missing commit nor a no-op. Cross-check the ledger against the overview, the contracts, the current code and - when a baseline applies - Git state before trusting it; when no baseline applies, do not fail recovery for its absence. A commit subject never establishes task approval or an agent ID, and missing or contradictory records stop recovery instead of being filled in. Preserve already-approved dirty paths for later tasks. Track a pending commit request, a refusal plus the user's explicit continue-without-commits or stop choice, a failure and a verified no-op distinctly. The preflight gates still apply (see **Preflight**).
+Keep the approved tasks, useful yacao:builder agent IDs, adjustment counts, commit preference and any review base in the existing overview so work can continue. For trivial tasks, retain this context in the conversation. Check the recorded progress against the current work before resuming; clarify uncertainty rather than inventing progress.
 
 ## Reusing the yacao:builder session
 
