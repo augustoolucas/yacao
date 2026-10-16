@@ -113,12 +113,10 @@ claude --plugin-dir /absolute/path/to/yacao/integrations/claude-code --agent yac
 
 ## Installing from the repository
 
-**Not currently available remotely.** The adapter exists only on the
-`claude-code` development branch: the default branch (`main`) and the current
-release (`v0.5.0`) do not contain these files. A remote marketplace install
-cannot work today, and nothing remote has been tested. That changes only when
-the maintainer merges the branch and publishes a release. **Prefer local
-installation until then.**
+**Available remotely from the `claude-code` branch only.** The default branch
+(`main`) and the current release do not contain these files, so a remote
+install has to pin the branch ref. Nothing remote has been tested yet.
+**Prefer local installation until the adapter is validated and released.**
 
 ### Local (recommended now)
 
@@ -139,25 +137,19 @@ The root marketplace registers exactly one plugin whose source is the local
 `./integrations/claude-code` bundle, so a clone or checkout of this repository
 is enough and no network publication is involved.
 
-### Remote Git marketplace (only after the maintainer merges and releases)
+### Remote Git marketplace (branch ref; unvalidated)
 
-Documented forms, usable only once the files are actually published:
+The adapter is not on the default branch or in a release, so the install has to
+pin the `claude-code` branch ref (the documented source syntax accepts a ref):
 
 ```text
-/plugin marketplace add augustoolucas/yacao
+/plugin marketplace add augustoolucas/yacao#claude-code
 /plugin install yacao@yacao
 ```
 
-To pin a branch or tag for an adapter revision that is not in the default
-branch or a release, the documented source syntax accepts a ref:
-
-```text
-/plugin marketplace add augustoolucas/yacao#<branch-or-tag>
-```
-
-As of this writing no pushed branch, tag or release contains the adapter, so
-the pinned form is documented for completeness only; it does not describe
-anything installable today.
+The branch ref moves as the branch is updated, so a later install can pick up
+different content. Once the adapter is merged and released, the unpinned form
+(`/plugin marketplace add augustoolucas/yacao`) becomes the stable one.
 
 ## Namespaces, paths and generated files
 
@@ -282,9 +274,10 @@ use them.
 
 ## Native acceptance checklist (not run yet)
 
-Nothing in this checklist has been executed. Run it only in a disposable Git
-fixture with an isolated Claude config, only with the user's explicit
-approval, and record the exact client version and mode. Do not copy
+Nothing in this checklist has been executed. Run it only in a disposable
+fixture (a Git repository when the checklist exercises commits) with an
+isolated Claude config, only with the user's explicit approval, and record the
+exact client version and mode. Do not copy
 credentials, do not run destructive commands, and do not install anything into
 the user's real configuration without authorization. Steps marked
 **[user observation]** can only be confirmed by the user watching the session;
@@ -327,3 +320,8 @@ a child report cannot prove a modal appeared.
     as a local marketplace (`/plugin marketplace add /absolute/path/to/yacao`)
     and install `yacao@yacao` under an isolated config, confirming the
     installed copy behaves the same way.
+11. **No-Git path.** In a plain directory (or an unborn Git repository) with no
+    baseline, run a small two-task plan where both tasks touch one file;
+    confirm the workflow is not blocked, review inspects the resulting files
+    instead of a diff, and no Git repository or initial commit is created
+    without authorization.

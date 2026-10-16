@@ -124,7 +124,7 @@ Load the committed bundle from an unrelated disposable project (no build step; N
 claude --plugin-dir /absolute/path/to/yacao/integrations/claude-code --agent yacao:orchestrator
 ```
 
-Local installation is preferred for now. Git marketplace installation becomes available only after the maintainer merges the adapter and publishes a release; the default branch and the current release do not contain it yet. Full guide, install options and the native acceptance checklist: [`docs/claude-code.md`](./docs/claude-code.md).
+Local installation is preferred for now. A remote install has to pin the `claude-code` branch ref (`augustoolucas/yacao#claude-code`) until the adapter is validated and released; the default branch and the current release do not contain it yet. Full guide, install options and the native acceptance checklist: [`docs/claude-code.md`](./docs/claude-code.md).
 
 ## Configuration
 
