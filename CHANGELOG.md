@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.6.0 (2026-10-16)
+
+- Add experimental Claude Code support: an orchestrator, a builder and three
+  skills, distributed through a Git marketplace.
+- Generate the Claude Code bundle from the existing agents and skills, keeping
+  one source for the workflow and preserving OpenCode V1/V2 support.
+- Let both Claude Code agents inherit available session tools, including MCPs,
+  while applying YACAO's role guardrails through a scoped hook.
+- Simplify implementation and review guidance, keeping optional Git and commits,
+  sequential tasks and mandatory reviews.
+- Generalize the README and add a Claude Code installation and configuration guide.
+
 ## v0.5.1 (2026-10-15)
 
 - Work without a Git baseline: implementation no longer requires a Git repository or an

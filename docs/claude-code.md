@@ -14,9 +14,9 @@ YACAO's canonical sources ([`package.json`](../package.json),
 - two agents: `yacao:orchestrator` (main) and `yacao:builder` (subagent);
 - three skills: `yacao:planning`, `yacao:implementation`, `yacao:review`;
 - guard handlers: [`hooks/hooks.json`](../integrations/claude-code/hooks/hooks.json)
-  preserve the base `PreToolUse` command
+  run one `PreToolUse` command
   (`node "${CLAUDE_PLUGIN_ROOT}/hooks/guard.mjs"`) for the tools
-  `Bash|Read|Edit|Write|Skill|Agent`, plus conditional native Bash handlers;
+  `Bash|Read|Edit|Write|Skill|Agent`;
 - the policy that hook reads,
   [`guardrails.json`](../integrations/claude-code/guardrails.json).
 
@@ -31,9 +31,9 @@ That is a property of the packaging.
 ### Requirements
 
 - **Claude Code CLI**: documented target 2.1.301 on an interactive Linux
-  terminal. The installed version must support native hook-handler `if`
-  conditions and Bash subcommand matching as documented in
-  [Hooks: common fields](https://code.claude.com/docs/en/hooks.md#common-fields).
+  terminal. The installed version must support `PreToolUse` command hooks as
+  documented in
+  [Hooks](https://code.claude.com/docs/en/hooks.md).
 - **Node.js 22 or newer** on `PATH`, for two independent reasons:
   - the guard hook is a Node script that runs on every matched tool call, so
     the prerequisite applies even to plugin users who never build anything;
@@ -86,11 +86,10 @@ claude --plugin-dir /absolute/path/to/yacao/integrations/claude-code --agent yac
 
 ## Installing from the repository
 
-**Available remotely from the `claude-code` branch only.** The default branch
-(`main`) and the current release do not contain these files, so a remote
-install has to pin the branch ref. **Prefer local installation for now.**
+**Available from v0.6.0.** The adapter is distributed through the Git
+marketplace from v0.6.0 onward; a local checkout install remains available.
 
-### Local (recommended)
+### Local
 
 Session-scoped load (see above):
 
@@ -109,19 +108,18 @@ The root marketplace registers exactly one plugin whose source is the local
 `./integrations/claude-code` bundle, so a clone or checkout of this repository
 is enough and no network publication is involved.
 
-### Remote Git marketplace (branch ref)
+### Remote Git marketplace (release tag)
 
-The adapter is not on the default branch or in a release, so the install has to
-pin the `claude-code` branch ref (the documented source syntax accepts a ref):
+Install the plugin from the v0.6.0 release tag:
 
 ```text
-/plugin marketplace add augustoolucas/yacao#claude-code
+/plugin marketplace add augustoolucas/yacao#v0.6.0
 /plugin install yacao@yacao
 ```
 
-The branch ref moves as the branch is updated, so a later install can pick up
-different content. Once the adapter is merged and released, the unpinned form
-(`/plugin marketplace add augustoolucas/yacao`) becomes the stable one.
+The tag pins the marketplace content to that release; the unpinned form
+(`/plugin marketplace add augustoolucas/yacao`) tracks the default branch
+instead.
 
 ## Namespaces, paths and generated files
 
@@ -190,33 +188,14 @@ system. Documented differences that matter:
   open shell access, `Grep`, `Glob` and `Explore` can still reach content the
   rules do not cover. Open shell access is a deliberate tradeoff, and `Explore`
   is not restricted to read-only behavior by this hook.
-- **Partial Bash coverage.** The base handler still matches the raw command as
-  one opaque string against anchored wildcards (last matching rule wins).
-  Additional handlers use native `if` filters for direct and Git-option-prefixed
-  commit, push, merge, cherry-pick, revert, am, rebase, pull, reset, checkout,
-  restore, switch and clean commands, explicit stash mutations and recursive or
-  force `rm` forms. `--native-commit` denies the builder and asks the
-  orchestrator; `--native-sensitive` asks both. Both validate the exact role,
-  Bash payload and packaged policy before deciding; unknown modes deny covered
-  YACAO calls. Other identities receive no decision. No mode emits `allow`.
-  The host's documented filter checks subcommands in `&&`, `$()` and backticks,
-  but stdin remains the full original command. Modes therefore do not apply
-  raw-command `lastMatch` again to decide the filtered subcommand. If multiple
-  handlers fire, deny dominates ask.
-  Native matching is best-effort and can be conservative, including triggering
-  argument-specific filters on unresolved substitutions or variables. It is
-  not a security guarantee. Wrappers, aliases, functions, scripts, quoting and
-  unlisted command forms remain limitations; the guard never parses, splits,
-  rewrites or executes commands.
-  Stash filters cover push/pop/apply/drop/clear/branch/store/create, explicit
-  save, bare stash and option-led default-save forms, not list/show. Unlisted
-  verbs, unusual option placement and implicit-save forms not starting with an
-  option are not promised coverage. Git-option-prefixed filters start `git -*`,
-  not `git *`, to avoid treating ordinary stash-show arguments as verbs.
-  Existing raw-command wildcard collisions remain possible; conservative native
-  matching can also prompt on read-only forms. Recursive/force `rm` filters
-  deliberately ask even without both flags; arbitrary operand/option ordering
-  is not fully covered.
+- **Partial Bash coverage.** The guard matches the raw command as one opaque
+  string against anchored wildcards (last matching rule wins) and never parses,
+  splits, rewrites or executes it. Compound commands (`a && b`, pipes, command
+  substitutions) and shell indirection such as aliases, functions and scripts
+  can therefore hide a guarded verb and escape the YACAO patterns - a known
+  coverage gap, not a claim of safety. Native permissions and the user's own
+  policy still govern on top: the hook never auto-approves, and nothing here
+  promises that every commit is blocked or that native approval is automatic.
 - **Native prompts remain.** When no YACAO rule matches, or the match is
   `allow`, the hook returns no decision and the native permission machinery
   still runs, including its own prompts. Falling through never means
