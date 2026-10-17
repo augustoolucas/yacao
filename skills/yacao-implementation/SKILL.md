@@ -20,7 +20,7 @@ Before the first dispatch, inspect existing work and preserve user changes and s
 Send the builder a direct spec containing:
 
 - **Goal** - what to accomplish
-- **Context** - useful prior decisions and relevant history
+- **Context** - useful prior decisions or history needed to implement or verify the task, if any
 - **Changes** - the precise edits. Make sure to follow KISS, DRY and YAGNI principles.
 - **File scope** - files the task may touch
 - **Verification commands** - what to run (omit only when nothing needs to be verified)
