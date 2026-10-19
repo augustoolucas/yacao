@@ -358,21 +358,21 @@ describe("claude-code manifest", () => {
 
 describe("claude-code guardrails adapter", () => {
   const guardrails = JSON.parse(generatePlugin({ root: ROOT })["guardrails.json"]);
-  const CANONICAL_CATEGORIES = ["bash", "read", "edit", "skill", "task"];
+  const CANONICAL_CATEGORIES = ["bash", "read", "edit", "skill"];
 
   const adaptPattern = (pattern) =>
     pattern
       .replaceAll(".opencode/plans", ".yacao/plans")
       .replaceAll("yacao-planning", "yacao:planning")
       .replaceAll("yacao-implementation", "yacao:implementation")
-      .replaceAll("yacao-review", "yacao:review")
-      .replace(/^builder$/, "yacao:builder")
-      .replace(/^explore$/, "Explore");
+      .replaceAll("yacao-review", "yacao:review");
 
-  test("uses exactly-qualified agent keys and the ordered categories", () => {
+  test("uses exactly-qualified agent keys and the guardrailed categories", () => {
     assert.deepEqual(Object.keys(guardrails), ["yacao:orchestrator", "yacao:builder"]);
-    assert.deepEqual(Object.keys(guardrails["yacao:orchestrator"]), ["bash", "read", "edit", "task"]);
-    assert.deepEqual(Object.keys(guardrails["yacao:builder"]), ["bash", "read", "skill", "task"]);
+    assert.deepEqual(Object.keys(guardrails["yacao:orchestrator"]), ["bash", "read", "edit"]);
+    assert.deepEqual(Object.keys(guardrails["yacao:builder"]), ["bash", "read", "skill"]);
+    assert.ok(!("task" in guardrails["yacao:orchestrator"]), "orchestrator dispatch is native");
+    assert.ok(!("task" in guardrails["yacao:builder"]), "builder dispatch is native");
   });
 
   test("mirrors the canonical rule order, patterns and decisions", () => {
@@ -390,6 +390,9 @@ describe("claude-code guardrails adapter", () => {
         }));
         assert.deepEqual(role[category], expected, `${name} ${category}`);
       }
+      // The canonical delegation policy has no counterpart: Claude Code's
+      // native permissions own subagent selection.
+      assert.ok(!("task" in role), `${name} translates no task policy`);
     }
   });
 
@@ -399,8 +402,7 @@ describe("claude-code guardrails adapter", () => {
     assert.ok(!/"\*"\s*:/.test(text), "no object key is a blanket wildcard");
     assert.ok(text.includes('".yacao/plans/*.md"'));
     assert.ok(text.includes('".yacao/plans/*"'));
-    assert.ok(text.includes('"yacao:builder"'));
-    assert.ok(text.includes('"Explore"'));
+    assert.ok(!text.includes('"Explore"'), "no dispatch allowlist");
     for (const skill of ["yacao:planning", "yacao:implementation", "yacao:review"]) {
       assert.ok(text.includes(`"${skill}"`), skill);
     }
@@ -928,13 +930,13 @@ describe("claude-code bundle statics", () => {
     }
   });
 
-  test("hooks.json wires exactly one synchronous matcher with one handler over the six covered tools", () => {
+  test("hooks.json wires exactly one synchronous matcher with one handler over the five covered tools", () => {
     const config = JSON.parse(readFileSync(HOOKS_JSON, "utf8"));
     assert.deepEqual(Object.keys(config), ["hooks"]);
     assert.deepEqual(Object.keys(config.hooks), ["PreToolUse"]);
     const entries = config.hooks.PreToolUse;
     assert.equal(entries.length, 1);
-    assert.equal(entries[0].matcher, "Bash|Read|Edit|Write|Skill|Agent");
+    assert.equal(entries[0].matcher, "Bash|Read|Edit|Write|Skill");
     const hooks = entries[0].hooks;
     assert.equal(hooks.length, 1);
     assert.deepEqual(Object.keys(hooks[0]).sort(), ["command", "type"]);
@@ -1003,7 +1005,6 @@ describe("claude-code role guard hook", () => {
       ["yacao:builder", "Read", { file_path: path.join(ROOT, "index.js") }],
       ["yacao:orchestrator", "Edit", { file_path: path.join(ROOT, ".yacao", "plans", "p", "t.md") }],
       ["yacao:builder", "Skill", { skill: "anything" }],
-      ["yacao:builder", "Agent", { subagent_type: "Explore" }],
     ];
     for (const [role, tool, input] of allowed) {
       const result = runGuard({ agent_type: role, tool_name: tool, tool_input: input });
@@ -1250,19 +1251,25 @@ describe("claude-code role guard hook", () => {
     noDecision(call("yacao:orchestrator", "Skill", {}));
   });
 
-  test("agent calls: dispatch scope is hook-enforced for both roles", () => {
-    noDecision(call("yacao:builder", "Agent", { subagent_type: "Explore" }));
-    for (const type of ["explore", "general-purpose", "yacao:builder", "fork", ""]) {
-      askOrDeny(call("yacao:builder", "Agent", { subagent_type: type }), "deny");
+  test("agent calls: both roles fall through to native permissions for any agent type", () => {
+    const agentTypes = [
+      "claude-code-guide",
+      "statusline-setup",
+      "Plan",
+      "general-purpose",
+      "user-defined-agent",
+      "Explore",
+      "yacao:builder",
+      "fork",
+      "",
+    ];
+    for (const role of ["yacao:orchestrator", "yacao:builder"]) {
+      for (const type of agentTypes) {
+        noDecision(call(role, "Agent", { subagent_type: type }));
+      }
+      noDecision(call(role, "Agent", {}));
+      noDecision(call(role, "Agent", undefined));
     }
-    askOrDeny(call("yacao:builder", "Agent", {}), "deny");
-    askOrDeny(call("yacao:builder", "Agent", undefined), "deny");
-    // The orchestrator's dispatch scope moved off native frontmatter onto the
-    // hook: yacao:builder and Explore pass, everything else is denied.
-    askOrDeny(call("yacao:orchestrator", "Agent", { subagent_type: "general-purpose" }), "deny");
-    noDecision(call("yacao:orchestrator", "Agent", { subagent_type: "Explore" }));
-    noDecision(call("yacao:orchestrator", "Agent", { subagent_type: "yacao:builder" }));
-    askOrDeny(call("yacao:orchestrator", "Agent", {}), "deny");
   });
 
   test("a corrupt or absent packaged policy fails closed for recognized roles", () => {
@@ -1307,12 +1314,12 @@ describe("claude-code role guard hook", () => {
       const guard = path.join(hooksDir, "guard.mjs");
       const allowAll = [{ pattern: "*", decision: "allow" }];
       const full = {
-        "yacao:orchestrator": { bash: allowAll, read: allowAll, edit: allowAll, task: allowAll },
-        "yacao:builder": { bash: allowAll, read: allowAll, skill: allowAll, task: allowAll },
+        "yacao:orchestrator": { bash: allowAll, read: allowAll, edit: allowAll },
+        "yacao:builder": { bash: allowAll, read: allowAll, skill: allowAll },
       };
       const mandatory = {
-        "yacao:orchestrator": ["bash", "read", "edit", "task"],
-        "yacao:builder": ["bash", "read", "skill", "task"],
+        "yacao:orchestrator": ["bash", "read", "edit"],
+        "yacao:builder": ["bash", "read", "skill"],
       };
       for (const [role, categories] of Object.entries(mandatory)) {
         for (const category of categories) {
@@ -1407,13 +1414,11 @@ describe("claude-code packaged self-containment", () => {
               bash: [{ pattern: "*", decision: "allow" }],
               read: placeholder,
               edit: placeholder,
-              task: placeholder,
             },
             "yacao:builder": {
               bash: [{ pattern: "probe-*", decision: "deny" }],
               read: placeholder,
               skill: placeholder,
-              task: placeholder,
             },
           },
           null,

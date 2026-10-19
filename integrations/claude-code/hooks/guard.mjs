@@ -31,10 +31,12 @@
 //     root (CLAUDE_PROJECT_DIR), normalizing path separators, "." and ".."
 //     and resolving symlinked ancestors, then match the root-relative path
 //     against the role's read/edit rules.
-//   - Skill and Agent read the documented input fields ("skill" and
-//     "subagent_type"). Whether the host delivers every skill invocation as a
-//     PreToolUse call for the Skill tool is a native-gate property this hook
-//     cannot establish.
+//   - Skill reads the documented input field ("skill"). Whether the host
+//     delivers every skill invocation as a PreToolUse call for the Skill tool
+//     is a native-gate property this hook cannot establish.
+//   - Agent dispatch is not covered at all: Claude Code's native permissions
+//     decide which subagents a role may use, so native helpers and user-defined
+//     agents keep working.
 //
 // Output contract: exit status 0 always; either a single JSON decision object
 // on stdout, or empty output for "no decision" (fall through).
@@ -52,12 +54,13 @@ const ROLE_IDS = new Set(["yacao:orchestrator", "yacao:builder"]);
 // Categories outside a role's list stay optional (the two roles differ), and
 // unrelated policy entries are not constrained.
 const REQUIRED_CATEGORIES = {
-  "yacao:orchestrator": ["bash", "read", "edit", "task"],
-  "yacao:builder": ["bash", "read", "skill", "task"],
+  "yacao:orchestrator": ["bash", "read", "edit"],
+  "yacao:builder": ["bash", "read", "skill"],
 };
 
-// Tools this hook is wired for in hooks.json.
-const COVERED_TOOLS = new Set(["Bash", "Read", "Edit", "Write", "Skill", "Agent"]);
+// Tools this hook is wired for in hooks.json. Agent is deliberately absent:
+// subagent dispatch stays under Claude Code's native permissions.
+const COVERED_TOOLS = new Set(["Bash", "Read", "Edit", "Write", "Skill"]);
 
 // The input field each covered tool must carry for its policy to be checked.
 const INPUT_FIELD = {
@@ -66,7 +69,6 @@ const INPUT_FIELD = {
   Edit: "file_path",
   Write: "file_path",
   Skill: "skill",
-  Agent: "subagent_type",
 };
 
 const DECISIONS = new Set(["allow", "ask", "deny"]);
@@ -234,9 +236,6 @@ const categoryFor = (roleId, toolName) => {
   if (toolName === "Read") return "read";
   if (toolName === "Edit" || toolName === "Write") return "edit";
   if (toolName === "Skill") return "skill";
-  // Both roles enforce dispatch here: the orchestrator may spawn only
-  // yacao:builder and Explore, and yacao:builder only Explore.
-  if (toolName === "Agent") return "task";
   return null;
 };
 
@@ -248,7 +247,6 @@ const missingInputDeny = (roleId, toolName, field, why) => ({
 const subjectFor = (toolName, target) => {
   if (toolName === "Bash") return "the Bash command";
   if (toolName === "Skill") return `the Skill call for "${target}"`;
-  if (toolName === "Agent") return `the Agent call spawning "${target}"`;
   return `${toolName} of "${target}"`;
 };
 

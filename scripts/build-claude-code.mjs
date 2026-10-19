@@ -17,9 +17,11 @@
 //
 // guardrails.json is adapter data for the Claude Code role guardrails, not
 // native permission settings: per qualified agent key it lists the ordered
-// policy rules of each category (bash/read/edit/skill/task), every rule
+// policy rules of each guardrailed category (bash/read/edit/skill), every rule
 // { "pattern", "decision" } with decision allow/ask/deny; a later rule
-// overrides an earlier one, like the canonical wildcard semantics.
+// overrides an earlier one, like the canonical wildcard semantics. Agent
+// dispatch policy is deliberately not translated: Claude Code keeps subagent
+// selection under its native permissions.
 //
 // The files under the plugin's hooks/ directory are hand-authored bundle
 // statics (STATIC_PATHS): generation never writes them, it scans their text
@@ -73,8 +75,8 @@ const CHECKED_FILE_COUNT = OUTPUT_PATHS.length + STATIC_PATHS.length + 1;
 
 // Claude Code agent definitions: native frontmatter fields only. Both agents
 // inherit the session's tools (MCP servers included); the adapter pins no tool
-// roster or denylist, and the dispatch scope of both roles is enforced by the
-// guard hook.
+// roster or denylist and does not translate the canonical delegation policy:
+// Agent dispatch stays under Claude Code's native permissions.
 const AGENT_SPECS = [
   {
     name: "orchestrator",
@@ -99,16 +101,18 @@ const SKILL_SPECS = [
   { name: "review", source: "skills/yacao-review/SKILL.md", output: "skills/review/SKILL.md" },
 ];
 
-const POLICY_CATEGORIES = ["bash", "read", "edit", "skill", "task"];
+const POLICY_CATEGORIES = ["bash", "read", "edit", "skill"];
 
-// Canonical permission keys that have no place in Claude Code guardrails:
-// the blanket all-allow and the OpenCode-only host gates.
-const HOST_ONLY_PERMISSION_KEYS = new Set([
+// Canonical permission keys that have no Claude Code guardrail counterpart:
+// the blanket all-allow, the OpenCode-only host gates, and the delegation
+// policy (Agent dispatch is native in Claude Code).
+const NON_GUARDRAIL_PERMISSION_KEYS = new Set([
   "*",
   "external_directory",
   "doom_loop",
   "lsp",
   "question",
+  "task",
 ]);
 
 const AGENT_FIELDS = new Set(["description", "mode", "temperature", "permission", "prompt"]);
@@ -235,7 +239,7 @@ const loadAgent = (root, spec) => {
     throw new Error(`unsupported source: ${rel} permission must be an object`);
   }
   for (const key of Object.keys(definition.permission)) {
-    if (!POLICY_CATEGORIES.includes(key) && !HOST_ONLY_PERMISSION_KEYS.has(key)) {
+    if (!POLICY_CATEGORIES.includes(key) && !NON_GUARDRAIL_PERMISSION_KEYS.has(key)) {
       throw new Error(`unsupported permission key "${key}" in ${rel}`);
     }
   }
@@ -277,9 +281,7 @@ const adaptPolicyPattern = (pattern) =>
     .replaceAll(".opencode/plans", ".yacao/plans")
     .replaceAll("yacao-planning", "yacao:planning")
     .replaceAll("yacao-implementation", "yacao:implementation")
-    .replaceAll("yacao-review", "yacao:review")
-    .replace(/^builder$/, "yacao:builder")
-    .replace(/^explore$/, "Explore");
+    .replaceAll("yacao-review", "yacao:review");
 
 const policyRules = (value, what) => {
   if (typeof value === "string") {

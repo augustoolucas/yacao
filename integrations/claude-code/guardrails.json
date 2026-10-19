@@ -181,20 +181,6 @@
         "pattern": ".yacao/plans/*.md",
         "decision": "allow"
       }
-    ],
-    "task": [
-      {
-        "pattern": "*",
-        "decision": "deny"
-      },
-      {
-        "pattern": "yacao:builder",
-        "decision": "allow"
-      },
-      {
-        "pattern": "Explore",
-        "decision": "allow"
-      }
     ]
   },
   "yacao:builder": {
@@ -390,16 +376,6 @@
       {
         "pattern": "yacao:review",
         "decision": "deny"
-      }
-    ],
-    "task": [
-      {
-        "pattern": "*",
-        "decision": "deny"
-      },
-      {
-        "pattern": "Explore",
-        "decision": "allow"
       }
     ]
   }
