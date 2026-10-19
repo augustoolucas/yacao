@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.1 (2026-10-19)
+
+- Stop blocking Claude Code's native helpers and user-defined agents through
+  YACAO's dispatch allowlist. Both roles now defer Agent calls to the host's
+  permissions; implementation guidance still directs coding work to the builder.
+
 ## v0.6.0 (2026-10-16)
 
 - Add experimental Claude Code support: an orchestrator, a builder and three

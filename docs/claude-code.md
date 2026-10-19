@@ -16,7 +16,7 @@ YACAO's canonical sources ([`package.json`](../package.json),
 - guard handlers: [`hooks/hooks.json`](../integrations/claude-code/hooks/hooks.json)
   run one `PreToolUse` command
   (`node "${CLAUDE_PLUGIN_ROOT}/hooks/guard.mjs"`) for the tools
-  `Bash|Read|Edit|Write|Skill|Agent`;
+  `Bash|Read|Edit|Write|Skill`;
 - the policy that hook reads,
   [`guardrails.json`](../integrations/claude-code/guardrails.json).
 
@@ -110,10 +110,10 @@ is enough and no network publication is involved.
 
 ### Remote Git marketplace (release tag)
 
-Install the plugin from the v0.6.0 release tag:
+Install the plugin from the v0.6.1 release tag:
 
 ```text
-/plugin marketplace add augustoolucas/yacao#v0.6.0
+/plugin marketplace add augustoolucas/yacao#v0.6.1
 /plugin install yacao@yacao
 ```
 
@@ -200,13 +200,19 @@ system. Documented differences that matter:
   `allow`, the hook returns no decision and the native permission machinery
   still runs, including its own prompts. Falling through never means
   auto-approval.
+- **Agent dispatch stays native.** The adapter emits no guardrail for the
+  Agent tool: subagent selection is left to Claude Code's own permissions, so
+  native helpers such as `claude-code-guide`, `statusline-setup` and `Plan`,
+  the `general-purpose` agent, and user-defined agents remain available to both
+  YACAO roles. The implementation skill still directs coding work to
+  `yacao:builder`; that is workflow guidance, not hook enforcement.
 - **Policy highlights** (generated into `guardrails.json`, offline-tested):
   orchestrator edits/writes are denied except `.yacao/plans` Markdown; builder
   reads of `.yacao/plans` are denied; builder YACAO skill use is denied;
-  builder Agent calls are limited to `Explore`; recognized `git commit`
-  commands are denied for the builder and ask for the orchestrator, as do
-  push and mutating Git forms; `.env` reads ask; `command git*` and `env git*`
-  are denied. These are patterns, not a shell parser (see the bullet above).
+  recognized `git commit` commands are denied for the builder and ask for the
+  orchestrator, as do push and mutating Git forms; `.env` reads ask;
+  `command git*` and `env git*` are denied. These are patterns, not a shell
+  parser (see the bullet above).
 - Permission modes, managed policy and external-directory access are native
   host concerns; the adapter neither translates nor overrides them.
 
@@ -245,9 +251,7 @@ context selected by the host and the user; the adapter pins no provider or
 model and translates no temperature. The orchestrator keeps the host and user
 model selection as well. Both agents inherit the tools the session offers,
 including the MCP servers and native tools the user configured; the adapter
-pins no tool roster. The dispatch
-scope of both agents is enforced by the guard hook rather than a frontmatter
-allowlist: the orchestrator may spawn only `yacao:builder` and `Explore`, and
-the builder only `Explore`. Plugin subagents do not support `hooks`,
+pins no tool roster and does not restrict Agent dispatch, which remains under
+Claude Code's native permissions. Plugin subagents do not support `hooks`,
 `mcpServers` or `permissionMode` frontmatter, and the adapter does not use
 them.
