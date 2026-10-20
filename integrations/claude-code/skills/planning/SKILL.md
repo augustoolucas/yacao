@@ -24,7 +24,7 @@ Write a plan overview and self-contained task contracts before implementation. M
    - **Verification commands** - final checks that only make sense after all tasks complete (omit only when nothing needs to be verified)
    - **Implementation metadata** - the commit preference, the progress and, when Git applies, the fixed initial review base, owned and recorded as the `yacao:implementation` skill describes
 
-   Each task contract is self-contained and contains only:
+   Each task contract is self-contained, without relying on other planning files, and contains only:
    - **Goal** - the independently testable increment it delivers
    - **Changes** - the precise edits for that task
    - **File scope** - files the task may touch

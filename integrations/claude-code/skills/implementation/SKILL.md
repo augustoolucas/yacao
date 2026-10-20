@@ -32,7 +32,7 @@ Send the yacao:builder a direct spec containing:
 Follow the approved plan overview's ordered task list, one yacao:builder at a time:
 
 1. Read the current task contract at the path listed in the approved plan overview.
-2. Send the yacao:builder the task's `Goal`, `Changes`, `File scope`, `Dependencies`, and `Verification commands`, plus concise task-relevant invariants, rationale, risks and prior decisions - nothing else. Never send the full plan overview or future task contracts.
+2. Send the yacao:builder the task's `Goal`, `Changes`, `File scope`, `Dependencies`, and `Verification commands`, plus concise task-relevant invariants, rationale, risks and prior decisions - nothing else. Provide the task details directly; do not ask the yacao:builder to read planning files. Never send the full plan overview or future task contracts.
 3. Review each result before advancing. Complete any requested task commit first unless the user chooses to continue without commits; final-only commits wait until the final review. After the last task, run the `yacao:review` final review.
 
 ## yacao:builder status routing
