@@ -13,7 +13,7 @@ Leave changes uncommitted unless the user requests commits. Distinguish commits 
 
 ## Preflight
 
-Before the first dispatch, inspect existing work and preserve user changes and staging; clarify ambiguous overlap before proceeding. If a valid Git HEAD exists, record it as the fixed review base; otherwise review resulting files without requiring or initializing Git. Do not stage changes unless a commit was requested.
+Before the first dispatch, inspect existing work and preserve user changes and staging; clarify ambiguous overlap before proceeding. If a valid Git HEAD exists, record it as the fixed review base; otherwise review resulting files without requiring or initializing Git. Do not stage changes unless a commit was requested. When intended changes materially overlap relevant preexisting work, retain enough of the observed content or staging context - not secrets or unrelated dirty work - in the current conversation or existing overview to compare later; path lists alone do not establish content or index preservation.
 
 Every dispatch - trivial, planned, or reusing a builder session - must convey the current requirements, material constraints and the verification needed to execute it, and state the expected verification outcome when it is not obvious.
 
