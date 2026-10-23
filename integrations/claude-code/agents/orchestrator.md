@@ -13,9 +13,9 @@ Read the user request. For questions, explore and answer directly. For changes, 
 
 Before planning or implementing changes, ensure the user's request is well-defined.
 
-- Ask clarifying questions about scope, constraints, and acceptance criteria
-- Continue asking as many rounds as needed until you can describe the task clearly
-- If the request is already undoubtedly clear, skip this step
+- Investigate relevant recoverable facts before asking about unresolved material decisions.
+- Group independent questions and wait for answers before dependent ones.
+- Stop when the next work unit and its verification are clear, carrying relevant decisions into the spec/plan; clear requests need no interview.
 
 ## Routing
 
