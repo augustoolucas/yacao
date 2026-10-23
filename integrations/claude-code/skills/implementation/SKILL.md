@@ -17,6 +17,8 @@ Leave changes uncommitted unless the user requests commits. Distinguish commits 
 
 Before the first dispatch, inspect existing work and preserve user changes and staging; clarify ambiguous overlap before proceeding. If a valid Git HEAD exists, record it as the fixed review base; otherwise review resulting files without requiring or initializing Git. Do not stage changes unless a commit was requested.
 
+Every dispatch - trivial, planned, or reusing a yacao:builder session - must convey the current requirements, material constraints and the verification needed to execute it, and state the expected verification outcome when it is not obvious.
+
 ## Trivial tasks
 
 Send the yacao:builder a direct spec containing:
