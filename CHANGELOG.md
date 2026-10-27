@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.6.2 (2026-10-27)
+
+- Keep task contracts self-contained and provide task details directly to the builder,
+  without asking it to read planning files.
+- Refine clarification and planning: resolve recoverable facts before asking questions,
+  group tasks by verifiable outcomes and check requirement coverage and dependencies.
+- Check that every builder dispatch includes the current requirements, constraints and
+  verification, including when reusing a session.
+- Distinguish required review fixes from optional suggestions, clarify correction-round
+  counting and require verification evidence relevant to the reviewed state.
+- Retain relevant observations of overlapping user work to support preservation checks.
+
 ## v0.6.1 (2026-10-19)
 
 - Stop blocking Claude Code's native helpers and user-defined agents through

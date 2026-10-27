@@ -110,10 +110,10 @@ is enough and no network publication is involved.
 
 ### Remote Git marketplace (release tag)
 
-Install the plugin from the v0.6.1 release tag:
+Install the plugin from the v0.6.2 release tag:
 
 ```text
-/plugin marketplace add augustoolucas/yacao#v0.6.1
+/plugin marketplace add augustoolucas/yacao#v0.6.2
 /plugin install yacao@yacao
 ```
 
