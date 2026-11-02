@@ -1013,6 +1013,26 @@ describe("claude-code role guard hook", () => {
     }
   });
 
+  test("multiline direct commands are matched by the same ordered policy", () => {
+    // The guard still matches the whole raw string and parses nothing; the only
+    // difference is that a policy wildcard now spans the line breaks inside it.
+    const cases = [
+      ['git commit -m "subject\n\nbody"', "deny", "ask"],
+      ['git stash push -m "subject\nbody"', "ask", "ask"],
+      ['printf "%s" "hello\nworld"', null, null],
+    ];
+    for (const [command, builder, orchestrator] of cases) {
+      for (const [role, expected] of [
+        ["yacao:builder", builder],
+        ["yacao:orchestrator", orchestrator],
+      ]) {
+        const output = bash(role, command);
+        if (expected === null) noDecision(output);
+        else askOrDeny(output, expected);
+      }
+    }
+  });
+
   test("routine commands with substitutions and variables fall through for both roles", () => {
     // Substitutions and variables are opaque to the guard, which matches the
     // raw command string and never executes it. None of these produce a YACAO

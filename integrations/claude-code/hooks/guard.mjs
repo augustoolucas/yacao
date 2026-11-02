@@ -80,15 +80,16 @@ const isPlainObject = (value) =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 // Canonical wildcard patterns: "*" matches any span of characters (empty
-// included, separators and spaces included) and the pattern is anchored to
-// the whole value; everything else is literal text.
+// included, separators, spaces and newlines included) and the pattern is
+// anchored to the whole value; everything else is literal text. The "s" flag
+// lets a wildcard span a line break in a raw multiline command.
 const escapeLiteral = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const compiled = new Map();
 const patternToRegExp = (pattern) => {
   let matcher = compiled.get(pattern);
   if (matcher === undefined) {
-    matcher = new RegExp(`^${pattern.split("*").map(escapeLiteral).join(".*")}$`);
+    matcher = new RegExp(`^${pattern.split("*").map(escapeLiteral).join(".*")}$`, "s");
     compiled.set(pattern, matcher);
   }
   return matcher;
