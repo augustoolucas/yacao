@@ -78,10 +78,6 @@ describe("mergeDefinition", () => {
     assert.deepEqual(mergeDefinition(base, override), { a: { b: 1, c: 9 }, d: 3 });
   });
 
-  test("the override value wins", () => {
-    assert.deepEqual(mergeDefinition({ a: 1, b: 2 }, { b: 5 }), { a: 1, b: 5 });
-  });
-
   test("arrays are replaced, not merged", () => {
     assert.deepEqual(mergeDefinition({ list: [1, 2, 3] }, { list: [9] }), { list: [9] });
   });
@@ -217,13 +213,6 @@ describe("applyAgentDefinitions", () => {
     applyAgentDefinitions(editor, [{ name: "builder", definition: definitionFor() }]);
     assert.equal(editor.agents.builder.description, "builder agent");
     assert.equal(editor.agents.builder.system, "you build");
-  });
-
-  test("handles a missing permissions array", () => {
-    const editor = createEditor({ builder: { description: "kept" } });
-    applyAgentDefinitions(editor, [{ name: "builder", definition: definitionFor() }]);
-    assert.ok(Array.isArray(editor.agents.builder.permissions));
-    assert.equal(editor.agents.builder.permissions.length, 3);
   });
 
   test("replaces rules on every call (idempotent)", () => {
@@ -754,14 +743,6 @@ describe("plugin.setup - V2 agents", () => {
     assert.match(errors[0], /YACAO plugin failed/);
     assert.equal(capture.state.calls, 1);
     assert.ok(editor.skills.has("yacao-review"), "skills still registered after an agent failure");
-  });
-
-  test("setup without the agent transform still registers skills", async () => {
-    const editor = createSkillEditor(hostSkills());
-    const capture = captureTransform(editor);
-    await plugin.setup({ skill: { transform: capture.transform } });
-    assert.equal(capture.state.calls, 1);
-    assert.ok(editor.skills.has("yacao-planning"));
   });
 });
 

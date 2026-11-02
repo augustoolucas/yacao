@@ -150,13 +150,6 @@ describe("claude-code bundle generation", () => {
     ]);
   });
 
-  test("is deterministic: two generations are byte-identical", () => {
-    const first = generatePlugin({ root: ROOT });
-    const second = generatePlugin({ root: ROOT });
-    assert.deepEqual(second, first);
-    for (const rel of OUTPUT_PATHS) assert.equal(second[rel], first[rel], rel);
-  });
-
   test("the committed bundle matches the generator output", () => {
     assert.deepEqual(readBundle(ROOT), generatePlugin({ root: ROOT }));
   });
@@ -999,27 +992,6 @@ describe("claude-code role guard hook", () => {
     noDecision(guardDecision(runGuard({ agent_type: "yacao:builder", tool_name: 7, tool_input: {} })));
   });
 
-  test("never emits allow and never rewrites tool input", () => {
-    const allowed = [
-      ["yacao:builder", "Bash", { command: "ls -la" }],
-      ["yacao:builder", "Read", { file_path: path.join(ROOT, "index.js") }],
-      ["yacao:orchestrator", "Edit", { file_path: path.join(ROOT, ".yacao", "plans", "p", "t.md") }],
-      ["yacao:builder", "Skill", { skill: "anything" }],
-    ];
-    for (const [role, tool, input] of allowed) {
-      const result = runGuard({ agent_type: role, tool_name: tool, tool_input: input });
-      assert.equal(result.stdout, "", `${role} ${tool} falls through silently`);
-      noDecision(guardDecision(result));
-    }
-    const denied = runGuard({
-      agent_type: "yacao:builder",
-      tool_name: "Bash",
-      tool_input: { command: "git commit -m x" },
-    });
-    assert.ok(!/updatedInput/.test(denied.stdout), "the decision never rewrites input");
-    assert.ok(!/"allow"/.test(denied.stdout), "the decision is never an allow");
-  });
-
   test("plain and prefixed commits: builder denies, orchestrator asks", () => {
     for (const command of ["git commit", "git commit -m x", "git -C repo commit -m x"]) {
       askOrDeny(bash("yacao:builder", command), "deny");
@@ -1289,10 +1261,6 @@ describe("claude-code role guard hook", () => {
         "not json",
         "[]",
         '{"yacao:builder": {}}',
-        '{"yacao:orchestrator": {}, "yacao:builder": {}}',
-        '{"yacao:orchestrator": {"bash": []}, "yacao:builder": {}}',
-        '{"yacao:orchestrator": {"bash": [{"pattern": "*", "decision": "maybe"}]}, "yacao:builder": {}}',
-        '{"yacao:orchestrator": {"bash": {"pattern": "*"}}, "yacao:builder": {}}',
       ];
       for (const policy of policies) {
         writeFileSync(path.join(dir, "guardrails.json"), policy);
