@@ -7,6 +7,7 @@
 
 <p align="center">
   <a href="https://opencode.ai/"><img src="https://img.shields.io/badge/OpenCode-V1%20%7C%20V2-6d5dfc?style=flat-square&amp;logo=opencode&amp;logoColor=white" alt="OpenCode V1 | V2"></a>
+  <a href="./docs/claude-code.md"><img src="https://img.shields.io/badge/Claude_Code-experimental-D97757?style=flat-square&amp;logo=claude&amp;logoColor=white" alt="Claude Code (experimental)"></a>
   <a href="https://github.com/augustoolucas/yacao/releases/latest"><img src="https://img.shields.io/github/v/release/augustoolucas/yacao?style=flat-square&amp;label=YACAO" alt="YACAO version"></a>
   <a href="https://github.com/augustoolucas/yacao/blob/main/LICENSE"><img src="https://img.shields.io/github/license/augustoolucas/yacao?style=flat-square" alt="MIT License"></a>
   <a href="https://github.com/augustoolucas/yacao/stargazers"><img src="https://img.shields.io/github/stars/augustoolucas/yacao?style=flat-square" alt="GitHub stars"></a>
