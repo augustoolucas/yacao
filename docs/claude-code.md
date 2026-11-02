@@ -121,6 +121,31 @@ The tag pins the marketplace content to that release; the unpinned form
 (`/plugin marketplace add augustoolucas/yacao`) tracks the default branch
 instead.
 
+## Updating
+
+From a shell, the two steps are separate:
+
+```sh
+claude plugin marketplace update yacao    # refresh the marketplace listing
+claude plugin update yacao@yacao          # update the installed plugin
+```
+
+`marketplace update` re-reads the configured source (for Git, its configured
+ref) and leaves installed plugins at their current versions; `plugin update`
+updates the installed plugin from that refreshed listing. A new session loads
+the updated plugin; `/reload-plugins` applies it in a running session.
+
+A tag-pinned marketplace stays on its tag: neither command moves it to another
+release. To select a different release, change the `ref` in the configured
+marketplace source first (see
+[Extra known marketplaces](https://code.claude.com/docs/en/settings-reference#extraknownmarketplaces)),
+then update. `--plugin-dir` sessions use the local checkout and are not
+refreshed by marketplace updates.
+
+These steps follow the official
+[plugin install docs](https://code.claude.com/docs/en/plugins/install#update-plugins-now)
+but were not exercised end-to-end here; the adapter remains experimental.
+
 ## Namespaces, paths and generated files
 
 - Agents: `yacao:orchestrator`, `yacao:builder`.
