@@ -46,7 +46,7 @@ With YACAO, the workflow is fundamentally the same but feels much more natural: 
 TL;DR: the orchestrator receives your prompt. Questions and discussions are answered directly after exploring if needed. For change requests, the orchestrator asks clarifying questions until the goal is well defined, then:
 
 - small changes go straight to the builder and back for review;
-- larger changes get a written plan you approve first, then the builder implements it, with review and fixes until it's right.
+- larger changes get a written plan you approve first, then implementation and review proceed sequentially, task by task.
 - by default the approved work stays uncommitted; you can ask for a commit after each approved task, or for a single commit at the end;
 - each task is still reviewed before the next one starts, and a task that needs fixes gets at most two adjustment rounds before it comes back to you.
 
@@ -117,15 +117,24 @@ This is the configured behavior from the installed CLI help and the versioned so
 
 ### Claude Code (experimental)
 
-[`integrations/claude-code/`](./integrations/claude-code) ships an experimental Claude Code adapter generated from the same canonical sources: two agents (`yacao:orchestrator`, `yacao:builder`), three skills and a guard hook.
+[`integrations/claude-code/`](./integrations/claude-code) ships an experimental Claude Code plugin generated from the same canonical sources: two agents (`yacao:orchestrator`, `yacao:builder`), three skills and a guard hook.
 
-Load the committed bundle from an unrelated disposable project (no build step; Node.js 22 or newer is required for the guard hook):
+Requires Node.js 22 or newer on `PATH` (the guard hook is a Node script).
 
-```sh
-claude --plugin-dir /absolute/path/to/yacao/integrations/claude-code --agent yacao:orchestrator
+Install from the Git marketplace at the v0.6.2 release tag:
+
+```text
+/plugin marketplace add augustoolucas/yacao#v0.6.2
+/plugin install yacao@yacao
 ```
 
-Available from v0.6.0 through the Git marketplace: add the release tag with `/plugin marketplace add augustoolucas/yacao#v0.6.2`, then `/plugin install yacao@yacao`. Full guide and install options: [`docs/claude-code.md`](./docs/claude-code.md).
+Then start a new Claude Code session from your project directory:
+
+```sh
+claude --agent yacao:orchestrator
+```
+
+Full guide: [`docs/claude-code.md`](./docs/claude-code.md).
 
 ## Configuration
 
@@ -135,7 +144,7 @@ On OpenCode V1 YACAO sets `orchestrator` as the default agent automatically **if
 
 On OpenCode V2 you need to set `"default_agent": "orchestrator"`.
 
-#### Setup builder model
+#### Builder model
 
 Builder inherits the model set for the Orchestrator.
 
@@ -163,7 +172,7 @@ On V2, use the `agents` key:
 }
 ```
 
-#### Setup builder subagents
+#### Builder subagents
 
 The builder can dispatch OpenCode's `explore` subagent to parallelize searches inside a task.
 
