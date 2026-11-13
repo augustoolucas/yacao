@@ -11,6 +11,8 @@
   "scripts": {
     "test": "node --test",
     "build:claude-code": "node scripts/build-claude-code.mjs",
-    "check:claude-code": "node scripts/build-claude-code.mjs --check"
+    "check:claude-code": "node scripts/build-claude-code.mjs --check",
+    "build:antigravity": "node scripts/build-antigravity.mjs",
+    "check:antigravity": "node scripts/build-antigravity.mjs --check"
   }
 }

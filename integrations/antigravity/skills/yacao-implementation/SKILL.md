@@ -1,0 +1,61 @@
+---
+name: "yacao-implementation"
+description: "Guides ordered task dispatch, yacao-builder conversation reuse, and yacao-builder response handling."
+---
+
+# Implementation
+
+You delegate code changes to **yacao-builder** via invoke_subagent - you construct the task, hand it off, and handle the response. Capture the returned child conversation ID for potential follow-up reuse.
+
+> **Dispatch and continuation.** Dispatch implementation with the `invoke_subagent` tool in the current workspace - never a branch or worktree. The observed per-call fields are `{Prompt,Role,TypeName}`: set `TypeName` to `yacao-builder`, give a descriptive `Role`, and put the current task in `Prompt` as a self-contained contract. The actual tool schema is authoritative; do not add unsupported `model` or `Workspace` parameters, and do not bake in an unverified outer `Subagents` JSON envelope. Record the real child conversation ID returned by the call; never invent one. Continue that same child with `send_message` using `{Recipient:childID,Message:current instruction}`. Wait for the child to actually complete before reviewing its work or advancing to the next task.
+
+## Commit preference
+
+Leave changes uncommitted unless the user requests commits. Distinguish commits after each approved task from a single commit after final review; a request to commit when finished does not authorize intermediate commits.
+
+## Preflight
+
+Before the first dispatch, inspect existing work and preserve user changes and staging; clarify ambiguous overlap before proceeding. If a valid Git HEAD exists, record it as the fixed review base; otherwise review resulting files without requiring or initializing Git. Do not stage changes unless a commit was requested. When intended changes materially overlap relevant preexisting work, retain enough of the observed content or staging context - not secrets or unrelated dirty work - in the current conversation or existing overview to compare later; path lists alone do not establish content or index preservation.
+
+Every dispatch - trivial, planned, or reusing a yacao-builder conversation - must convey the current requirements, material constraints and the verification needed to execute it, and state the expected verification outcome when it is not obvious.
+
+## Trivial tasks
+
+Send the yacao-builder a direct spec containing:
+
+- **Goal** - what to accomplish
+- **Context** - useful prior decisions or history needed to implement or verify the task, if any
+- **Changes** - the precise edits. Make sure to follow KISS, DRY and YAGNI principles.
+- **File scope** - files the task may touch
+- **Verification commands** - what to run (omit only when nothing needs to be verified)
+
+## Needs planning
+
+Follow the approved plan overview's ordered task list, one yacao-builder at a time:
+
+1. Read the current task contract at the path listed in the approved plan overview.
+2. Send the yacao-builder the task's `Goal`, `Changes`, `File scope`, `Dependencies`, and `Verification commands`, plus concise task-relevant invariants, rationale, risks and prior decisions - nothing else. Provide the task details directly; do not ask the yacao-builder to read planning files. Never send the full plan overview or future task contracts.
+3. Review each result before advancing. Complete any requested task commit first unless the user chooses to continue without commits; final-only commits wait until the final review. After the last task, run the `yacao-review` final review.
+
+## yacao-builder status routing
+
+For a yacao-builder response:
+
+- `complete` -> invoke the `yacao-review` flow for the current task.
+- `partial` -> hold the current task, reuse the same yacao-builder conversation to complete it, and do not advance to another task. Surface repeated lack of progress as a blocker.
+- `blocked` -> stop, surface the blocker, and do not advance.
+- `escalate` -> read `GAPS`; resolve it from the plan overview or codebase when you can, otherwise surface it to the user; do not advance.
+
+A blocked or escalated task may resume without a new plan approval only if the approved task and approach remain unchanged; a material plan, approach, or scope change requires a revised, approved plan. On the trivial path, a material change becomes **Needs planning** and enters the planning flow first.
+
+If the user abandons or supersedes the plan during execution, stop, record the plan as abandoned in the overview, and do not dispatch further tasks.
+
+## Progress in the overview
+
+Keep the approved tasks, useful yacao-builder child conversation IDs, adjustment counts, commit preference and any review base in the existing overview so work can continue. For trivial tasks, retain this context in the conversation. Check the recorded progress against the current work before resuming; clarify uncertainty rather than inventing progress.
+
+## Reusing the yacao-builder conversation
+
+- Always reuse the yacao-builder conversation for corrections to the same task.
+- Reuse it for related or dependent tasks when the previous context helps.
+- Start a fresh conversation for unrelated tasks.

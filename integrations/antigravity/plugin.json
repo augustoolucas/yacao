@@ -1,0 +1,7 @@
+{
+  "name": "yacao",
+  "displayName": "YACAO",
+  "version": "0.6.2",
+  "description": "Yet Another Coding Agent Orchestrator - a minimal 2-agent, 3-skill workflow plugin for Antigravity.",
+  "author": "augustoolucas"
+}

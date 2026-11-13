@@ -659,7 +659,9 @@ describe("claude-code shipped bundle", () => {
   test("the repository stays a package, not a script host: no install or release hooks", () => {
     const pkg = readJson(ROOT, "package.json");
     assert.deepEqual(Object.keys(pkg.scripts).sort(), [
+      "build:antigravity",
       "build:claude-code",
+      "check:antigravity",
       "check:claude-code",
       "test",
     ]);
