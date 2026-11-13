@@ -1,6 +1,6 @@
 # YACAO for Claude Code
 
-YACAO for Claude Code is an experimental plugin that brings the same workflow to
+YACAO for Claude Code is a plugin that brings the same workflow to
 Claude Code: an orchestrator that plans and reviews, and a builder subagent that
 implements. It ships two agents - `yacao:orchestrator` and `yacao:builder` -
 three skills and a guard hook, generated from YACAO's canonical sources under

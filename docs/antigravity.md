@@ -6,46 +6,43 @@ builder subagent that implements. It ships two agents - `yacao-orchestrator` and
 `yacao-builder` - and three skills, generated from YACAO's canonical sources
 under [`integrations/antigravity/`](../integrations/antigravity).
 
-This guide has been tested with Antigravity CLI 1.5.7 on Linux.
+This guide has been tested with Antigravity CLI 1.5.7 and 1.5.8 on Linux.
 
 ## Requirements
 
 - **Antigravity CLI** with plugin and subagent support, as documented in
   [Build plugins](https://antigravity.google/docs/build-plugins/) and
   [Subagents](https://antigravity.google/docs/subagents/).
-- **A local checkout** that contains `integrations/antigravity/`; see
-  [Install](#install).
+- **Git and network access** for the initial install and updates. A local
+  checkout is only needed for development; see [Install](#install).
 - **No runtime dependencies.** The six plugin files are committed and need no
   `npm install`, build step, Node.js runtime or third-party package. Node.js 22
   or newer is only needed for development.
 
 ## Install
 
-The Antigravity bundle is not part of a tagged release yet. Use a checkout that
-contains `integrations/antigravity/` - `main` once the change is published, or
-the branch that carries it.
-
-```sh
-git clone https://github.com/augustoolucas/yacao.git
-```
-
-Check for a name collision before installing:
+The Antigravity bundle is published in the repository's `main` branch. Check for
+a name collision before installing:
 
 ```sh
 agy plugin list --json
 ```
 
 If an unrelated plugin named `yacao` is already installed, resolve the collision
-first; do not overwrite it. Then install from the checkout, replacing the path
-with its absolute location:
+first; do not overwrite it. Then install the published bundle directly from
+GitHub:
+
+```sh
+agy plugin install https://github.com/augustoolucas/yacao/tree/main/integrations/antigravity
+```
+
+The native installer clones the repository, copies the plugin files, and enables
+the plugin at `~/.gemini/config/plugins/yacao`. For local development, you can
+install from a checkout instead:
 
 ```sh
 agy plugin install /absolute/path/to/yacao/integrations/antigravity
 ```
-
-The native installer copies and enables the plugin at
-`~/.gemini/config/plugins/yacao`. YACAO does not publish a marketplace entry or
-a remote install target for this bundle - install from the local checkout.
 
 ## Start and use
 
@@ -93,18 +90,19 @@ the session.
 
 ## Update and removal
 
-Update from a clean checkout on the appropriate branch:
+Reinstall from the published `main` bundle with the same command used to
+install:
 
 ```sh
-git pull --ff-only
-agy plugin install /absolute/path/to/yacao/integrations/antigravity
+agy plugin install https://github.com/augustoolucas/yacao/tree/main/integrations/antigravity
 ```
 
 Reinstalling replaces the installed plugin directory as a whole. Local edits
 under `~/.gemini/config/plugins/yacao` are lost, so keep custom configuration
 outside that directory. Check `agy plugin list --json` before reinstalling if
 another install named `yacao` could collide. Start a new session to load the
-updated plugin.
+updated plugin. If you develop from a local checkout, use `git pull --ff-only`
+and install that local path instead.
 
 Remove the installed copy:
 
@@ -113,7 +111,7 @@ agy plugin uninstall yacao
 ```
 
 This removes the plugin from `~/.gemini/config/plugins/yacao` and leaves your
-checkout, project files and `.yacao/plans/` artifacts untouched.
+project files and `.yacao/plans/` artifacts untouched.
 
 ## Permissions and limits
 
@@ -129,8 +127,9 @@ is not a sandbox, and the Antigravity integration does not provide parity with
 the OpenCode or Claude Code guardrails.
 
 Both agents declare an explicit, finite roster of native tools. In the tested
-host, an agent that omits its tool list is read-only, so the roster is required.
-It is not an all-tools grant or a statement about every tool the host may expose
+hosts, an agent that omits its tool list receives a default set lacking native
+`write_file`, so the roster is required. It is not an all-tools grant or a
+statement about every tool the host may expose
 now or later: MCP servers and host customizations are inherited separately
 through `inheritMcp` and `inheritCustomizations`, and depend on the native
 configuration and grants you provide. The builder explores relevant code

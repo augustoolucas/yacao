@@ -7,7 +7,7 @@
 
 <p align="center">
   <a href="https://opencode.ai/"><img src="https://img.shields.io/badge/OpenCode-V1%20%7C%20V2-6d5dfc?style=flat-square&amp;logo=opencode&amp;logoColor=white" alt="OpenCode V1 | V2"></a>
-  <a href="./docs/claude-code.md"><img src="https://img.shields.io/badge/Claude_Code-experimental-D97757?style=flat-square&amp;logo=claude&amp;logoColor=white" alt="Claude Code (experimental)"></a>
+  <a href="./docs/claude-code.md"><img src="https://img.shields.io/badge/Claude_Code-D97757?style=flat-square&amp;logo=claude&amp;logoColor=white" alt="Claude Code"></a>
   <a href="https://github.com/augustoolucas/yacao/releases/latest"><img src="https://img.shields.io/github/v/release/augustoolucas/yacao?style=flat-square&amp;label=YACAO" alt="YACAO version"></a>
   <a href="https://github.com/augustoolucas/yacao/blob/main/LICENSE"><img src="https://img.shields.io/github/license/augustoolucas/yacao?style=flat-square" alt="MIT License"></a>
   <a href="https://github.com/augustoolucas/yacao/stargazers"><img src="https://img.shields.io/github/stars/augustoolucas/yacao?style=flat-square" alt="GitHub stars"></a>
@@ -115,9 +115,9 @@ Omit the target to update all outdated plugins.
 
 This is the configured behavior from the installed CLI help and the versioned source; it has not been exercised end to end here.
 
-### Claude Code (experimental)
+### Claude Code
 
-[`integrations/claude-code/`](./integrations/claude-code) ships an experimental Claude Code plugin generated from the same canonical sources: two agents (`yacao:orchestrator`, `yacao:builder`), three skills and a guard hook.
+[`integrations/claude-code/`](./integrations/claude-code) ships a Claude Code plugin generated from the same canonical sources: two agents (`yacao:orchestrator`, `yacao:builder`), three skills and a guard hook.
 
 Requires Node.js 22 or newer on `PATH` (the guard hook is a Node script).
 
@@ -140,10 +140,10 @@ Full guide: [`docs/claude-code.md`](./docs/claude-code.md).
 
 [`integrations/antigravity/`](./integrations/antigravity) ships an experimental Antigravity CLI plugin generated from the same canonical sources: two agents (`yacao-orchestrator`, `yacao-builder`) and three skills. No Node.js runtime or build step is required.
 
-Install from a checkout that contains the bundle, then start a new session from your project directory:
+Install directly from the published GitHub bundle, then start a new session from your project directory:
 
 ```sh
-agy plugin install /absolute/path/to/yacao/integrations/antigravity
+agy plugin install https://github.com/augustoolucas/yacao/tree/main/integrations/antigravity
 agy --agent yacao-orchestrator
 ```
 
