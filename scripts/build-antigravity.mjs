@@ -276,7 +276,12 @@ const adaptSkillBody = (name, body) => {
     text = adaptConversations(adaptRoles(text));
     return insertBeforeFirstSection(text, DISPATCH_PARAGRAPH, "skills/yacao-implementation/SKILL.md");
   }
-  text = replaceRequired(text, "the delegation tool", "invoke_subagent", "skills/yacao-review/SKILL.md");
+  text = replaceRequired(
+    text,
+    "one correction dispatch to the builder via the delegation tool, reusing the same builder session",
+    "one correction message with `send_message` targeting the recorded child conversation ID, reusing the same builder conversation",
+    "skills/yacao-review/SKILL.md",
+  );
   return adaptConversations(adaptRoles(text));
 };
 

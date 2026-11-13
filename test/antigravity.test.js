@@ -376,7 +376,11 @@ describe("antigravity host binding", () => {
     assert.match(review, /without Git or a base, inspect the resulting files directly/);
     assert.match(review, /After two unsuccessful correction rounds/);
     assert.match(review, /final full-plan review and final verification commands again/);
-    assert.match(review, /to the yacao-builder via invoke_subagent/);
+    assert.match(
+      review,
+      /one correction message with `send_message` targeting the recorded child conversation ID/,
+    );
+    assert.ok(!/correction[^.]*invoke_subagent/.test(review));
   });
 });
 
