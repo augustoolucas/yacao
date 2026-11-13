@@ -25,7 +25,7 @@
 
 ## What is YACAO?
 
-YACAO is a truly minimal agent workflow for OpenCode and Claude Code: just 2 agents and 3 skills to handle all planning, building, and reviewing.
+YACAO is a truly minimal agent workflow for OpenCode, Claude Code and Antigravity CLI: just 2 agents and 3 skills to handle all planning, building, and reviewing.
 
 The main orchestrator agent handles code exploration, implementation planning, and review. Each workflow phase has specific guidance defined as skills, loaded on demand. Implementation is delegated to the builder agent.
 
@@ -136,6 +136,19 @@ claude --agent yacao:orchestrator
 
 Full guide: [`docs/claude-code.md`](./docs/claude-code.md).
 
+### Antigravity CLI (experimental)
+
+[`integrations/antigravity/`](./integrations/antigravity) ships an experimental Antigravity CLI plugin generated from the same canonical sources: two agents (`yacao-orchestrator`, `yacao-builder`) and three skills. No Node.js runtime or build step is required.
+
+Install from a checkout that contains the bundle, then start a new session from your project directory:
+
+```sh
+agy plugin install /absolute/path/to/yacao/integrations/antigravity
+agy --agent yacao-orchestrator
+```
+
+Full guide: [`docs/antigravity.md`](./docs/antigravity.md).
+
 ## Configuration
 
 ### OpenCode
@@ -213,6 +226,10 @@ These rules are limits of what the tools guard, not content isolation: the plan-
 ### Claude Code
 
 See [the Claude Code guide](./docs/claude-code.md) for model selection and host-specific permissions.
+
+### Antigravity CLI
+
+See [the Antigravity CLI guide](./docs/antigravity.md) for model selection and host-specific limits.
 
 ## Development
 
