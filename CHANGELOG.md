@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.7.0 (2026-11-13)
+
+- Add experimental Antigravity CLI support with an orchestrator, a builder and three
+  skills, installed directly from GitHub.
+- Generate the Antigravity bundle from the canonical agents and skills, with no
+  runtime dependencies or build step for installation.
+- Remove Claude Code's experimental status and focus its documentation on everyday
+  installation, use, model selection and updates.
+- Fix Claude Code guard wildcards so multiline commands retain the expected
+  role-specific approval or denial.
+- Review the plan overview and task contracts before presenting them for approval.
+- Run the test suite on pushes and pull requests with GitHub Actions, and remove
+  redundant tests and ineffective fixtures.
+
 ## v0.6.2 (2026-10-27)
 
 - Keep task contracts self-contained and provide task details directly to the builder,

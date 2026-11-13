@@ -22,11 +22,11 @@ This guide targets Claude Code CLI 2.1.301 on an interactive Linux terminal.
 Install from the Git marketplace at the release tag:
 
 ```text
-/plugin marketplace add augustoolucas/yacao#v0.6.2
+/plugin marketplace add augustoolucas/yacao#v0.7.0
 /plugin install yacao@yacao
 ```
 
-The tag pins the marketplace content to v0.6.2. The unpinned form
+The tag pins the marketplace content to v0.7.0. The unpinned form
 (`/plugin marketplace add augustoolucas/yacao`) follows the default branch
 instead.
 

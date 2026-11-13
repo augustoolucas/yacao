@@ -121,10 +121,10 @@ This is the configured behavior from the installed CLI help and the versioned so
 
 Requires Node.js 22 or newer on `PATH` (the guard hook is a Node script).
 
-Install from the Git marketplace at the v0.6.2 release tag:
+Install from the Git marketplace at the v0.7.0 release tag:
 
 ```text
-/plugin marketplace add augustoolucas/yacao#v0.6.2
+/plugin marketplace add augustoolucas/yacao#v0.7.0
 /plugin install yacao@yacao
 ```
 
