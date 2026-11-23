@@ -10,7 +10,7 @@ Write a plan overview and self-contained task contracts before implementation. M
 ## Workflow
 
 1. **Explore** - use the available tools to understand the relevant code, identify affected files, and surface risks. Use web search and fetch for external information whenever you need.
-2. **Write the plan** - create `.opencode/plans/plan-<slug>/plan.md` and one contract for each task under `.opencode/plans/plan-<slug>/tasks/task-XX-<name>.md`.
+2. **Write the plan** - create `.yacao/plans/plan-<slug>/plan.md` and one contract for each task under `.yacao/plans/plan-<slug>/tasks/task-XX-<name>.md`.
 
    The plan overview contains:
    - **Goal** - what the complete change accomplishes

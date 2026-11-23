@@ -12,7 +12,7 @@
       "*.env": "ask",
       "*.env.*": "ask",
       "*.env.example": "allow",
-      ".opencode/plans/*": "deny"
+      ".yacao/plans/*": "deny"
     },
     "skill": {
       "*": "allow",

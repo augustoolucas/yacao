@@ -14,7 +14,7 @@
     },
     "edit": {
       "*": "deny",
-      ".opencode/plans/*.md": "allow"
+      ".yacao/plans/*.md": "allow"
     },
     "bash": {
       "*": "allow",

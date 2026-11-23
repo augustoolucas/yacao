@@ -198,7 +198,6 @@ const adaptPrompt = (spec, prompt) => {
       "For a broad or parallelizable search, explore the relevant areas directly yourself.",
       "agents/prompts/orchestrator.md",
     );
-    text = replaceRequired(text, ".opencode/plans", ".yacao/plans", "agents/prompts/orchestrator.md");
   } else {
     text = replaceRequired(
       text,
@@ -252,7 +251,6 @@ const loadAgent = (root, spec) => {
 const adaptSkillBody = (name, body) => {
   let text = body;
   if (name === "planning") {
-    text = replaceRequired(text, ".opencode/plans", ".yacao/plans", "skills/yacao-planning/SKILL.md");
     text = adaptRoles(text);
     return insertBeforeFirstSection(text, PLANNING_PATH_PARAGRAPH, "skills/yacao-planning/SKILL.md");
   }

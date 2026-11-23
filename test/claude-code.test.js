@@ -370,7 +370,6 @@ describe("claude-code guardrails adapter", () => {
 
   const adaptPattern = (pattern) =>
     pattern
-      .replaceAll(".opencode/plans", ".yacao/plans")
       .replaceAll("yacao-planning", "yacao:planning")
       .replaceAll("yacao-implementation", "yacao:implementation")
       .replaceAll("yacao-review", "yacao:review");

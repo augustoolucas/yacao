@@ -178,15 +178,12 @@ const requireDecision = (value, what) => {
 const isPlainObject = (value) =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-// Host-binding text adaptation for the generated copies: namespaced skills,
-// the .yacao/plans protocol path, and qualified agent references. The
-// lookbehind keeps an already-qualified yacao:builder untouched.
+// Host-binding text adaptation for the generated copies: namespaced skills and qualified agent references. The lookbehind keeps an already-qualified yacao:builder untouched.
 const adaptText = (text) =>
   text
     .replaceAll("yacao-planning", "yacao:planning")
     .replaceAll("yacao-implementation", "yacao:implementation")
     .replaceAll("yacao-review", "yacao:review")
-    .replaceAll(".opencode/plans", ".yacao/plans")
     .replaceAll("`explore`", "`Explore`")
     .replaceAll("the delegation tool", "the Agent tool")
     .replaceAll("a session reference", "an agent ID")
@@ -301,11 +298,9 @@ const loadSkill = (root, spec) => {
   return { spec, description, body: adaptText(adapted) };
 };
 
-// Guardrail patterns keep the canonical wildcard syntax; only host names and
-// protocol paths are adapted (agent keys and skill names become qualified).
+// Guardrail patterns keep the canonical wildcard syntax; only host names and agent/skill names are adapted.
 const adaptPolicyPattern = (pattern) =>
   pattern
-    .replaceAll(".opencode/plans", ".yacao/plans")
     .replaceAll("yacao-planning", "yacao:planning")
     .replaceAll("yacao-implementation", "yacao:implementation")
     .replaceAll("yacao-review", "yacao:review");

@@ -234,6 +234,23 @@ const readAgentPermissions = (name) =>
 const shellRules = (name) =>
   agentPermissionRules(readAgentPermissions(name)).filter((rule) => rule.action === "shell");
 
+describe("canonical plan paths", () => {
+  test("OpenCode uses .yacao/plans", () => {
+    const orchestrator = readAgentPermissions("orchestrator");
+    const builder = readAgentPermissions("builder");
+    assert.equal(orchestrator.edit[".yacao/plans/*.md"], "allow");
+    assert.equal(builder.read[".yacao/plans/*"], "deny");
+    assert.ok(!(".opencode/plans/*.md" in orchestrator.edit));
+    assert.ok(!(".opencode/plans/*" in builder.read));
+    const prompt = readFileSync(new URL("../agents/prompts/orchestrator.md", import.meta.url), "utf8");
+    assert.match(prompt, /plan Markdown under `\.yacao\/plans\/`/);
+    assert.ok(!prompt.includes(".opencode/plans"));
+    const planning = readFileSync(new URL("../skills/yacao-planning/SKILL.md", import.meta.url), "utf8");
+    assert.match(planning, /`\.yacao\/plans\/plan-<slug>\/plan\.md`/);
+    assert.ok(!planning.includes(".opencode/plans"));
+  });
+});
+
 // Our reading of the documented wildcard semantics: anchored match, `*` spans
 // every character, the last matching rule wins. This pins the rule order in the
 // agent definitions, not the host implementation.
