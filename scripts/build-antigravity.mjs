@@ -97,9 +97,6 @@ const DISPATCH_PARAGRAPH =
 const PLANNING_PATH_PARAGRAPH =
   "When working on a project below the workspace root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.\nThese paths are relative to the workspace root for the current session, not the target project root; use the selected plan directory for all overview, task and contract paths in this skill.";
 
-const BUILDER_COMMIT_RULE =
-  "- Do not stage, commit or push; the yacao-orchestrator owns commit decisions and performs requested commits after review.";
-
 const BUILDER_REPORT_PARAGRAPH =
   "Deliver the canonical STATUS/CHANGES/VERIFIED/GAPS report through `send_message` to the actual parent conversation ID supplied by the host, using `{Recipient: parentID, Message: report}`. Never fabricate a parent ID or add a configuration field for it; the normal final reply alone is not sufficient.";
 
@@ -211,14 +208,8 @@ const adaptPrompt = (spec, prompt) => {
     );
     text = replaceRequired(
       text,
-      "- Do not apply unplanned refactor, optimization or cleanup",
-      `- Do not apply unplanned refactor, optimization or cleanup\n${BUILDER_COMMIT_RULE}`,
-      "agents/prompts/builder.md",
-    );
-    text = replaceRequired(
-      text,
-      "If STATUS is escalate, put the decision that must be made in GAPS.",
-      `If STATUS is escalate, put the decision that must be made in GAPS.\n\n${BUILDER_REPORT_PARAGRAPH}`,
+      "- **GAPS**: anything unfinished, task issues, or \"none\"",
+      `- **GAPS**: anything unfinished, task issues, or "none"\n\n${BUILDER_REPORT_PARAGRAPH}`,
       "agents/prompts/builder.md",
     );
   }

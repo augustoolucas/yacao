@@ -266,7 +266,7 @@ describe("antigravity agents", () => {
     assert.match(orchestrator.body, /delegate implementation to yacao-builder/);
     assert.match(orchestrator.body, /All code changes go through yacao-builder/);
     assert.match(builder.body, /\*\*`yacao-builder`\*\*/);
-    assert.match(builder.body, /the yacao-orchestrator owns commit decisions/);
+    assert.match(builder.body, /yacao-orchestrator owns staging and commits\./);
   });
 
   test("replace explore-subagent dispatch with direct exploration", () => {
@@ -351,9 +351,7 @@ describe("antigravity host binding", () => {
       "`{Recipient: parentID, Message: report}`",
       "Never fabricate a parent ID or add a configuration field for it",
       "the normal final reply alone is not sufficient",
-      "Do not stage, commit or push;",
-      "the yacao-orchestrator owns commit decisions",
-      "performs requested commits after review",
+      "Do not stage, commit, or push; yacao-orchestrator owns staging and commits.",
     ]) {
       assert.ok(builder.includes(fragment), fragment);
     }
