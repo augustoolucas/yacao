@@ -284,6 +284,7 @@ describe("claude-code host binding", () => {
     const instruction = 'When working on a project below the session root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.';
     const content = files["skills/planning/SKILL.md"];
     assert.equal(content.split(instruction).length - 1, 1);
+    assert.ok(content.indexOf(instruction) < content.indexOf("## Workflow"));
     assert.match(content, /relative to the session root, not the target project root/);
     for (const rel of ["skills/implementation/SKILL.md", "skills/review/SKILL.md"]) {
       assert.ok(!files[rel].includes(instruction));

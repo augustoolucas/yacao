@@ -127,6 +127,9 @@ const DECISIONS = new Set(["allow", "ask", "deny"]);
 const DISPATCH_PARAGRAPH =
   "> **Dispatch and continuation.** In Claude Code the dispatch tool is the **Agent** tool: dispatch the explicit custom agent type `yacao:builder` - never a fork or a teammate - and record the actual returned agent ID; never fabricate one. Continue an existing task by sending a follow-up message with the **SendMessage** tool targeted at that recorded agent ID on the same dispatched agent, and wait for the agent to actually complete before reviewing its work or advancing to the next task.";
 
+const PLANNING_PATH_PARAGRAPH =
+  "When working on a project below the session root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.\nThese paths are relative to the session root, not the target project root; use the selected plan directory for all overview and task contract paths in this skill.";
+
 const FORBIDDEN_OUTPUT = [
   { pattern: /opencode/i, reason: "an OpenCode reference" },
   { pattern: /`Task`/, reason: "the OpenCode V1 delegation tool name" },
@@ -190,14 +193,12 @@ const adaptText = (text) =>
     .replaceAll("session reference", "agent ID")
     .replace(/(?<![\w:])(?:builder|Builder)\b/g, "yacao:builder");
 
-const adaptImplementationBody = (body) => {
+const insertBeforeFirstSection = (body, paragraph, what, guidance) => {
   const anchor = body.indexOf("\n## ");
   if (anchor === -1) {
-    throw new Error(
-      "unsupported source: skills/yacao-implementation/SKILL.md has no section heading to anchor the Claude Code dispatch guidance",
-    );
+    throw new Error(`unsupported source: ${what} has no section heading to anchor the ${guidance}`);
   }
-  return `${body.slice(0, anchor)}\n${DISPATCH_PARAGRAPH}\n${body.slice(anchor)}`;
+  return `${body.slice(0, anchor)}\n${paragraph}\n${body.slice(anchor)}`;
 };
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n)*/;
@@ -267,9 +268,21 @@ const loadSkill = (root, spec) => {
     );
   }
   const description = adaptText(requireText(fields.description, `${spec.source} description`));
-  let adapted = spec.name === "implementation" ? adaptImplementationBody(body) : body;
-  if (spec.name === "planning") {
-    adapted += "\nWhen working on a project below the session root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.\nThese paths are relative to the session root, not the target project root; use the selected plan directory for all overview, task and ledger paths in this skill.\n";
+  let adapted = body;
+  if (spec.name === "implementation") {
+    adapted = insertBeforeFirstSection(
+      body,
+      DISPATCH_PARAGRAPH,
+      "skills/yacao-implementation/SKILL.md",
+      "Claude Code dispatch guidance",
+    );
+  } else if (spec.name === "planning") {
+    adapted = insertBeforeFirstSection(
+      body,
+      PLANNING_PATH_PARAGRAPH,
+      "skills/yacao-planning/SKILL.md",
+      "Claude Code planning path guidance",
+    );
   }
   return { spec, description, body: adaptText(adapted) };
 };

@@ -7,6 +7,9 @@ description: "Guides the exploration of the codebase and produces a structured p
 
 Write a plan overview and self-contained task contracts before implementation. Make sure your plan follows the KISS, DRY and YAGNI principles.
 
+When working on a project below the session root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.
+These paths are relative to the session root, not the target project root; use the selected plan directory for all overview and task contract paths in this skill.
+
 ## Workflow
 
 1. **Explore** - use the available tools to understand the relevant code, identify affected files, and surface risks. Use web search and fetch for external information whenever you need.
@@ -35,6 +38,3 @@ Write a plan overview and self-contained task contracts before implementation. M
 3. **Review the plan and tasks** - Read the overview and task contracts against the user's request. Check coverage, verification, dependencies and consistency. Fix errors and omissions before presenting.
 4. **Present for approval** - show a summary to the user. One approval covers the complete plan before writing code; do not ask for approval between tasks. An unchanged task needs no new plan approval. Accept clear approval or revision intent rather than a literal token. If the user abandons or supersedes the plan instead, stop and note the plan as abandoned in the overview.
 5. On **Revise**: update the overview and task contracts, then re-present.
-
-When working on a project below the session root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.
-These paths are relative to the session root, not the target project root; use the selected plan directory for all overview, task and ledger paths in this skill.

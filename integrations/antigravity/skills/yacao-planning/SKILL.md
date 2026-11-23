@@ -8,7 +8,7 @@ description: "Guides the exploration of the codebase and produces a structured p
 Write a plan overview and self-contained task contracts before implementation. Make sure your plan follows the KISS, DRY and YAGNI principles.
 
 When working on a project below the workspace root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.
-These paths are relative to the workspace root for the current session, not the target project root; use the selected plan directory for all overview, task and contract paths in this skill.
+These paths are relative to the workspace root for the current session, not the target project root; use the selected plan directory for all overview and task contract paths in this skill.
 
 ## Workflow
 
