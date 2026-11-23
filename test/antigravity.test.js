@@ -320,16 +320,14 @@ describe("antigravity host binding", () => {
     assert.match(planning, /relative to the workspace root for the current session, not the target project root/);
   });
 
-  test("implementation dispatches yacao-builder with the observed agy fields and continues by child ID", () => {
+  test("implementation dispatches yacao-builder and continues by child ID", () => {
     const implementation = files["skills/yacao-implementation/SKILL.md"];
     for (const fragment of [
-      "`invoke_subagent` tool in the current workspace - never a branch or worktree",
-      "`{Prompt,Role,TypeName}`",
-      "`TypeName` to `yacao-builder`",
-      "descriptive `Role`",
-      "put the current task in `Prompt` as a self-contained contract",
+      "`invoke_subagent` tool in the current workspace - never `Workspace: \"branch\"` or `\"share\"`",
+      "Pass `TypeName: \"yacao-builder\"`",
+      "a descriptive `Role`",
+      "the current task in `Prompt` as a self-contained contract",
       "The actual tool schema is authoritative",
-      "unsupported `model` or `Workspace` parameters",
       "outer `Subagents` JSON envelope",
       "real child conversation ID returned by the call",
       "never invent one",
@@ -339,6 +337,7 @@ describe("antigravity host binding", () => {
       assert.ok(implementation.includes(fragment), fragment);
     }
     assert.ok(!/sessionID|task_id|delegation tool/.test(implementation));
+    assert.ok(!implementation.includes("unsupported"));
     const dispatch = implementation.match(/^> \*\*Dispatch and continuation\.\*\*.*$/gm) ?? [];
     assert.equal(dispatch.length, 1);
   });

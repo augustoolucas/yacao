@@ -321,6 +321,20 @@ describe("claude-code implementation skill dispatch guidance", () => {
   });
 });
 
+describe("claude-code review skill correction guidance", () => {
+  const content = generatePlugin({ root: ROOT })["skills/review/SKILL.md"];
+
+  test("uses one SendMessage correction to the recorded agent ID, not the Agent tool", () => {
+    assert.match(
+      content,
+      /one correction message with the \*\*SendMessage\*\* tool targeting the recorded agent ID, reusing the same yacao:builder session/,
+    );
+    assert.equal(content.split("one correction message").length - 1, 1);
+    assert.ok(!/correction[^.]*Agent tool/.test(content));
+    assert.ok(!/correction dispatch/.test(content));
+  });
+});
+
 describe("claude-code manifest", () => {
   const manifestText = generatePlugin({ root: ROOT })[".claude-plugin/plugin.json"];
   const manifest = JSON.parse(manifestText);

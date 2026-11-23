@@ -7,7 +7,7 @@ description: "Guides ordered task dispatch, yacao-builder conversation reuse, an
 
 You delegate code changes to **yacao-builder** via invoke_subagent - you construct the task, hand it off, and handle the response. Capture the returned child conversation ID for potential follow-up reuse.
 
-> **Dispatch and continuation.** Dispatch implementation with the `invoke_subagent` tool in the current workspace - never a branch or worktree. The observed per-call fields are `{Prompt,Role,TypeName}`: set `TypeName` to `yacao-builder`, give a descriptive `Role`, and put the current task in `Prompt` as a self-contained contract. The actual tool schema is authoritative; do not add unsupported `model` or `Workspace` parameters, and do not bake in an unverified outer `Subagents` JSON envelope. Record the real child conversation ID returned by the call; never invent one. Continue that same child with `send_message` using `{Recipient:childID,Message:current instruction}`. Wait for the child to actually complete before reviewing its work or advancing to the next task.
+> **Dispatch and continuation.** Dispatch implementation with the `invoke_subagent` tool in the current workspace - never `Workspace: "branch"` or `"share"`. Pass `TypeName: "yacao-builder"`, a descriptive `Role`, and the current task in `Prompt` as a self-contained contract. The actual tool schema is authoritative; do not bake in an unverified outer `Subagents` JSON envelope. Record the real child conversation ID returned by the call; never invent one. Continue that same child with `send_message` using `{Recipient:childID,Message:current instruction}`. Wait for the child to actually complete before reviewing its work or advancing to the next task.
 
 ## Commit preference
 

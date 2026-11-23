@@ -193,6 +193,13 @@ const adaptText = (text) =>
     .replaceAll("session reference", "agent ID")
     .replace(/(?<![\w:])(?:builder|Builder)\b/g, "yacao:builder");
 
+const replaceRequired = (text, anchor, replacement, what) => {
+  if (!text.includes(anchor)) {
+    throw new Error(`unsupported source: missing host-adaptation anchor ${JSON.stringify(anchor)} in ${what}`);
+  }
+  return text.replaceAll(anchor, replacement);
+};
+
 const insertBeforeFirstSection = (body, paragraph, what, guidance) => {
   const anchor = body.indexOf("\n## ");
   if (anchor === -1) {
@@ -282,6 +289,13 @@ const loadSkill = (root, spec) => {
       PLANNING_PATH_PARAGRAPH,
       "skills/yacao-planning/SKILL.md",
       "Claude Code planning path guidance",
+    );
+  } else if (spec.name === "review") {
+    adapted = replaceRequired(
+      body,
+      "one correction dispatch to the builder via the delegation tool, reusing the same builder session",
+      "one correction message with the **SendMessage** tool targeting the recorded agent ID, reusing the same builder session",
+      "skills/yacao-review/SKILL.md",
     );
   }
   return { spec, description, body: adaptText(adapted) };

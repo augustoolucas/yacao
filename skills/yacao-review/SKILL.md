@@ -10,7 +10,7 @@ You validate every builder output against the current task contract or spec befo
 ## Workflow
 
 1. **Inspect** - when a valid initial base applies, run `git diff <initial-base> -- <relevant-paths>` plus `git status --porcelain --untracked-files=all` and read the relevant untracked files separately; without Git or a base, inspect the resulting files directly - never block on absent Git. In both cases read the modified files and the current task contract.
-2. **Verify** - cross-reference the result against the current task's `Goal`, `Changes`, and `Verification commands` (plus `File scope` and `Dependencies` for a planned task), and only the relevant plan-overview context. Do not treat other, unimplemented tasks as missing work.
+2. **Verify** - cross-reference the result against the current task's `Goal`, `Changes`, `File scope`, and `Verification commands` (plus `Dependencies` for a planned task), and only the relevant plan-overview context. Do not treat other, unimplemented tasks as missing work.
 3. **Validate**:
    - **Task adherence** - does the result match the current task contract or spec? Nothing extra, nothing missing for this task?
    - **Bugs / regressions** - any obvious logic errors, broken paths, or things that used to work and now won't?
