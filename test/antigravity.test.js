@@ -269,7 +269,7 @@ describe("antigravity agents", () => {
     assert.match(builder.body, /yacao-orchestrator owns staging and commits\./);
   });
 
-  test("replace explore-subagent dispatch with direct exploration", () => {
+  test("removes the explore-subagent dispatch sentence", () => {
     assert.ok(!/explore the relevant areas directly yourself/.test(files["agents/yacao-orchestrator.md"]));
     assert.match(files["agents/yacao-builder.md"], /explore relevant code directly to support the current task/);
     assert.ok(!/dispatch `explore` subagents/.test(files["agents/yacao-orchestrator.md"]));
@@ -375,6 +375,8 @@ describe("antigravity host binding", () => {
     assert.match(review, /without Git or a base, inspect the resulting files directly/);
     assert.match(review, /After two unsuccessful correction rounds/);
     assert.match(review, /final full-plan review and final verification commands again/);
+    assert.match(review, /If a commit was requested, commit the verified plan-owned changes/);
+    assert.match(review, /Report only after the full-plan review and final verification are approved/);
     assert.match(
       review,
       /one correction message with `send_message` targeting the recorded child conversation ID/,

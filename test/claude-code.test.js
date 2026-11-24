@@ -282,7 +282,7 @@ describe("claude-code host binding", () => {
     );
   });
 
-  test("planning adds session-root project grouping exactly once without changing permissions", () => {
+  test("planning includes workspace-root project grouping exactly once without changing permissions", () => {
     const instruction = 'When working on a project below the workspace root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.';
     const content = files["skills/planning/SKILL.md"];
     assert.equal(content.split(instruction).length - 1, 1);
@@ -335,6 +335,8 @@ describe("claude-code review skill correction guidance", () => {
     assert.equal(content.split("one correction message").length - 1, 1);
     assert.ok(!/correction[^.]*Agent tool/.test(content));
     assert.ok(!/correction dispatch/.test(content));
+    assert.match(content, /If a commit was requested, commit the verified plan-owned changes/);
+    assert.match(content, /Report only after the full-plan review and final verification are approved/);
   });
 });
 
@@ -1075,9 +1077,11 @@ describe("claude-code role guard hook", () => {
   test("builder denies staging commands while lookalikes fall through", () => {
     for (const command of [
       "git add .",
+      "git add",
       "git add -A",
       "git add src/push.js",
       "git stage .",
+      "git stage",
       "git stage src/clean.js",
     ]) {
       askOrDeny(bash("yacao:builder", command), "deny");

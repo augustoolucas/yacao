@@ -240,6 +240,7 @@ describe("canonical plan paths", () => {
     const builder = readAgentPermissions("builder");
     assert.equal(orchestrator.edit[".yacao/plans/*.md"], "allow");
     assert.equal(builder.read[".yacao/plans/*"], "deny");
+    assert.equal(builder.edit[".yacao/plans/*"], "deny");
     assert.ok(!(".opencode/plans/*.md" in orchestrator.edit));
     assert.ok(!(".opencode/plans/*" in builder.read));
     const prompt = readFileSync(new URL("../agents/prompts/orchestrator.md", import.meta.url), "utf8");
@@ -297,9 +298,11 @@ describe("agent shell rule order", () => {
   test("builder denies staging commands including gated filenames", () => {
     for (const command of [
       "git add .",
+      "git add",
       "git add -A",
       "git add src/push.js",
       "git stage .",
+      "git stage",
       "git stage src/clean.js",
     ]) {
       assert.equal(decide(builder, command), "deny", command);
