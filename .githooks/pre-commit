@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+set -eu
+
+staged_files=$(git diff --cached --name-only --diff-filter=ACMRD)
+if [ -z "$staged_files" ]; then
+  exit 0
+fi
+
+needs_check=0
+old_ifs=$IFS
+IFS='
+'
+for path in $staged_files; do
+  case "$path" in
+    package.json|agents/*|skills/*|scripts/build-*.mjs|integrations/*|.claude-plugin/*)
+      needs_check=1
+      break
+      ;;
+  esac
+done
+IFS=$old_ifs
+
+if [ "$needs_check" -eq 0 ]; then
+  exit 0
+fi
+
+if ! node scripts/build-antigravity.mjs --check || ! node scripts/build-claude-code.mjs --check; then
+  printf '%s\n' "Bundle check failed. Run: npm run build:antigravity && npm run build:claude-code, then stage the updated bundle files." >&2
+  exit 1
+fi
