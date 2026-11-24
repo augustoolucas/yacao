@@ -292,7 +292,9 @@ describe("antigravity host binding", () => {
       assert.ok(!content.includes("commandExecutionPolicy"), `${rel} has no execution policy override`);
     }
     assert.match(files["agents/yacao-orchestrator.md"], /plan Markdown under `\.yacao\/plans\/`/);
-    assert.match(files["skills/yacao-planning/SKILL.md"], /`\.yacao\/plans\/plan-<slug>\/plan\.md`/);
+    const planning = files["skills/yacao-planning/SKILL.md"];
+    assert.ok(planning.includes("inside `<plan-dir>`, create `plan.md`"));
+    assert.ok(planning.includes(".yacao/plans/plan-<slug>/"));
     assert.ok(!text.includes(".opencode"));
   });
 
@@ -317,7 +319,9 @@ describe("antigravity host binding", () => {
     const instruction =
       "When working on a project below the workspace root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.";
     assert.equal(planning.split(instruction).length - 1, 1);
+    assert.ok(planning.indexOf(instruction) < planning.indexOf("## Workflow"));
     assert.match(planning, /relative to the workspace root for the current session, not the target project root/);
+    assert.match(planning, /`<plan-dir>` is the selected plan directory for all overview and task contract paths in this skill/);
   });
 
   test("implementation dispatches yacao-builder and continues by child ID", () => {

@@ -94,9 +94,6 @@ const SKILL_FIELDS = new Set(["name", "description"]);
 const DISPATCH_PARAGRAPH =
   "> **Dispatch and continuation.** Dispatch implementation with the `invoke_subagent` tool in the current workspace - never `Workspace: \"branch\"` or `\"share\"`. Pass `TypeName: \"yacao-builder\"`, a descriptive `Role`, and the current task in `Prompt` as a self-contained contract. The actual tool schema is authoritative; do not bake in an unverified outer `Subagents` JSON envelope. Record the real child conversation ID returned by the call; never invent one. Continue that same child with `send_message` using `{Recipient:childID,Message:current instruction}`. Wait for the child to actually complete before reviewing its work or advancing to the next task.";
 
-const PLANNING_PATH_PARAGRAPH =
-  "When working on a project below the workspace root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.\nThese paths are relative to the workspace root for the current session, not the target project root; use the selected plan directory for all overview and task contract paths in this skill.";
-
 const BUILDER_REPORT_PARAGRAPH =
   "Deliver the canonical STATUS/CHANGES/VERIFIED/GAPS report through `send_message` to the actual parent conversation ID supplied by the host, using `{Recipient: parentID, Message: report}`. Never fabricate a parent ID; the normal final reply alone is not sufficient.";
 
@@ -252,7 +249,7 @@ const adaptSkillBody = (name, body) => {
   let text = body;
   if (name === "planning") {
     text = adaptRoles(text);
-    return insertBeforeFirstSection(text, PLANNING_PATH_PARAGRAPH, "skills/yacao-planning/SKILL.md");
+    return text;
   }
   if (name === "implementation") {
     text = replaceRequired(

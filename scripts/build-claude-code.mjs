@@ -127,9 +127,6 @@ const DECISIONS = new Set(["allow", "ask", "deny"]);
 const DISPATCH_PARAGRAPH =
   "> **Dispatch and continuation.** In Claude Code the dispatch tool is the **Agent** tool: dispatch the explicit custom agent type `yacao:builder` - never a fork or a teammate - and record the actual returned agent ID; never fabricate one. Continue an existing task by sending a follow-up message with the **SendMessage** tool targeted at that recorded agent ID on the same dispatched agent, and wait for the agent to actually complete before reviewing its work or advancing to the next task.";
 
-const PLANNING_PATH_PARAGRAPH =
-  "When working on a project below the session root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.\nThese paths are relative to the session root, not the target project root; use the selected plan directory for all overview and task contract paths in this skill.";
-
 const FORBIDDEN_OUTPUT = [
   { pattern: /opencode/i, reason: "an OpenCode reference" },
   { pattern: /`Task`/, reason: "the OpenCode V1 delegation tool name" },
@@ -279,13 +276,6 @@ const loadSkill = (root, spec) => {
       DISPATCH_PARAGRAPH,
       "skills/yacao-implementation/SKILL.md",
       "Claude Code dispatch guidance",
-    );
-  } else if (spec.name === "planning") {
-    adapted = insertBeforeFirstSection(
-      body,
-      PLANNING_PATH_PARAGRAPH,
-      "skills/yacao-planning/SKILL.md",
-      "Claude Code planning path guidance",
     );
   } else if (spec.name === "review") {
     adapted = replaceRequired(

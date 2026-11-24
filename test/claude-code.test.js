@@ -273,7 +273,9 @@ describe("claude-code host binding", () => {
 
   test("protocol paths use .yacao/plans", () => {
     assert.match(files["agents/orchestrator.md"], /plan Markdown under `\.yacao\/plans\/`/);
-    assert.match(files["skills/planning/SKILL.md"], /`\.yacao\/plans\/plan-<slug>\/plan\.md`/);
+    const planning = files["skills/planning/SKILL.md"];
+    assert.ok(planning.includes("inside `<plan-dir>`, create `plan.md`"));
+    assert.ok(planning.includes(".yacao/plans/plan-<slug>/"));
     assert.match(
       files["skills/implementation/SKILL.md"],
       /Read the current task contract at the path listed in the approved plan overview\./,
@@ -281,11 +283,11 @@ describe("claude-code host binding", () => {
   });
 
   test("planning adds session-root project grouping exactly once without changing permissions", () => {
-    const instruction = 'When working on a project below the session root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.';
+    const instruction = 'When working on a project below the workspace root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.';
     const content = files["skills/planning/SKILL.md"];
     assert.equal(content.split(instruction).length - 1, 1);
     assert.ok(content.indexOf(instruction) < content.indexOf("## Workflow"));
-    assert.match(content, /relative to the session root, not the target project root/);
+    assert.match(content, /relative to the workspace root for the current session, not the target project root/);
     for (const rel of ["skills/implementation/SKILL.md", "skills/review/SKILL.md"]) {
       assert.ok(!files[rel].includes(instruction));
     }

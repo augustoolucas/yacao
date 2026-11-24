@@ -246,7 +246,12 @@ describe("canonical plan paths", () => {
     assert.match(prompt, /plan Markdown under `\.yacao\/plans\/`/);
     assert.ok(!prompt.includes(".opencode/plans"));
     const planning = readFileSync(new URL("../skills/yacao-planning/SKILL.md", import.meta.url), "utf8");
-    assert.match(planning, /`\.yacao\/plans\/plan-<slug>\/plan\.md`/);
+    const note =
+      "When working on a project below the workspace root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.";
+    assert.equal(planning.split(note).length - 1, 1);
+    assert.ok(planning.indexOf(note) < planning.indexOf("## Workflow"));
+    assert.match(planning, /`<plan-dir>` is the selected plan directory/);
+    assert.ok(planning.includes("inside `<plan-dir>`, create `plan.md`"));
     assert.ok(!planning.includes(".opencode/plans"));
   });
 });
