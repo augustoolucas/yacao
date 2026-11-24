@@ -294,6 +294,24 @@ describe("agent shell rule order", () => {
     }
   });
 
+  test("builder denies staging commands including gated filenames", () => {
+    for (const command of [
+      "git add .",
+      "git add -A",
+      "git add src/push.js",
+      "git stage .",
+      "git stage src/clean.js",
+    ]) {
+      assert.equal(decide(builder, command), "deny", command);
+    }
+  });
+
+  test("builder allows read-only git commands mentioning add or stage", () => {
+    for (const command of ['git log --grep="add"', "git diff -- src/address.js", "git show HEAD:src/stage.js"]) {
+      assert.equal(decide(builder, command), "allow", command);
+    }
+  });
+
   test("builder asks for the gated git commands", () => {
     for (const command of [
       "git stash push -m x",

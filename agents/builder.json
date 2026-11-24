@@ -58,7 +58,9 @@
       "git reset*": "ask",
       "git stash list*": "allow",
       "git stash show*": "allow",
-      "git commit*": "deny"
+      "git commit*": "deny",
+      "git add*": "deny",
+      "git stage*": "deny"
     },
     "task": {
       "*": "deny",

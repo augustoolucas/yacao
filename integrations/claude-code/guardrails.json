@@ -336,6 +336,14 @@
       {
         "pattern": "git commit*",
         "decision": "deny"
+      },
+      {
+        "pattern": "git add*",
+        "decision": "deny"
+      },
+      {
+        "pattern": "git stage*",
+        "decision": "deny"
       }
     ],
     "read": [

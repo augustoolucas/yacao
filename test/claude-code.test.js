@@ -1072,6 +1072,24 @@ describe("claude-code role guard hook", () => {
     }
   });
 
+  test("builder denies staging commands while lookalikes fall through", () => {
+    for (const command of [
+      "git add .",
+      "git add -A",
+      "git add src/push.js",
+      "git stage .",
+      "git stage src/clean.js",
+    ]) {
+      askOrDeny(bash("yacao:builder", command), "deny");
+    }
+    for (const command of ["git add .", "git stage .", "git add src/push.js"]) {
+      noDecision(bash("yacao:orchestrator", command));
+    }
+    for (const command of ['git log --grep="add"', "git diff -- src/address.js", "git show HEAD:src/stage.js"]) {
+      noDecision(bash("yacao:builder", command));
+    }
+  });
+
   test("ordinary controls and the read-only stash exceptions fall through", () => {
     for (const command of ["git status", "ls -la", "grep -rn commit .", "cat package.json"]) {
       noDecision(bash("yacao:builder", command));
