@@ -380,7 +380,7 @@ describe("claude-code guardrails adapter", () => {
   test("uses exactly-qualified agent keys and the guardrailed categories", () => {
     assert.deepEqual(Object.keys(guardrails), ["yacao:orchestrator", "yacao:builder"]);
     assert.deepEqual(Object.keys(guardrails["yacao:orchestrator"]), ["bash", "read", "edit"]);
-    assert.deepEqual(Object.keys(guardrails["yacao:builder"]), ["bash", "read", "skill"]);
+    assert.deepEqual(Object.keys(guardrails["yacao:builder"]), ["bash", "read", "edit", "skill"]);
     assert.ok(!("task" in guardrails["yacao:orchestrator"]), "orchestrator dispatch is native");
     assert.ok(!("task" in guardrails["yacao:builder"]), "builder dispatch is native");
   });
@@ -1188,8 +1188,10 @@ describe("claude-code role guard hook", () => {
         askOrDeny(call("yacao:builder", "Read", { file_path: plan }, options), "deny").permissionDecisionReason,
         /\.yacao\/plans\/\*/,
       );
-      // The builder has no canonical edit policy: edits stay on the native gate.
       noDecision(call("yacao:builder", "Edit", { file_path: path.join(dir, "src", "index.js") }, options));
+      for (const tool of ["Edit", "Write"]) {
+        askOrDeny(call("yacao:builder", tool, { file_path: plan }, options), "deny");
+      }
     });
   });
 
@@ -1340,11 +1342,11 @@ describe("claude-code role guard hook", () => {
       const allowAll = [{ pattern: "*", decision: "allow" }];
       const full = {
         "yacao:orchestrator": { bash: allowAll, read: allowAll, edit: allowAll },
-        "yacao:builder": { bash: allowAll, read: allowAll, skill: allowAll },
+        "yacao:builder": { bash: allowAll, read: allowAll, edit: allowAll, skill: allowAll },
       };
       const mandatory = {
         "yacao:orchestrator": ["bash", "read", "edit"],
-        "yacao:builder": ["bash", "read", "skill"],
+        "yacao:builder": ["bash", "read", "edit", "skill"],
       };
       for (const [role, categories] of Object.entries(mandatory)) {
         for (const category of categories) {
@@ -1443,6 +1445,7 @@ describe("claude-code packaged self-containment", () => {
             "yacao:builder": {
               bash: [{ pattern: "probe-*", decision: "deny" }],
               read: placeholder,
+              edit: placeholder,
               skill: placeholder,
             },
           },

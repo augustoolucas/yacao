@@ -368,6 +368,16 @@
         "decision": "deny"
       }
     ],
+    "edit": [
+      {
+        "pattern": "*",
+        "decision": "allow"
+      },
+      {
+        "pattern": ".yacao/plans/*",
+        "decision": "deny"
+      }
+    ],
     "skill": [
       {
         "pattern": "*",

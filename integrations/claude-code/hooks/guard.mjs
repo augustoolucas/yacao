@@ -55,7 +55,7 @@ const ROLE_IDS = new Set(["yacao:orchestrator", "yacao:builder"]);
 // unrelated policy entries are not constrained.
 const REQUIRED_CATEGORIES = {
   "yacao:orchestrator": ["bash", "read", "edit"],
-  "yacao:builder": ["bash", "read", "skill"],
+  "yacao:builder": ["bash", "read", "edit", "skill"],
 };
 
 // Tools this hook is wired for in hooks.json. Agent is deliberately absent:
