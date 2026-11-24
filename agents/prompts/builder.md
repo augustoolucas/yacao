@@ -22,6 +22,6 @@ You may dispatch the `explore` subagent via the delegation tool to parallelize s
 Return exactly:
 
 - **STATUS**: complete (done, verified if specified) | partial (unfinished) | blocked (external impediment) | escalate (decision needed in GAPS)
-- **CHANGES**: each file modified, one line per file, describing the actual change
-- **VERIFIED**: exact command(s) run and their real output (not "should pass")
+- **CHANGES**: each file changed (created, modified, or deleted), one line per file, describing the actual change, or "none"
+- **VERIFIED**: exact command(s) run and their real output (not "should pass"), or "none"
 - **GAPS**: anything unfinished, task issues, or "none"

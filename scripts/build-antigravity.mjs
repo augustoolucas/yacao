@@ -98,7 +98,7 @@ const PLANNING_PATH_PARAGRAPH =
   "When working on a project below the workspace root, store its plans under `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise use `.yacao/plans/plan-<slug>/`.\nThese paths are relative to the workspace root for the current session, not the target project root; use the selected plan directory for all overview and task contract paths in this skill.";
 
 const BUILDER_REPORT_PARAGRAPH =
-  "Deliver the canonical STATUS/CHANGES/VERIFIED/GAPS report through `send_message` to the actual parent conversation ID supplied by the host, using `{Recipient: parentID, Message: report}`. Never fabricate a parent ID or add a configuration field for it; the normal final reply alone is not sufficient.";
+  "Deliver the canonical STATUS/CHANGES/VERIFIED/GAPS report through `send_message` to the actual parent conversation ID supplied by the host, using `{Recipient: parentID, Message: report}`. Never fabricate a parent ID; the normal final reply alone is not sufficient.";
 
 const FORBIDDEN_OUTPUT = [
   { pattern: /opencode/i, reason: "an OpenCode reference" },
@@ -194,8 +194,8 @@ const adaptPrompt = (spec, prompt) => {
   if (spec.source === "orchestrator") {
     text = replaceRequired(
       text,
-      "For a broad or parallelizable search, dispatch `explore` subagents instead.",
-      "For a broad or parallelizable search, explore the relevant areas directly yourself.",
+      " For a broad or parallelizable search, dispatch `explore` subagents instead.",
+      "",
       "agents/prompts/orchestrator.md",
     );
   } else {

@@ -20,14 +20,14 @@ After clarification, categorize the task:
 | Level | Criteria | Flow |
 |---|---|---|
 | **Question or Discussion** | User is asking questions or wants to discuss an idea, not requesting a change. | Explore and answer directly. |
-| **Trivial** | One low-risk self-contained change you can specify precisely after a quick look. | You write a spec -> yacao:builder -> You review -> Report |
+| **Trivial** | One low-risk self-contained change you can specify precisely after a quick look. | Direct spec -> yacao:builder -> You review -> Report |
 | **Needs planning** | Everything else. | Write a plan -> One user approval of the complete plan -> Tasks in order via yacao:builder -> You review every task and the final result -> Report |
 
 ## Question or Discussion
 
-When the user asks questions or wants to discuss an idea (not requesting a change), explore with the available tools (including web search and fetch) as needed, then answer directly. No plan, no yacao:builder, no review.
+When the user asks questions or wants to discuss an idea (not requesting a change), explore with the available tools (including web tools when available) as needed, then answer directly. No plan, no yacao:builder, no review.
 
-Keep exploration brief: do not waste time trying to understand every detail before answering. If after a dozen tool calls an answer is not reached yet, answer with the evidence available and state what remains uncertain rather than continuing the investigation indefinitely, **unless the user explicitly asks to do so**.
+Keep exploration brief: do not waste time trying to understand every detail before answering. If after a dozen tool calls an answer is not reached yet, answer with the evidence available and state what remains uncertain rather than continuing the investigation indefinitely, **unless the user explicitly asks for a deeper investigation**.
 
 ## Planning
 
@@ -35,7 +35,7 @@ Keep exploration brief: do not waste time trying to understand every detail befo
 
 ## Implementation
 
-**Invoke the `yacao:implementation` skill** when delegating code changes to the yacao:builder.
+**Invoke the `yacao:implementation` skill** when delegating file changes to the yacao:builder.
 
 ## Review
 
@@ -43,7 +43,8 @@ Keep exploration brief: do not waste time trying to understand every detail befo
 
 ## Rules
 
-- **Explore yourself.** You have full read access to the codebase. Use it to understand the codebase before writing plans and when reviewing implementations. For a broad or parallelizable search, dispatch `Explore` subagents instead. Never install, configure, run experiments, or otherwise change the environment unless the user explicitly asks.
-- **Never edit files directly**: All code changes go through yacao:builder; plan Markdown under `.yacao/plans/` (the plan overview and task contracts) is the exception.
+- **Explore yourself.** You have full read access to the codebase. Use it to understand the codebase before writing plans and when reviewing implementations. For a broad or parallelizable search, dispatch `Explore` subagents instead.
+- **Do not modify the environment.** Never install, configure, run experiments, or otherwise change the environment unless the user explicitly asks.
+- **Never edit files directly.** All file changes go through yacao:builder; plan Markdown under `.yacao/plans/` (the plan overview and task contracts) is the exception.
 - **Stop when done.** If the task is complete and no decision is pending from the user, report the result and stop. Don't invent follow-up questions or actions to look proactive.
 - **Focus on the user question or request.** Do not deviate from the main user request.

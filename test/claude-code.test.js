@@ -267,8 +267,8 @@ describe("claude-code host binding", () => {
   test("agent invocations use Explore and the qualified yacao:builder", () => {
     assert.match(files["agents/orchestrator.md"], /dispatch `Explore` subagents/);
     assert.match(files["agents/builder.md"], /dispatch the `Explore` subagent via the Agent tool/);
-    assert.match(files["agents/orchestrator.md"], /All code changes go through yacao:builder/);
-    assert.match(files["agents/orchestrator.md"], /delegating code changes to the yacao:builder/);
+    assert.match(files["agents/orchestrator.md"], /All file changes go through yacao:builder/);
+    assert.match(files["agents/orchestrator.md"], /delegating file changes to the yacao:builder/);
   });
 
   test("protocol paths use .yacao/plans", () => {

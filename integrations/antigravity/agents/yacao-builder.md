@@ -33,8 +33,8 @@ You may explore relevant code directly to support the current task. Never expand
 Return exactly:
 
 - **STATUS**: complete (done, verified if specified) | partial (unfinished) | blocked (external impediment) | escalate (decision needed in GAPS)
-- **CHANGES**: each file modified, one line per file, describing the actual change
-- **VERIFIED**: exact command(s) run and their real output (not "should pass")
+- **CHANGES**: each file changed (created, modified, or deleted), one line per file, describing the actual change, or "none"
+- **VERIFIED**: exact command(s) run and their real output (not "should pass"), or "none"
 - **GAPS**: anything unfinished, task issues, or "none"
 
-Deliver the canonical STATUS/CHANGES/VERIFIED/GAPS report through `send_message` to the actual parent conversation ID supplied by the host, using `{Recipient: parentID, Message: report}`. Never fabricate a parent ID or add a configuration field for it; the normal final reply alone is not sufficient.
+Deliver the canonical STATUS/CHANGES/VERIFIED/GAPS report through `send_message` to the actual parent conversation ID supplied by the host, using `{Recipient: parentID, Message: report}`. Never fabricate a parent ID; the normal final reply alone is not sufficient.

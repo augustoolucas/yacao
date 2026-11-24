@@ -264,13 +264,13 @@ describe("antigravity agents", () => {
     assert.equal(builder.fields.description, readJson(ROOT, "agents/builder.json").description);
     assert.match(orchestrator.body, /\*\*`yacao-orchestrator`\*\*/);
     assert.match(orchestrator.body, /delegate implementation to yacao-builder/);
-    assert.match(orchestrator.body, /All code changes go through yacao-builder/);
+    assert.match(orchestrator.body, /All file changes go through yacao-builder/);
     assert.match(builder.body, /\*\*`yacao-builder`\*\*/);
     assert.match(builder.body, /yacao-orchestrator owns staging and commits\./);
   });
 
   test("replace explore-subagent dispatch with direct exploration", () => {
-    assert.match(files["agents/yacao-orchestrator.md"], /explore the relevant areas directly yourself/);
+    assert.ok(!/explore the relevant areas directly yourself/.test(files["agents/yacao-orchestrator.md"]));
     assert.match(files["agents/yacao-builder.md"], /explore relevant code directly to support the current task/);
     assert.ok(!/dispatch `explore` subagents/.test(files["agents/yacao-orchestrator.md"]));
     assert.ok(!/## Subagents/.test(files["agents/yacao-builder.md"]));
@@ -348,7 +348,7 @@ describe("antigravity host binding", () => {
       "STATUS/CHANGES/VERIFIED/GAPS",
       "`send_message` to the actual parent conversation ID supplied by the host",
       "`{Recipient: parentID, Message: report}`",
-      "Never fabricate a parent ID or add a configuration field for it",
+      "Never fabricate a parent ID",
       "the normal final reply alone is not sufficient",
       "Do not stage, commit, or push; yacao-orchestrator owns staging and commits.",
     ]) {
