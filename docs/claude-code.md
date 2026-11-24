@@ -58,8 +58,8 @@ before the next one begins. A task that needs fixes gets at most two adjustment
 rounds before it comes back to you. Approved work stays uncommitted by default;
 ask for a commit after an approved task, or for one commit at the end.
 
-Plans live relative to the session root, not the target project root. For a
-project below the session root, they go in
+Plans live relative to the workspace root for the current session, not the
+target project root. For a project below the workspace root, they go in
 `.yacao/plans/<project-relative-path>/plan-<slug>/`; otherwise in
 `.yacao/plans/plan-<slug>/`.
 
@@ -119,10 +119,10 @@ It is a guardrail, not a sandbox:
   and never parses it, so compound commands and shell indirection can hide a
   guarded verb - a known coverage gap.
 - Policy highlights: orchestrator edits and writes are denied except
-  `.yacao/plans` Markdown; builder reads of `.yacao/plans` are denied;
-  recognized `git commit` commands are denied for the builder and ask for the
-  orchestrator, as do push and mutating Git forms; `.env` reads ask;
-  `command git*` and `env git*` are denied.
+  `.yacao/plans` Markdown; builder reads, edits, and writes of `.yacao/plans`
+  are denied; `git commit`, `git add`, and `git stage` are denied for the
+  builder, and `git commit` asks for the orchestrator, as do push and mutating
+  Git forms; `.env` reads ask; `command git*` and `env git*` are denied.
 - Agent dispatch stays native. Both YACAO roles inherit the tools the session
   offers, including configured MCP servers and native helpers such as
   `claude-code-guide`, `Plan` and `general-purpose`.
