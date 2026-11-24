@@ -125,7 +125,7 @@ const DECISIONS = new Set(["allow", "ask", "deny"]);
 // generator inserts it before the first section heading and fails if that
 // anchor is gone, so source drift cannot pass silently.
 const DISPATCH_PARAGRAPH =
-  "> **Dispatch and continuation.** In Claude Code the dispatch tool is the **Agent** tool: dispatch the explicit custom agent type `yacao:builder` - never a fork or a teammate - and record the actual returned agent ID; never fabricate one. Continue an existing task by sending a follow-up message with the **SendMessage** tool targeted at that recorded agent ID on the same dispatched agent, and wait for the agent to actually complete before reviewing its work or advancing to the next task.";
+  "> **Dispatch and continuation.** In Claude Code the dispatch tool is the **Agent** tool: dispatch the explicit custom agent type `yacao:builder` - never a fork or a teammate - and record the actual returned agent ID; never fabricate one. Continue the same yacao:builder for follow-ups, corrections, or related tasks by sending a message with the **SendMessage** tool targeted at that recorded agent ID on the same dispatched agent, and wait for the agent to actually complete before reviewing its work or advancing to the next task.";
 
 const FORBIDDEN_OUTPUT = [
   { pattern: /opencode/i, reason: "an OpenCode reference" },

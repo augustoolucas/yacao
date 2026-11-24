@@ -307,6 +307,7 @@ describe("claude-code implementation skill dispatch guidance", () => {
     assert.match(content, /never a fork or a teammate/);
     assert.match(content, /record the actual returned agent ID/);
     assert.match(content, /never fabricate one/);
+    assert.match(content, /Continue the same yacao:builder for follow-ups, corrections, or related tasks/);
     assert.match(content, /the \*\*SendMessage\*\* tool/);
     assert.match(content, /wait for the agent to actually complete before reviewing/);
     assert.ok(!/V1 exposes|V2 exposes|sessionID|task_id|delegation tool/.test(content));

@@ -331,8 +331,6 @@ describe("antigravity host binding", () => {
       "Pass `TypeName: \"yacao-builder\"`",
       "a descriptive `Role`",
       "the current task in `Prompt` as a self-contained contract",
-      "The actual tool schema is authoritative",
-      "outer `Subagents` JSON envelope",
       "real child conversation ID returned by the call",
       "never invent one",
       "`send_message` using `{Recipient:childID,Message:current instruction}`",
