@@ -18,7 +18,7 @@ These paths are relative to the workspace root for the current session, not the 
    The plan overview contains:
    - **Goal** - what the complete change accomplishes
    - **Repository path** - the repository this plan targets
-   - **Scope** - files touched and boundaries
+   - **Scope** - files touched, boundaries, and explicit non-goals when relevant
    - **Reasoning** - brief explanation for the proposed approach
    - **References** - table of relevant files and their roles
    - **Acceptance criteria** - the original user acceptance criteria the completed work must satisfy
