@@ -204,8 +204,8 @@ const adaptPrompt = (spec, prompt) => {
     );
     text = replaceRequired(
       text,
-      "- **GAPS**: anything unfinished, task issues, or \"none\"",
-      `- **GAPS**: anything unfinished, task issues, or "none"\n\n${BUILDER_REPORT_PARAGRAPH}`,
+      '- **GAPS**: anything unfinished, task issues, out-of-scope issues or risks noticed (without editing them), or "none"',
+      `- **GAPS**: anything unfinished, task issues, out-of-scope issues or risks noticed (without editing them), or "none"\n\n${BUILDER_REPORT_PARAGRAPH}`,
       "agents/prompts/builder.md",
     );
   }
