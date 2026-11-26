@@ -25,14 +25,15 @@ default agent.
 
 ## Configuration
 
-Both agents use the session model. Pass it at launch:
+Both agents use the session model by default. Pass it at launch:
 
 ```sh
 claude --agent yacao:orchestrator --model sonnet
 ```
 
-or switch in the running session with `/model`. `yacao:builder` inherits the
-session model. There is no separate builder-model setting.
+or switch in the running session with `/model`. There is no separate
+builder-model setting, though you can ask the orchestrator to use a different
+model alias (such as `sonnet` or `haiku`) when calling `yacao:builder`.
 
 ## Updating
 
