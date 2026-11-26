@@ -86,7 +86,7 @@ Full guide: [docs/opencode.md](./docs/opencode.md).
 Requires Node.js 22 or newer on `PATH`.
 
 ```text
-/plugin marketplace add augustoolucas/yacao#v0.7.0
+/plugin marketplace add augustoolucas/yacao
 /plugin install yacao@yacao
 ```
 
