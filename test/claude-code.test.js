@@ -344,11 +344,10 @@ describe("claude-code manifest", () => {
   const manifestText = generatePlugin({ root: ROOT })[".claude-plugin/plugin.json"];
   const manifest = JSON.parse(manifestText);
 
-  test("name, MIT license and the default agent", () => {
+  test("name, MIT license and author", () => {
     assert.equal(manifest.name, "yacao");
     assert.equal(manifest.license, "MIT");
     assert.deepEqual(manifest.author, { name: "augustoolucas" });
-    assert.deepEqual(manifest.settings, { agent: "orchestrator" });
   });
 
   test("version stays in sync with package.json", () => {
@@ -361,11 +360,10 @@ describe("claude-code manifest", () => {
     assert.ok(!/opencode/i.test(manifest.description));
   });
 
-  test("declares no hooks, permission arrays or update callbacks", () => {
-    for (const key of ["hooks", "permissions", "permission", "mcpServers", "update"]) {
+  test("declares no settings, hooks, permission arrays or update callbacks", () => {
+    for (const key of ["settings", "hooks", "permissions", "permission", "mcpServers", "update"]) {
       assert.ok(!(key in manifest), `manifest must not declare ${key}`);
     }
-    assert.deepEqual(Object.keys(manifest.settings), ["agent"]);
   });
 });
 
@@ -654,13 +652,7 @@ describe("claude-code shipped bundle", () => {
     }
   });
 
-  test("manifest defaults, hook commands and generated references resolve inside the bundle", () => {
-    const manifest = readJson(ROOT, `${PLUGIN_ROOT}/.claude-plugin/plugin.json`);
-    assert.equal(manifest.settings.agent, "orchestrator");
-    assert.ok(
-      statSync(pluginFile(ROOT, `agents/${manifest.settings.agent}.md`)).isFile(),
-      "the default agent file exists inside the bundle",
-    );
+  test("hook commands and generated references resolve inside the bundle", () => {
     const hooks = readJson(ROOT, `${PLUGIN_ROOT}/hooks/hooks.json`);
     for (const group of Object.values(hooks.hooks).flat()) {
       for (const hook of group.hooks) {

@@ -376,7 +376,6 @@ export function generatePlugin({ root = defaultRoot() } = {}) {
     version: pkg.version,
     license: "MIT",
     author: { name: "augustoolucas" },
-    settings: { agent: "orchestrator" },
   });
   for (const agent of agents) {
     const fields = [

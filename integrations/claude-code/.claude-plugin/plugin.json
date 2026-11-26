@@ -5,8 +5,5 @@
   "license": "MIT",
   "author": {
     "name": "augustoolucas"
-  },
-  "settings": {
-    "agent": "orchestrator"
   }
 }
