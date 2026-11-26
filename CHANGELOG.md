@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.7.1 (2026-11-26)
+
+- Unify plan storage under `.yacao/plans/` across OpenCode, Claude Code and
+  Antigravity CLI, and support nested project paths from the workspace root.
+- Harden builder guardrails in OpenCode and Claude Code: deny `git add`/`git stage`
+  and `.yacao/plans/` edits/writes, and clarify commit ownership and status semantics
+  in canonical prompts.
+- Fix host adapters: remove deprecated `settings.agent` from the Claude Code plugin
+  manifest, route Claude Code review corrections through `SendMessage` to the recorded
+  builder, and align Antigravity `invoke_subagent` parameter guidance.
+- Refine agent prompts and skills (`Clarify`, `builder`, `Planning`, `Implementation`
+  and `Review`): adopt patterns from community agent skills (recommended defaults and
+  options in `Clarify`, bounded pre-edit reading and out-of-scope `GAPS` in `builder`,
+  explicit non-goals in `Planning`, and root-cause premise checks on repeated review
+  failures), verify plans against repository files before approval, and tighten
+  final-review commit handling.
+- Add the OpenCode guide (`docs/opencode.md`), restructure `README.md` with
+  install accordions, and standardize all three harness guides without pinned tags.
+
 ## v0.7.0 (2026-11-13)
 
 - Add experimental Antigravity CLI support with an orchestrator, a builder and three
