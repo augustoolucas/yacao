@@ -36,11 +36,10 @@ Then start a new Claude Code session from your project directory:
 claude --agent yacao:orchestrator
 ```
 
-Starting with `--agent` is the reliable way to begin as the orchestrator. The
-plugin manifest sets `settings.agent: orchestrator`, which is documented to
-select the orchestrator only when neither you nor the CLI has selected another
-agent; your settings and an explicit `--agent` take precedence. Installing the
-plugin never overwrites your configured default agent.
+To make `yacao:orchestrator` the default without passing `--agent` each time,
+set `"agent": "yacao:orchestrator"` in your own Claude Code settings
+(`~/.claude/settings.json` or `.claude/settings.json`). Installing the plugin
+never changes your configured default agent.
 
 ## Start and use
 
